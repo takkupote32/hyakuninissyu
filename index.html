@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0d1420">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>五色百人一首 かるた対戦</title>
+<style>
+:root{
+  --bg:#0d1420; --line:rgba(255,255,255,.10);
+  --gold:#d9b46a; --ink:#f3efe6; --dim:#96a2b8;
+  --c-base:#2f6fb3; --c-dark:#16416f; --c-ink:#fff;
+  --fs:clamp(9px,2.95vw,13px); --radius:8px;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+html,body{margin:0;padding:0;height:100%;}
+body{
+  background:radial-gradient(125% 85% at 50% -10%, #1d2a44 0%, var(--bg) 58%, #06090f 100%);
+  color:var(--ink);
+  font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic UI","Yu Gothic",Meiryo,system-ui,-apple-system,sans-serif;
+  overscroll-behavior:none;-webkit-user-select:none;user-select:none;
+  font-feature-settings:"palt" 0;
+}
+.screen{display:none;min-height:100svh;min-height:100dvh;flex-direction:column;}
+.screen.on{display:flex;}
+
+/* ===== 設定画面 ===== */
+#setup{padding:14px 16px 26px;gap:10px;overflow-y:auto;}
+.brand{text-align:center;padding:6px 0 2px;}
+.brand h1{margin:0;font-size:27px;letter-spacing:.20em;font-weight:700;
+  background:linear-gradient(180deg,#f8ecc9 0%,#d9b46a 55%,#a8823f 100%);
+  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;}
+.brand p{margin:6px 0 0;font-size:11.5px;color:var(--dim);letter-spacing:.14em;}
+.sec{margin-top:6px;}
+.sec>h2{font-size:12px;color:var(--gold);letter-spacing:.16em;margin:12px 0 7px;font-weight:600;}
+.sec>h2 small{color:var(--dim);letter-spacing:0;font-weight:400;margin-left:6px;font-size:10.5px;}
+.colors{display:grid;grid-template-columns:repeat(5,1fr);gap:7px;}
+.cbtn{
+  border:0;border-radius:var(--radius);padding:11px 0 9px;cursor:pointer;
+  color:#fff;font-family:inherit;font-size:15px;font-weight:700;letter-spacing:.1em;
+  box-shadow:0 3px 0 rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.32);
+  position:relative;transition:transform .12s, outline-color .12s;
+  outline:3px solid transparent;outline-offset:2px;
+}
+.cbtn:active{transform:translateY(2px);box-shadow:0 1px 0 rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.32);}
+.cbtn .cnt{display:block;font-size:9px;opacity:.85;letter-spacing:0;margin-top:3px;font-weight:500;}
+.cbtn.sel{outline-color:var(--gold);}
+.diffs{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;}
+.dbtn{
+  border:1px solid var(--line);background:rgba(255,255,255,.045);color:var(--ink);
+  border-radius:var(--radius);padding:10px 2px;font-family:inherit;font-size:12px;font-weight:600;
+  cursor:pointer;letter-spacing:.02em;transition:all .15s;
+}
+.dbtn span{display:block;font-size:8.5px;color:var(--dim);font-weight:400;margin-top:3px;}
+.dbtn.sel{background:linear-gradient(180deg,rgba(217,180,106,.30),rgba(217,180,106,.13));
+  border-color:var(--gold);color:#f8ecc9;}
+.dbtn.sel span{color:#d9c39a;}
+.note{
+  font-size:11px;color:#c8bfa8;background:rgba(217,180,106,.09);
+  border-left:2px solid var(--gold);border-radius:0 6px 6px 0;padding:8px 10px;margin-top:8px;line-height:1.65;
+}
+.opts{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;}
+.chk{
+  display:flex;align-items:center;gap:6px;font-size:11.5px;color:#cfd6e2;
+  background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:20px;padding:7px 12px;cursor:pointer;
+}
+.chk.on{background:rgba(217,180,106,.18);border-color:rgba(217,180,106,.5);color:#f4e6c6;}
+.chk input{display:none;}
+.rules{font-size:11px;color:#b8c2d4;line-height:1.85;background:rgba(255,255,255,.035);
+  border:1px solid var(--line);border-radius:10px;padding:11px 13px;margin-top:8px;}
+.rules b{color:var(--gold);}
+#startBtn{
+  margin-top:16px;width:100%;border:0;border-radius:12px;padding:17px;font-family:inherit;
+  font-size:16px;font-weight:700;letter-spacing:.2em;color:#251c07;cursor:pointer;
+  background:linear-gradient(180deg,#f2dda6,#d9b46a 60%,#bb9247);
+  box-shadow:0 5px 16px rgba(217,180,106,.28), inset 0 1px 0 rgba(255,255,255,.7);
+}
+#startBtn:active{transform:translateY(2px);}
+.ghost{
+  margin-top:9px;width:100%;border:1px solid var(--line);background:transparent;color:var(--dim);
+  border-radius:10px;padding:11px;font-family:inherit;font-size:11.5px;cursor:pointer;
+}
+.ghost.blocked{opacity:.45;}
+
+/* ===== 対戦画面 ===== */
+#game{padding:5px 6px;gap:5px;height:100svh;height:100dvh;overflow:hidden;}
+.hud{
+  display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:6px;
+  font-size:11px;padding:2px 4px;flex:0 0 auto;
+}
+.hud .side{display:flex;align-items:center;gap:5px;color:var(--dim);}
+.hud .side.r{justify-content:flex-end;}
+.hud b{font-size:15px;color:var(--ink);font-variant-numeric:tabular-nums;}
+.hud b.hot{color:#ff9f6b;}
+.hud .mid{
+  font-size:10.5px;color:var(--gold);letter-spacing:.1em;text-align:center;
+  border:1px solid rgba(217,180,106,.35);border-radius:20px;padding:3px 12px;white-space:nowrap;
+}
+.field{display:grid;grid-template-columns:repeat(5,1fr);grid-template-rows:repeat(2,1fr);
+  gap:4px;flex:0 0 auto;position:relative;}
+.field.cpu{transform:rotate(180deg);}
+.card{
+  position:relative;border:0;padding:3px 2px;border-radius:6px;overflow:hidden;cursor:pointer;
+  background:linear-gradient(160deg,var(--c-base),var(--c-dark));
+  box-shadow:0 2px 5px rgba(0,0,0,.45), inset 0 0 0 1px rgba(255,255,255,.22);
+  display:grid;place-items:center;aspect-ratio:3/4.05;min-width:0;
+  font-family:inherit;transition:transform .1s, box-shadow .15s, opacity .25s;
+}
+.card::after{content:"";position:absolute;inset:2px;border-radius:4px;
+  border:1px solid rgba(255,255,255,.18);pointer-events:none;}
+.card .num{
+  position:absolute;left:2px;top:1px;font-size:7px;color:var(--c-ink);opacity:.55;
+  line-height:1;letter-spacing:0;
+}
+.card .shimo{writing-mode:vertical-rl;display:block;height:100%;margin:0 auto;color:var(--c-ink);}
+.card .shimo span{display:block;font-size:var(--fs);line-height:1.06;letter-spacing:0;font-weight:500;}
+.card.empty{background:rgba(255,255,255,.03);box-shadow:inset 0 0 0 1px rgba(255,255,255,.06);cursor:default;}
+.card.empty::after{border-color:transparent;}
+.card:active:not(.empty){transform:scale(.94);}
+.card.hit{animation:hit .45s ease-out;box-shadow:0 0 0 3px #7de08a, 0 0 22px rgba(125,224,138,.7);}
+.card.bad{animation:bad .45s ease-out;box-shadow:0 0 0 3px #ff6b6b, 0 0 22px rgba(255,107,107,.7);}
+.card.dim{opacity:.28;}
+@keyframes hit{0%{transform:scale(1.14)}100%{transform:scale(1)}}
+@keyframes bad{0%,100%{transform:translateX(0)}25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
+.card.nonum .num{display:none;}
+
+.reader{
+  flex:0 0 auto;border-radius:10px;padding:7px 10px;text-align:center;
+  background:linear-gradient(180deg,rgba(255,255,255,.075),rgba(255,255,255,.028));
+  border:1px solid var(--line);min-height:78px;
+  display:flex;flex-direction:column;justify-content:center;gap:3px;position:relative;overflow:hidden;
+}
+.reader .lbl{font-size:9px;color:var(--dim);letter-spacing:.32em;}
+.reader .kami{font-size:15px;font-weight:600;letter-spacing:.06em;line-height:1.5;word-break:break-all;}
+.reader .sub{font-size:10.5px;color:#8fa8c4;letter-spacing:.05em;min-height:14px;line-height:1.35;}
+.reader.hide .kami{filter:blur(7px);opacity:.55;}
+.reader.done .kami{color:var(--gold);}
+.reader .rep{position:absolute;right:6px;top:5px;border:1px solid var(--line);background:rgba(255,255,255,.07);
+  color:#cbd4e2;border-radius:14px;font-family:inherit;font-size:9.5px;padding:4px 8px;cursor:pointer;letter-spacing:.02em;}
+.reader .rep:active{transform:scale(.94);}
+.reader .rep[disabled]{opacity:.3;}
+.bar{position:absolute;left:0;bottom:0;height:3px;width:100%;background:rgba(255,255,255,.09);}
+.bar i{display:block;height:100%;width:100%;background:linear-gradient(90deg,#7de08a,#d9b46a,#ff6b6b);
+  transform-origin:left center;transform:scaleX(1);}
+.toast{
+  position:fixed;left:50%;top:38%;transform:translate(-50%,-50%) scale(.85);
+  background:rgba(8,12,20,.93);border:1px solid var(--line);color:#fff;padding:13px 24px;border-radius:12px;
+  font-size:14px;font-weight:700;letter-spacing:.1em;opacity:0;pointer-events:none;transition:all .2s;z-index:60;
+  white-space:nowrap;backdrop-filter:blur(6px);
+}
+.toast.show{opacity:1;transform:translate(-50%,-50%) scale(1);}
+
+/* ===== オーバーレイ ===== */
+.ov{position:fixed;inset:0;background:rgba(5,8,13,.93);display:none;
+  flex-direction:column;align-items:center;justify-content:center;gap:16px;z-index:80;padding:24px;text-align:center;}
+.ov.on{display:flex;}
+.ov h3{margin:0;font-size:13px;letter-spacing:.3em;color:var(--gold);}
+.ov .big{font-size:74px;font-weight:700;font-variant-numeric:tabular-nums;color:#f8ecc9;line-height:1;}
+.ov .small{font-size:12px;color:var(--dim);line-height:1.9;}
+.ov .btn{border:0;border-radius:11px;padding:14px 30px;font-family:inherit;font-size:14px;font-weight:700;
+  letter-spacing:.14em;color:#251c07;background:linear-gradient(180deg,#f2dda6,#d9b46a 60%,#bb9247);cursor:pointer;}
+.ov .btn.g{background:transparent;border:1px solid var(--line);color:#c9d2e0;}
+.spin{width:46px;height:46px;border-radius:50%;border:3px solid rgba(217,180,106,.22);
+  border-top-color:var(--gold);animation:sp 1s linear infinite;}
+@keyframes sp{to{transform:rotate(360deg)}}
+.pulse{animation:pl 1.4s ease-in-out infinite;}
+@keyframes pl{0%,100%{opacity:1}50%{opacity:.45}}
+
+/* ===== 結果 ===== */
+#result{padding:22px 20px;align-items:center;justify-content:center;gap:14px;text-align:center;}
+#result .verdict{font-size:40px;font-weight:700;letter-spacing:.22em;
+  background:linear-gradient(180deg,#f8ecc9,#d9b46a);-webkit-background-clip:text;background-clip:text;
+  -webkit-text-fill-color:transparent;}
+#result .why{font-size:12px;color:var(--dim);letter-spacing:.06em;line-height:1.9;}
+.scorebox{display:grid;grid-template-columns:1fr auto 1fr;gap:14px;align-items:center;
+  background:rgba(255,255,255,.045);border:1px solid var(--line);border-radius:14px;padding:16px 22px;width:100%;max-width:330px;}
+.scorebox .n{font-size:34px;font-weight:700;font-variant-numeric:tabular-nums;}
+.scorebox .t{font-size:10.5px;color:var(--dim);letter-spacing:.14em;margin-top:3px;}
+.scorebox .vs{font-size:10px;color:var(--gold);letter-spacing:.16em;}
+.stat{font-size:11px;color:#aab4c6;line-height:1.9;}
+@media (min-width:600px){
+  :root{--fs:13px;}
+  .screen{max-width:470px;margin:0 auto;}
+}
+</style>
+</head>
+<body>
+
+<!-- ========== 設定 ========== -->
+<section id="setup" class="screen on">
+  <div class="brand">
+    <h1>五色百人一首</h1>
+    <p>からた たいせん</p>
+  </div>
+
+  <div class="sec">
+    <h2>色をえらぶ <small>20まい ずつ</small></h2>
+    <div class="colors" id="colorpick"></div>
+  </div>
+
+  <div class="sec">
+    <h2>あいての強さ</h2>
+    <div class="diffs" id="diffpick"></div>
+    <div class="note" id="diffNote"></div>
+  </div>
+
+  <div class="sec">
+    <h2>せってい</h2>
+    <div class="opts">
+      <label class="chk" id="chkNum"><input type="checkbox" id="cbNum">札に番号を表示</label>
+      <label class="chk on" id="chkKami"><input type="checkbox" id="cbKami" checked>上の句を表示</label>
+      <label class="chk on" id="chkVoice"><input type="checkbox" id="cbVoice" checked>音声で読み上げ</label>
+      <label class="chk" id="chkSlow"><input type="checkbox" id="cbSlow">ゆっくり読む</label>
+    </div>
+  </div>
+
+  <div class="rules">
+    <b>あそびかた</b><br>
+    ・20まいを 10まいずつ 分ける（自分＝下、あいて＝上）。<br>
+    ・自分の札は <b>横5列×縦2段</b>、自分に向けて ならべる。<br>
+    ・さいしょに <b>60秒</b> で 場所をおぼえる。<br>
+    ・読み手が <b>上の句</b> を読み、その下の句の札を タップして取る。<br>
+    ・先に <b>自分の札が 0まい</b> になった方が 勝ち。20首読み終えたら <b>残りが少ない方</b> の勝ち。<br>
+    ・まちがえた札を タップすると <b>お手つき</b>。あいての札を 1まい もらってしまう。
+  </div>
+
+  <button id="startBtn">対 戦 ス タ ー ト</button>
+  <button id="voiceTest" class="ghost">🔊 読み上げの 音声テスト</button>
+</section>
+
+<!-- ========== 対戦 ========== -->
+<section id="game" class="screen">
+  <div class="hud">
+    <div class="side"><span>あいて</span> <b id="cpuCount">10</b><span>枚</span></div>
+    <div class="mid" id="phaseText">じゅんび</div>
+    <div class="side r"><span>自分</span> <b id="myCount" class="hot">10</b><span>枚</span></div>
+  </div>
+
+  <div class="field cpu" id="cpuField"></div>
+
+  <div class="reader" id="reader">
+    <div class="lbl">上 の 句</div>
+    <div class="kami" id="kamiText">―</div>
+    <div class="sub" id="subText"></div>
+    <button class="rep" id="replayBtn" aria-label="もう一度聞く">↻ もう一度</button>
+    <div class="bar"><i id="barFill"></i></div>
+  </div>
+
+  <div class="field me" id="myField"></div>
+</section>
+
+<!-- ========== 結果 ========== -->
+<section id="result" class="screen">
+  <div class="verdict" id="verdict">―</div>
+  <div class="why" id="whyText"></div>
+  <div class="scorebox">
+    <div><div class="n" id="rMy">0</div><div class="t">自分の のこり</div></div>
+    <div class="vs">VS</div>
+    <div><div class="n" id="rCpu">0</div><div class="t">あいての のこり</div></div>
+  </div>
+  <div class="stat" id="statText"></div>
+  <button class="btn" id="againBtn" style="border:0;border-radius:11px;padding:14px 30px;font-family:inherit;font-size:14px;font-weight:700;letter-spacing:.14em;color:#251c07;background:linear-gradient(180deg,#f2dda6,#d9b46a 60%,#bb9247);cursor:pointer;">もう一度 対戦</button>
+  <button class="ghost" id="backBtn" style="width:auto;padding:11px 26px;">設定にもどる</button>
+</section>
+
+<!-- オーバーレイ -->
+<div class="ov" id="memoOv">
+  <h3>場 所 を お ぼ え る</h3>
+  <div class="big" id="memoNum">60</div>
+  <div class="small" id="memoMsg">自分の陣の 下の句を よく見て おぼえよう</div>
+  <button class="btn" id="memoSkip">おぼえた！ はじめる</button>
+</div>
+
+<div class="ov" id="readyOv">
+  <div class="spin"></div>
+  <div class="small" id="readyMsg">準備中…</div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+
+/* ====== 百人一首データ（五色分類・上の句／下の句・すべてひらがな） ====== */
+/* ===== 五色百人一首データ（すべてひらがな・上の句＝5/7/5、下の句＝7/7） ===== */
+const COLORS=[
+{id:'ao',name:'青',base:'#2f6fb3',dark:'#12395e',ink:'#eaf4ff',poems:[
+ {n:3,k:['あしびきの','やまどりのをの','しだりをの'],s:['ながながしよを','ひとりかもねむ']},
+ {n:5,k:['おくやまに','もみぢふみわけ','なくしかの'],s:['こゑきくときぞ','あきはかなしき']},
+ {n:6,k:['かささぎの','わたせるはしに','おくしもの'],s:['しろきをみれば','よぞふけにける']},
+ {n:12,k:['あまつかぜ','くものかよひぢ','ふきとぢよ'],s:['をとめのすがた','しばしとどめむ']},
+ {n:14,k:['みちのくの','しのぶもぢずり','たれゆゑに'],s:['みだれそめにし','われならなくに']},
+ {n:24,k:['このたびは','ぬさもとりあへず','たむけやま'],s:['もみぢのにしき','かみのまにまに']},
+ {n:30,k:['ありあけの','つれなくみえし','わかれより'],s:['あかつきばかり','うきものはなし']},
+ {n:31,k:['あさぼらけ','ありあけのつきと','みるまでに'],s:['よしののさとに','ふれるしらゆき']},
+ {n:50,k:['きみがため','をしからざりし','いのちさへ'],s:['ながくもがなと','おもひけるかな']},
+ {n:57,k:['めぐりあひて','みしやそれとも','わかぬまに'],s:['くもがくれにし','よはのつきかな']},
+ {n:61,k:['いにしへの','ならのみやこの','やへざくら'],s:['けふここのへに','にほひぬるかな']},
+ {n:62,k:['よをこめて','とりのそらねは','はかるとも'],s:['よにあふさかの','せきはゆるさじ']},
+ {n:69,k:['あらしふく','みむろのやまの','もみぢばは'],s:['たつたのかはの','にしきなりけり']},
+ {n:70,k:['さびしさに','やどをたちいでて','ながむれば'],s:['いづこもおなじ','あきのゆふぐれ']},
+ {n:74,k:['うかりける','ひとをはつせの','やまおろしよ'],s:['はげしかれとは','いのらぬものを']},
+ {n:75,k:['ちぎりおきし','させもがつゆを','いのちにて'],s:['あはれことしの','あきもいぬめり']},
+ {n:76,k:['わたのはら','こぎいでてみれば','ひさかたの'],s:['くもゐにまがふ','おきつしらなみ']},
+ {n:82,k:['おもひわび','さてもいのちは','あるものを'],s:['うきにたへぬは','なみだなりけり']},
+ {n:91,k:['きりぎりす','なくやしもよの','さむしろに'],s:['ころもかたしき','ひとりかもねむ']},
+ {n:100,k:['ももしきや','ふるきのきばの','しのぶにも'],s:['なほあまりある','むかしなりけり']}
+]},
+{id:'momo',name:'桃',base:'#d4587e',dark:'#8c2750',ink:'#fff0f5',poems:[
+ {n:86,k:['なげけとて','つきやはものを','おもはする'],s:['かこちがほなる','わがなみだかな']},
+ {n:97,k:['こぬひとを','まつほのうらの','ゆふなぎに'],s:['やくやもしほの','みもこがれつつ']},
+ {n:66,k:['もろともに','あはれとおもへ','やまざくら'],s:['はなよりほかに','しるひともなし']},
+ {n:72,k:['おとにきく','たかしのはまの','あだなみは'],s:['かけじやそでの','ぬれもこそすれ']},
+ {n:73,k:['たかさごの','をのへのさくら','さきにけり'],s:['とやまのかすみ','たたずもあらなむ']},
+ {n:80,k:['ながからむ','こころもしらず','くろかみの'],s:['みだれてけさは','ものをこそおもへ']},
+ {n:51,k:['かくとだに','えやはいぶきの','さしもぐさ'],s:['さしもしらじな','もゆるおもひを']},
+ {n:58,k:['ありまやま','ゐなのささはら','かぜふけば'],s:['いでそよひとを','わすれやはする']},
+ {n:65,k:['うらみわび','ほさぬそでだに','あるものを'],s:['こひにくちなむ','なこそをしけれ']},
+ {n:34,k:['たれをかも','しるひとにせむ','たかさごの'],s:['まつもむかしの','ともならなくに']},
+ {n:40,k:['しのぶれど','いろにいでにけり','わがこひは'],s:['ものやおもふと','ひとのとふまで']},
+ {n:48,k:['かぜをいたみ','いはうつなみの','おのれのみ'],s:['くだけてものを','おもふころかな']},
+ {n:16,k:['たちわかれ','いなばのやまの','みねにおふる'],s:['まつとしきかば','いまかへりこむ']},
+ {n:22,k:['ふくからに','あきのくさきの','しをるれば'],s:['むべやまかぜを','あらしといふらむ']},
+ {n:28,k:['やまざとは','ふゆぞさびしさ','まさりける'],s:['ひとめもくさも','かれぬとおもへば']},
+ {n:1,k:['あきのたの','かりほのいほの','とまをあらみ'],s:['わがころもでは','つゆにぬれつつ']},
+ {n:4,k:['たごのうらに','うちいでてみれば','しろたへの'],s:['ふじのたかねに','ゆきはふりつつ']},
+ {n:13,k:['つくばねの','みねよりおつる','みなのがは'],s:['こひぞつもりて','ふちとなりぬる']},
+ {n:83,k:['よのなかよ','みちこそなけれ','おもひいる'],s:['やまのおくにも','しかぞなくなる']},
+ {n:84,k:['ながらへば','またこのごろや','しのばれむ'],s:['うしとみしよぞ','いまはこひしき']}
+]},
+{id:'ki',name:'黄',base:'#c9a125',dark:'#8a6c10',ink:'#fffbe8',poems:[
+ {n:2,k:['はるすぎて','なつきにけらし','しろたへの'],s:['ころもほすてふ','あまのかぐやま']},
+ {n:7,k:['あまのはら','ふりさけみれば','かすがなる'],s:['みかさのやまに','いでしつきかも']},
+ {n:10,k:['これやこの','ゆくもかへるも','わかれては'],s:['しるもしらぬも','あふさかのせき']},
+ {n:18,k:['すみのえの','きしによるなみ','よるさへや'],s:['ゆめのかよひぢ','ひとめよくらむ']},
+ {n:32,k:['やまがはに','かぜのかけたる','しがらみは'],s:['ながれもあへぬ','もみぢなりけり']},
+ {n:33,k:['ひさかたの','ひかりのどけき','はるのひに'],s:['しづごころなく','はなのちるらむ']},
+ {n:37,k:['しらつゆに','かぜのふきしく','あきののは'],s:['つらぬきとめぬ','たまぞちりける']},
+ {n:39,k:['あさぢふの','をののしのはら','しのぶれど'],s:['あまりてなどか','ひとのこひしき']},
+ {n:46,k:['ゆらのとを','わたるふなびと','かぢをたえ'],s:['ゆくへもしらぬ','こひのみちかな']},
+ {n:47,k:['やへむぐら','しげれるやどの','さびしきに'],s:['ひとこそみえね','あきはきにけり']},
+ {n:55,k:['たきのおとは','たえてひさしく','なりぬれど'],s:['なこそながれて','なほきこえけれ']},
+ {n:60,k:['おほえやま','いくののみちの','とほければ'],s:['まだふみもみず','あまのはしだて']},
+ {n:78,k:['あはぢしま','かよふちどりの','なくこゑに'],s:['いくよねざめぬ','すまのせきもり']},
+ {n:79,k:['あきかぜに','たなびくくもの','たえまより'],s:['もれいづるつきの','かげのさやけさ']},
+ {n:81,k:['ほととぎす','なきつるかたを','ながむれば'],s:['ただありあけの','つきぞのこれる']},
+ {n:87,k:['むらさめの','つゆもまだひぬ','まきのはに'],s:['きりたちのぼる','あきのゆふぐれ']},
+ {n:89,k:['たまのをよ','たえなばたえね','ながらへば'],s:['しのぶることの','よわりもぞする']},
+ {n:94,k:['みよしのの','やまのあきかぜ','さよふけて'],s:['ふるさとさむく','ころもうつなり']},
+ {n:96,k:['はなさそふ','あらしのにはの','ゆきならで'],s:['ふりゆくものは','わがみなりけり']},
+ {n:85,k:['よもすがら','ものおもふころは','あけやらで'],s:['ねやのひまさへ','つれなかりけり']}
+]},
+{id:'midori',name:'緑',base:'#3f9a6a',dark:'#1b5638',ink:'#eafff2',poems:[
+ {n:8,k:['わがいほは','みやこのたつみ','しかぞすむ'],s:['よをうぢやまと','ひとはいふなり']},
+ {n:9,k:['はなのいろは','うつりにけりな','いたづらに'],s:['わがみよにふる','ながめせしまに']},
+ {n:11,k:['わたのはら','やそしまかけて','こぎいでぬと'],s:['ひとにはつげよ','あまのつりぶね']},
+ {n:15,k:['きみがため','はるののにいでて','わかなつむ'],s:['わがころもでに','ゆきはふりつつ']},
+ {n:17,k:['ちはやぶる','かみよもきかず','たつたがは'],s:['からくれなゐに','みづくくるとは']},
+ {n:20,k:['わびぬれば','いまはたおなじ','なにはなる'],s:['みをつくしても','あはむとぞおもふ']},
+ {n:23,k:['つきみれば','ちぢにものこそ','かなしけれ'],s:['わがみひとつの','あきにはあらねど']},
+ {n:26,k:['をぐらやま','みねのもみぢば','こころあらば'],s:['いまひとたびの','みゆきまたなむ']},
+ {n:29,k:['こころあてに','をらばやをらむ','はつしもの'],s:['おきまどはせる','しらぎくのはな']},
+ {n:35,k:['ひとはいさ','こころもしらず','ふるさとは'],s:['はなぞむかしの','かににほひける']},
+ {n:36,k:['なつのよは','まだよひながら','あけぬるを'],s:['くものいづこに','つきやどるらむ']},
+ {n:38,k:['わすらるる','みをばおもはず','ちかひてし'],s:['ひとのいのちの','をしくもあるかな']},
+ {n:41,k:['こひすてふ','わがなはまだき','たちにけり'],s:['ひとしれずこそ','おもひそめしか']},
+ {n:42,k:['ちぎりきな','かたみにそでを','しぼりつつ'],s:['すゑのまつやま','なみこさじとは']},
+ {n:54,k:['わすれじの','ゆくすゑまでは','かたければ'],s:['けふをかぎりの','いのちともがな']},
+ {n:59,k:['やすらはで','ねなましものを','さよふけて'],s:['かたぶくまでの','つきをみしかな']},
+ {n:68,k:['こころにも','あらでうきよに','ながらへば'],s:['こひしかるべき','よはのつきかな']},
+ {n:71,k:['ゆふされば','かどたのいなば','おとづれて'],s:['あしのまろやに','あきかぜぞふく']},
+ {n:92,k:['わがそでは','しほひにみえぬ','おきのいしの'],s:['ひとこそしらね','かわくまもなし']},
+ {n:93,k:['よのなかは','つねにもがもな','なぎさこぐ'],s:['あまのをぶねの','つなでかなしも']}
+]},
+{id:'daidai',name:'橙',base:'#e07b32',dark:'#8f4415',ink:'#fff3e6',poems:[
+ {n:19,k:['なにはがた','みじかきあしの','ふしのまも'],s:['あはでこのよを','すぐしてよとや']},
+ {n:21,k:['いまこむと','いひしばかりに','ながつきの'],s:['ありあけのつきを','まちいでつるかな']},
+ {n:25,k:['なにしおはば','あふさかやまの','さねかづら'],s:['ひとにしられで','くるよしもがな']},
+ {n:27,k:['みかのはら','わきてながるる','いづみがは'],s:['いつみきとてか','こひしかるらむ']},
+ {n:43,k:['あひみての','のちのこころに','くらぶれば'],s:['むかしはものを','おもはざりけり']},
+ {n:44,k:['あふことの','たえてしなくは','なかなかに'],s:['ひとをもみをも','うらみざらまし']},
+ {n:45,k:['あはれとも','いふべきひとは','おもほえで'],s:['みのいたづらに','なりぬべきかな']},
+ {n:49,k:['みかきもり','ゑじのたくひの','よるはもえ'],s:['ひるはきえつつ','ものをこそおもへ']},
+ {n:52,k:['あけぬれば','くるるものとは','しりながら'],s:['なほうらめしき','あさぼらけかな']},
+ {n:53,k:['なげきつつ','ひとりぬるよの','あくるまは'],s:['いかにひさしき','ものとかはしる']},
+ {n:56,k:['あらざらむ','このよのほかの','おもひでに'],s:['いまひとたびの','あふこともがな']},
+ {n:63,k:['いまはただ','おもひたえなむ','とばかりを'],s:['ひとづてならで','いふよしもがな']},
+ {n:64,k:['あさぼらけ','うぢのかはぎり','たえだえに'],s:['あらはれわたる','せぜのあじろぎ']},
+ {n:67,k:['はるのよの','ゆめばかりなる','たまくらに'],s:['かひなくたたむ','なこそをしけれ']},
+ {n:77,k:['せをはやみ','いはにせかるる','たきがはの'],s:['われてもすゑに','あはむとぞおもふ']},
+ {n:88,k:['なにはえの','あしのかりねの','ひとよゆゑ'],s:['みをつくしてや','こひわたるべき']},
+ {n:90,k:['みせばやな','をじまのあまの','そでだにも'],s:['ぬれにぞぬれし','いろはかはらず']},
+ {n:95,k:['おほけなく','うきよのたみに','おほふかな'],s:['わがたつそまに','すみぞめのそで']},
+ {n:98,k:['かぜそよぐ','ならのをがはの','ゆふぐれは'],s:['みそぎぞなつの','しるしなりける']},
+ {n:99,k:['ひともをし','ひともうらめし','あぢきなく'],s:['よをおもふゆゑに','ものおもふみは']}
+]}
+];
+
+/* あいての強さ */
+const DIFFS=[
+ {id:'low',  name:'下位', sub:'入門',   react:3600, jitter:900, err:0.30, note:'とても ゆっくり。まちがえることも 多い。はじめての 人に。'},
+ {id:'mid',  name:'中位', sub:'ふつう', react:2500, jitter:700, err:0.17, note:'ふつうの 速さ。聞きなれてきたら ここ。'},
+ {id:'high', name:'上位', sub:'速い',   react:1700, jitter:500, err:0.08, note:'速い。まちがいは 少ない。決まり字まで 覚えないと 苦しい。'},
+ {id:'goku', name:'極意', sub:'達人',   react:1000, jitter:350, err:0.025,note:'とても 速い。ほとんど まちがえない。'},
+ {id:'gokuP',name:'極意+',sub:'最上',   react:600,  jitter:200, err:0.004,note:'最速。ほぼ 完璧に 取ってくる。'}
+];
+
+/* ===== 状態 ===== */
+const S={
+  color:COLORS[0], diff:DIFFS[1],
+  my:[], cpu:[], order:[], idx:0,
+  cur:null, resolved:true, phase:'idle',
+  cpuTimer:null, rafId:null, forceTimer:null, memoTimer:null,
+  stat:{myTake:0,cpuTake:0,myFault:0,cpuFault:0,missed:0},
+  opts:{num:false,kami:true,voice:true,slow:false}
+};
+
+/* ===== 要素 ===== */
+const $=id=>document.getElementById(id);
+const setupScr=$('setup'),gameScr=$('game'),resultScr=$('result');
+const colorPick=$('colorpick'),diffPick=$('diffpick'),diffNote=$('diffNote');
+const myField=$('myField'),cpuField=$('cpuField');
+const myCountEl=$('myCount'),cpuCountEl=$('cpuCount'),phaseText=$('phaseText');
+const reader=$('reader'),kamiText=$('kamiText'),subText=$('subText'),barFill=$('barFill'),replayBtn=$('replayBtn');
+const memoOv=$('memoOv'),memoNum=$('memoNum'),memoMsg=$('memoMsg'),memoSkip=$('memoSkip');
+const readyOv=$('readyOv'),toastEl=$('toast'),voiceTest=$('voiceTest');
+
+const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));const t=a[i];a[i]=a[j];a[j]=t;}return a;};
+
+/* ===== 音声（無料・ブラウザ内蔵の読み上げ） ===== */
+let JA=null,voiceReady=false;
+function loadVoices(){
+  if(!('speechSynthesis' in window))return;
+  const vs=speechSynthesis.getVoices()||[];
+  const ja=vs.filter(v=>/^ja/i.test(v.lang||''));
+  if(!ja.length)return;
+  const pref=['Kyoko','Google 日本語','Nanami','Ayumi','Haruka','O-ren','O-Ren','Kyoto','Microsoft'];
+  JA=ja.find(v=>pref.some(p=>(v.name||'').indexOf(p)>=0))||ja[0];
+  voiceReady=true;
+}
+if('speechSynthesis' in window){
+  loadVoices();
+  speechSynthesis.onvoiceschanged=loadVoices;
+}
+function warmup(){
+  if(!('speechSynthesis' in window))return;
+  try{const u=new SpeechSynthesisUtterance(' ');u.volume=0;u.lang='ja-JP';speechSynthesis.speak(u);}catch(e){}
+}
+function speak(text,rate,force){
+  if(!force && !S.opts.voice)return;
+  if(!('speechSynthesis' in window))return;
+  try{speechSynthesis.cancel();}catch(e){}
+  const u=new SpeechSynthesisUtterance(text);
+  u.lang='ja-JP';
+  u.rate=rate||(S.opts.slow?0.72:0.96);
+  u.pitch=1;u.volume=1;
+  if(JA)u.voice=JA;
+  try{speechSynthesis.speak(u);}catch(e){}
+}
+function stopSpeak(){try{speechSynthesis.cancel();}catch(e){}}
+
+/* ===== 設定画面の組み立て ===== */
+function selectColor(c){
+  S.color=c;
+  [...colorPick.children].forEach(b=>b.classList.toggle('sel',b.dataset.id===c.id));
+  document.documentElement.style.setProperty('--c-base',c.base);
+  document.documentElement.style.setProperty('--c-dark',c.dark);
+  document.documentElement.style.setProperty('--c-ink',c.ink);
+}
+function selectDiff(d){
+  S.diff=d;
+  [...diffPick.children].forEach(b=>b.classList.toggle('sel',b.dataset.id===d.id));
+  diffNote.textContent=d.note;
+}
+COLORS.forEach(c=>{
+  const b=document.createElement('button');
+  b.className='cbtn';b.dataset.id=c.id;
+  b.style.background='linear-gradient(170deg,'+c.base+','+c.dark+')';
+  b.innerHTML=c.name+'<span class="cnt">20首</span>';
+  b.addEventListener('click',()=>selectColor(c));
+  colorPick.appendChild(b);
+});
+DIFFS.forEach(d=>{
+  const b=document.createElement('button');
+  b.className='dbtn';b.dataset.id=d.id;
+  b.innerHTML=d.name+'<span>'+d.sub+'</span>';
+  b.addEventListener('click',()=>{selectDiff(d);warmup();});
+  diffPick.appendChild(b);
+});
+selectColor(COLORS[0]);selectDiff(DIFFS[1]);
+diffNote.textContent=DIFFS[1].note;
+
+const chk=(id,key,elId)=>{
+  const box=$(elId),wrap=$(id);
+  box.checked=S.opts[key];
+  wrap.classList.toggle('on',box.checked);
+  box.addEventListener('change',()=>{S.opts[key]=box.checked;wrap.classList.toggle('on',box.checked);});
+};
+chk('chkNum','num','cbNum');
+chk('chkKami','kami','cbKami');
+chk('chkVoice','voice','cbVoice');
+chk('chkSlow','slow','cbSlow');
+
+voiceTest.addEventListener('click',()=>{
+  warmup();speak('あしびきの　やまどりのをの　しだりをの',0.96,true);
+  voiceTest.textContent=JA?('🔊 音声テスト（'+JA.name+'）'):'🔊 音声テスト（日本語音声が 見つかりません／文字表示のみ）';
+});
+
+/* ===== 描画 ===== */
+function cardHTML(p,own){
+  const c=S.color;
+  const cls='card'+(S.opts.num?'':' nonum');
+  return '<button class="'+cls+'" data-num="'+p.n+'" data-own="'+own+'" '+
+    'style="--c-base:'+c.base+';--c-dark:'+c.dark+';--c-ink:'+c.ink+'">'+
+    '<span class="num">'+p.n+'</span>'+
+    '<div class="shimo"><span>'+p.s[0]+'</span><span>'+p.s[1]+'</span></div></button>';
+}
+function render(){
+  myField.innerHTML=S.my.map(p=>cardHTML(p,'me')).join('');
+  cpuField.innerHTML=S.cpu.map(p=>cardHTML(p,'cpu')).join('');
+  myCountEl.textContent=S.my.length;
+  cpuCountEl.textContent=S.cpu.length;
+  myCountEl.classList.toggle('hot',S.phase==='read');
+}
+function toast(msg,ms){
+  toastEl.textContent=msg;toastEl.classList.add('show');
+  clearTimeout(toast._t);
+  toast._t=setTimeout(()=>toastEl.classList.remove('show'),ms||1500);
+}
+
+/* ===== 進行バー ===== */
+function startBar(ms){
+  const t0=performance.now();
+  cancelAnimationFrame(S.rafId);
+  const tick=()=>{
+    const left=1-(performance.now()-t0)/ms;
+    barFill.style.transform='scaleX('+Math.max(0,left)+')';
+    if(left>0&&!S.resolved)S.rafId=requestAnimationFrame(tick);
+  };
+  S.rafId=requestAnimationFrame(tick);
+}
+function stopBar(){cancelAnimationFrame(S.rafId);}
+
+/* ===== ゲーム開始 ===== */
+function start(){
+  warmup();
+  const pool=shuffle(S.color.poems.slice());
+  S.my=pool.slice(0,10);
+  S.cpu=pool.slice(10,20);
+  S.order=shuffle(pool.slice());
+  S.idx=0;S.resolved=true;S.phase='ready';
+  S.stat={myTake:0,cpuTake:0,myFault:0,cpuFault:0,missed:0};
+  clearTimeout(S.cpuTimer);clearTimeout(S.forceTimer);stopBar();stopSpeak();
+  render();
+  setupScr.classList.remove('on');resultScr.classList.remove('on');gameScr.classList.add('on');
+  phaseText.textContent='じゅんび';
+  subText.textContent='';kamiText.textContent='―';
+  reader.classList.remove('done');
+  readyOv.classList.add('on');
+  setTimeout(()=>{readyOv.classList.remove('on');startMemo();},500);
+}
+
+/* ===== 覚える時間（60秒） ===== */
+function startMemo(){
+  S.phase='memo';
+  let t=60;memoNum.textContent=t;
+  memoMsg.textContent='自分の陣（下側）の下の句を よく見て 場所をおぼえよう';
+  memoOv.classList.add('on');
+  clearInterval(S.memoTimer);
+  S.memoTimer=setInterval(()=>{
+    t--;memoNum.textContent=t;
+    if(t<=0){clearInterval(S.memoTimer);begin();}
+  },1000);
+}
+memoSkip.addEventListener('click',()=>{clearInterval(S.memoTimer);begin();});
+
+function begin(){
+  memoOv.classList.remove('on');
+  S.phase='read';
+  render();
+  nextPoem();
+}
+
+/* ===== 1首ずつ ===== */
+function nextPoem(){
+  if(S.my.length===0||S.cpu.length===0)return finish();
+  if(S.idx>=S.order.length)return finish();
+  const p=S.order[S.idx];
+  S.cur=p;S.resolved=false;S.phase='read';
+  phaseText.textContent='第'+(S.idx+1)+'首／'+S.order.length+'首';
+  const k=p.k.join('');
+  kamiText.textContent=k;
+  subText.textContent='';
+  reader.classList.toggle('hide',!S.opts.kami);
+  reader.classList.remove('done');
+  replayBtn.disabled=false;
+  speak(k);
+  const d=S.diff;
+  const ms=Math.max(280,d.react+(Math.random()*2-1)*d.jitter);
+  clearTimeout(S.cpuTimer);
+  S.cpuTimer=setTimeout(cpuAct,ms);
+  startBar(ms);
+  clearTimeout(S.forceTimer);
+  S.forceTimer=setTimeout(forceResolve,12000);
+}
+replayBtn.addEventListener('click',()=>{if(S.cur&&S.phase==='read'&&!S.resolved)speak(S.cur.k.join(''));});
+
+/* ===== あいて（コンピュータ）の動き ===== */
+function cpuAct(){
+  if(S.resolved||S.phase!=='read')return;
+  const p=S.cur;
+  if(Math.random()<S.diff.err){
+    if(penaltyFrom('cpu')){
+      clearTimeout(S.cpuTimer);
+      S.cpuTimer=setTimeout(cpuAct,900);
+      return;
+    }
+  }
+  const own=S.my.some(x=>x.n===p.n)?'me':'cpu';
+  takeCard(p.n,own,'cpu');
+}
+
+/* ===== お手つき（まちがえた人が あいての札を1枚もらう） ===== */
+function penaltyFrom(tapper){
+  const victim=tapper==='me'?'cpu':'me';
+  const vsrc=victim==='me'?S.my:S.cpu;
+  const tsrc=tapper==='me'?S.my:S.cpu;
+  if(!vsrc.length)return false;
+  const i=Math.floor(Math.random()*vsrc.length);
+  const card=vsrc.splice(i,1)[0];
+  tsrc.push(card);
+  if(tapper==='me'){S.stat.myFault++;toast('お手つき！ あいての札を 1枚 もらった');}
+  else{S.stat.cpuFault++;toast('あいてが お手つき！ 自分の札を 1枚 あげた');}
+  render();
+  return true;
+}
+
+/* ===== 札を取る ===== */
+function takeCard(n,owner,taker){
+  S.resolved=true;S.phase='read';
+  clearTimeout(S.cpuTimer);clearTimeout(S.forceTimer);stopBar();replayBtn.disabled=true;
+  const src=owner==='me'?S.my:S.cpu;
+  const i=src.findIndex(x=>x.n===n);
+  if(i<0)return;
+  const card=src[i];
+  const el=document.querySelector('.card[data-num="'+n+'"]');
+  if(el)el.classList.add('hit');
+  if(taker==='me')S.stat.myTake++;else S.stat.cpuTake++;
+  subText.textContent='下の句　'+card.s[0]+'　'+card.s[1];
+  reader.classList.add('done');
+  reader.classList.remove('hide');
+  toast(taker==='me'?'自分が 取りました！':'あいてが 取りました',1100);
+  setTimeout(()=>{
+    src.splice(i,1);
+    render();
+    if(S.my.length===0||S.cpu.length===0){setTimeout(finish,600);return;}
+    S.idx++;
+    setTimeout(nextPoem,850);
+  },620);
+}
+
+/* ===== 誰も取れなかった時 ===== */
+function forceResolve(){
+  if(S.resolved||!S.cur)return;
+  S.resolved=true;S.phase='read';
+  clearTimeout(S.cpuTimer);stopBar();replayBtn.disabled=true;
+  S.stat.missed++;
+  const n=S.cur.n;
+  const owner=S.my.some(x=>x.n===n)?'me':'cpu';
+  const src=owner==='me'?S.my:S.cpu;
+  const i=src.findIndex(x=>x.n===n);
+  const card=src[i];
+  const el=document.querySelector('.card[data-num="'+n+'"]');
+  if(el)el.classList.add('dim');
+  subText.textContent='下の句　'+card.s[0]+'　'+card.s[1];
+  reader.classList.add('done');
+  toast('時間切れ… この札は 場から なくなりました',1600);
+  setTimeout(()=>{
+    src.splice(i,1);render();
+    if(S.my.length===0||S.cpu.length===0){setTimeout(finish,600);return;}
+    S.idx++;
+    setTimeout(nextPoem,700);
+  },750);
+}
+
+/* ===== タップ ===== */
+function onTap(e){
+  const el=e.target.closest?e.target.closest('.card'):null;
+  if(!el)return;
+  if(S.phase!=='read'||S.resolved||!S.cur)return;
+  const n=parseInt(el.dataset.num,10);
+  const owner=el.dataset.own;
+  if(n===S.cur.n){takeCard(n,owner,'me');return;}
+  el.classList.add('bad');
+  setTimeout(()=>el.classList.remove('bad'),450);
+  penaltyFrom('me');
+}
+myField.addEventListener('click',onTap);
+cpuField.addEventListener('click',onTap);
+
+/* ===== 結果 ===== */
+function finish(){
+  S.phase='over';S.resolved=true;
+  clearTimeout(S.cpuTimer);clearTimeout(S.forceTimer);stopBar();stopSpeak();
+  const m=S.my.length,c=S.cpu.length;
+  let v,why;
+  if(m===0&&c===0){v='引き分け';why='同時に 0枚になりました';}
+  else if(m===0){v='勝ち';why='先に 自分の札が 0枚になりました';}
+  else if(c===0){v='負け';why='あいての札が 先に 0枚になりました';}
+  else{v=m<c?'勝ち':(m>c?'負け':'引き分け');why='20首 読み終えました。のこりの枚数で きまりました';}
+  $('verdict').textContent=v;
+  $('whyText').textContent=why+'（'+S.color.name+'札・あいて '+S.diff.name+'）';
+  $('rMy').textContent=m;$('rCpu').textContent=c;
+  $('statText').innerHTML=
+    '自分が取った札　'+S.stat.myTake+'枚<br>'+
+    'あいてが取った札　'+S.stat.cpuTake+'枚<br>'+
+    '自分のお手つき　'+S.stat.myFault+'回<br>'+
+    'あいてのお手つき　'+S.stat.cpuFault+'回'+
+    (S.stat.missed?('<br>どちらも取れなかった札　'+S.stat.missed+'枚'):'');
+  gameScr.classList.remove('on');resultScr.classList.add('on');
+}
+
+/* ===== ボタン ===== */
+$('startBtn').addEventListener('click',start);
+$('againBtn').addEventListener('click',start);
+$('backBtn').addEventListener('click',()=>{
+  resultScr.classList.remove('on');gameScr.classList.remove('on');setupScr.classList.add('on');
+  stopSpeak();
+});
+document.addEventListener('gesturestart',e=>e.preventDefault());
+</script>
+</body>
+</html>
