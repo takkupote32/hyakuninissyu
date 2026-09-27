@@ -31,7 +31,7 @@ body{
 .brand h1{margin:0;font-size:27px;letter-spacing:.20em;font-weight:700;
   background:linear-gradient(180deg,#f8ecc9 0%,#d9b46a 55%,#a8823f 100%);
   -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;}
-.brand p{margin:6px 0 0;font-size:11.5px;color:var(--dim);letter-spacing:.14em;}
+.brand p{margin:6px 0 0;font-size:12px;color:var(--dim);letter-spacing:.14em;}
 .sec{margin-top:6px;}
 .sec>h2{font-size:12px;color:var(--gold);letter-spacing:.16em;margin:12px 0 7px;font-weight:600;}
 .sec>h2 small{color:var(--dim);letter-spacing:0;font-weight:400;margin-left:6px;font-size:10.5px;}
@@ -94,9 +94,11 @@ body{
 .hud b{font-size:15px;color:var(--ink);font-variant-numeric:tabular-nums;}
 .hud b.hot{color:#ff9f6b;}
 .hud .mid{
-  font-size:10.5px;color:var(--gold);letter-spacing:.1em;text-align:center;
-  border:1px solid rgba(217,180,106,.35);border-radius:20px;padding:3px 12px;white-space:nowrap;
+  font-size:10.5px;color:var(--gold);letter-spacing:.08em;text-align:center;
+  border:1px solid rgba(217,180,106,.35);border-radius:20px;padding:3px 10px;white-space:nowrap;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
 }
+.hud .pot-info{font-size:9px;color:#ff9f6b;margin-top:1px;}
 .field{display:grid;grid-template-columns:repeat(5,1fr);grid-template-rows:repeat(2,1fr);
   gap:4px;flex:0 0 auto;position:relative;}
 .field.cpu{transform:rotate(180deg);}
@@ -133,7 +135,7 @@ body{
 }
 .reader .lbl{font-size:9px;color:var(--dim);letter-spacing:.32em;}
 .reader .kami{font-size:15px;font-weight:600;letter-spacing:.06em;line-height:1.5;word-break:break-all;}
-.reader .sub{font-size:10.5px;color:#8fa8c4;letter-spacing:.05em;min-height:14px;line-height:1.35;}
+.reader .sub{font-size:10.5px;color:#8fa8c4;letter-spacing:.05em;min-height:14px;line-height:1.35;transition:opacity .3s;}
 .reader.hide .kami{filter:blur(7px);opacity:.55;}
 .reader.done .kami{color:var(--gold);}
 .reader .rep{position:absolute;right:6px;top:5px;border:1px solid var(--line);background:rgba(255,255,255,.07);
@@ -146,8 +148,8 @@ body{
 .toast{
   position:fixed;left:50%;top:38%;transform:translate(-50%,-50%) scale(.85);
   background:rgba(8,12,20,.93);border:1px solid var(--line);color:#fff;padding:13px 24px;border-radius:12px;
-  font-size:14px;font-weight:700;letter-spacing:.1em;opacity:0;pointer-events:none;transition:all .2s;z-index:60;
-  white-space:nowrap;backdrop-filter:blur(6px);
+  font-size:13.5px;font-weight:700;letter-spacing:.08em;opacity:0;pointer-events:none;transition:all .2s;z-index:60;
+  white-space:nowrap;backdrop-filter:blur(6px);text-align:center;line-height:1.4;
 }
 .toast.show{opacity:1;transform:translate(-50%,-50%) scale(1);}
 
@@ -155,7 +157,7 @@ body{
 .ov{position:fixed;inset:0;background:rgba(5,8,13,.93);display:none;
   flex-direction:column;align-items:center;justify-content:center;gap:16px;z-index:80;padding:24px;text-align:center;}
 .ov.on{display:flex;}
-.ov h3{margin:0;font-size:13px;letter-spacing:.3em;color:var(--gold);}
+.ov h3{margin:0;font-size:14px;letter-spacing:.3em;color:var(--gold);}
 .ov .big{font-size:74px;font-weight:700;font-variant-numeric:tabular-nums;color:#f8ecc9;line-height:1;}
 .ov .small{font-size:12px;color:var(--dim);line-height:1.9;}
 .ov .btn{border:0;border-radius:11px;padding:14px 30px;font-family:inherit;font-size:14px;font-weight:700;
@@ -164,8 +166,6 @@ body{
 .spin{width:46px;height:46px;border-radius:50%;border:3px solid rgba(217,180,106,.22);
   border-top-color:var(--gold);animation:sp 1s linear infinite;}
 @keyframes sp{to{transform:rotate(360deg)}}
-.pulse{animation:pl 1.4s ease-in-out infinite;}
-@keyframes pl{0%,100%{opacity:1}50%{opacity:.45}}
 
 /* ===== 結果 ===== */
 #result{padding:22px 20px;align-items:center;justify-content:center;gap:14px;text-align:center;}
@@ -191,50 +191,57 @@ body{
 <section id="setup" class="screen on">
   <div class="brand">
     <h1>五色百人一首</h1>
-    <p>からた たいせん</p>
+    <p>かるた対戦</p>
   </div>
 
   <div class="sec">
-    <h2>色をえらぶ <small>20まい ずつ</small></h2>
+    <h2>色を選ぶ <small>20枚 ずつ</small></h2>
     <div class="colors" id="colorpick"></div>
   </div>
 
   <div class="sec">
-    <h2>あいての強さ</h2>
+    <h2>相手の強さ</h2>
     <div class="diffs" id="diffpick"></div>
     <div class="note" id="diffNote"></div>
   </div>
 
   <div class="sec">
-    <h2>せってい</h2>
+    <h2>設定</h2>
     <div class="opts">
       <label class="chk" id="chkNum"><input type="checkbox" id="cbNum">札に番号を表示</label>
       <label class="chk on" id="chkKami"><input type="checkbox" id="cbKami" checked>上の句を表示</label>
       <label class="chk on" id="chkVoice"><input type="checkbox" id="cbVoice" checked>音声で読み上げ</label>
-      <label class="chk" id="chkSlow"><input type="checkbox" id="cbSlow">ゆっくり読む</label>
+      <label class="chk" id="chkSlow"><input type="checkbox" id="cbSlow">ゆっくり詠む</label>
     </div>
   </div>
 
   <div class="rules">
-    <b>あそびかた</b><br>
-    ・20まいを 10まいずつ 分ける（自分＝下、あいて＝上）。<br>
-    ・自分の札は <b>横5列×縦2段</b>、自分に向けて ならべる。<br>
-    ・さいしょに <b>60秒</b> で 場所をおぼえる。<br>
-    ・読み手が <b>上の句</b> を読み、その下の句の札を タップして取る。<br>
-    ・先に <b>自分の札が 0まい</b> になった方が 勝ち。20首読み終えたら <b>残りが少ない方</b> の勝ち。<br>
-    ・まちがえた札を タップすると <b>お手つき</b>。あいての札を 1まい もらってしまう。
+    <b>遊び方・対戦ルール</b><br>
+    ・20枚の札を10枚ずつ分け（自分＝下段、相手＝上段）、陣に並べます。<br>
+    ・最初に <b>60秒間</b> で札の位置を覚えます。<br>
+    ・全20枚のうち <b>17枚（17首）</b> を読み上げ、<b>取った札の枚数が多い方</b> の勝ちとなります。<br>
+    ・17首終了時に同点の場合は <b>サドンデス（1首勝負）</b> で決着をつけます。<br>
+    ・札が取られても、読み手は <b>下の句まで最後まで読み上げます</b>。読み終わりから <b>2秒後</b> に次の札へ自動進行します。<br>
+    ・<b>お手つきルール</b>：<br>
+     ① 獲得札がある場合：自分の獲得札から1枚を <b>「場」</b> に出します。<br>
+       次に札を取った人が、場に出ている札から <b>1枚追加で獲得</b> できます。<br>
+     ② 獲得札が0枚の場合：<b>次の1首が1回休み</b> となります。<br>
+     ③ 最後の札でお手つきした場合：獲得札から1枚を場に出して終了します（場の札は双方の得点に含まれません）。
   </div>
 
   <button id="startBtn">対 戦 ス タ ー ト</button>
-  <button id="voiceTest" class="ghost">🔊 読み上げの 音声テスト</button>
+  <button id="voiceTest" class="ghost">🔊 読み上げの音声テスト</button>
 </section>
 
 <!-- ========== 対戦 ========== -->
 <section id="game" class="screen">
   <div class="hud">
-    <div class="side"><span>あいて</span> <b id="cpuCount">10</b><span>枚</span></div>
-    <div class="mid" id="phaseText">じゅんび</div>
-    <div class="side r"><span>自分</span> <b id="myCount" class="hot">10</b><span>枚</span></div>
+    <div class="side"><span>相手</span> <b id="cpuCount">0</b><span>枚</span></div>
+    <div class="mid">
+      <span id="phaseText">準備</span>
+      <span id="potText" class="pot-info"></span>
+    </div>
+    <div class="side r"><span>自分</span> <b id="myCount" class="hot">0</b><span>枚</span></div>
   </div>
 
   <div class="field cpu" id="cpuField"></div>
@@ -255,21 +262,21 @@ body{
   <div class="verdict" id="verdict">―</div>
   <div class="why" id="whyText"></div>
   <div class="scorebox">
-    <div><div class="n" id="rMy">0</div><div class="t">自分の のこり</div></div>
+    <div><div class="n" id="rMy">0</div><div class="t">自分の獲得数</div></div>
     <div class="vs">VS</div>
-    <div><div class="n" id="rCpu">0</div><div class="t">あいての のこり</div></div>
+    <div><div class="n" id="rCpu">0</div><div class="t">相手の獲得数</div></div>
   </div>
   <div class="stat" id="statText"></div>
   <button class="btn" id="againBtn" style="border:0;border-radius:11px;padding:14px 30px;font-family:inherit;font-size:14px;font-weight:700;letter-spacing:.14em;color:#251c07;background:linear-gradient(180deg,#f2dda6,#d9b46a 60%,#bb9247);cursor:pointer;">もう一度 対戦</button>
-  <button class="ghost" id="backBtn" style="width:auto;padding:11px 26px;">設定にもどる</button>
+  <button class="ghost" id="backBtn" style="width:auto;padding:11px 26px;">設定に戻る</button>
 </section>
 
 <!-- オーバーレイ -->
 <div class="ov" id="memoOv">
-  <h3>場 所 を お ぼ え る</h3>
+  <h3>場 所 を 覚 え る</h3>
   <div class="big" id="memoNum">60</div>
-  <div class="small" id="memoMsg">自分の陣の 下の句を よく見て おぼえよう</div>
-  <button class="btn" id="memoSkip">おぼえた！ はじめる</button>
+  <div class="small" id="memoMsg">自分の陣の下の句をよく見て場所を覚えよう</div>
+  <button class="btn" id="memoSkip">覚えた！ 始める</button>
 </div>
 
 <div class="ov" id="readyOv">
@@ -282,8 +289,7 @@ body{
 <script>
 "use strict";
 
-/* ====== 百人一首データ（五色分類・上の句／下の句・すべてひらがな） ====== */
-/* ===== 五色百人一首データ（すべてひらがな・上の句＝5/7/5、下の句＝7/7） ===== */
+/* ====== 百人一首データ ====== */
 const COLORS=[
 {id:'ao',name:'青',base:'#2f6fb3',dark:'#12395e',ink:'#eaf4ff',poems:[
  {n:3,k:['あしびきの','やまどりのをの','しだりをの'],s:['ながながしよを','ひとりかもねむ']},
@@ -397,21 +403,28 @@ const COLORS=[
 ]}
 ];
 
-/* あいての強さ */
+/* 相手の強さ */
 const DIFFS=[
- {id:'low',  name:'下位', sub:'入門',   react:3600, jitter:900, err:0.30, note:'とても ゆっくり。まちがえることも 多い。はじめての 人に。'},
- {id:'mid',  name:'中位', sub:'ふつう', react:2500, jitter:700, err:0.17, note:'ふつうの 速さ。聞きなれてきたら ここ。'},
- {id:'high', name:'上位', sub:'速い',   react:1700, jitter:500, err:0.08, note:'速い。まちがいは 少ない。決まり字まで 覚えないと 苦しい。'},
- {id:'goku', name:'極意', sub:'達人',   react:1000, jitter:350, err:0.025,note:'とても 速い。ほとんど まちがえない。'},
- {id:'gokuP',name:'極意+',sub:'最上',   react:600,  jitter:200, err:0.004,note:'最速。ほぼ 完璧に 取ってくる。'}
+ {id:'low',  name:'下位', sub:'入門',   react:3800, jitter:900, err:0.30, note:'とてもゆっくり。誤りも多い。はじめての方に。'},
+ {id:'mid',  name:'中位', sub:'ふつう', react:2600, jitter:700, err:0.17, note:'標準的な速さ。聞き慣れてきたらこちら。'},
+ {id:'high', name:'上位', sub:'速い',   react:1800, jitter:500, err:0.08, note:'速い。誤りは少ない。決まり字の暗記が必要。'},
+ {id:'goku', name:'極意', sub:'達人',   react:1100, jitter:350, err:0.025,note:'非常に速い。ほとんど誤らない。'},
+ {id:'gokuP',name:'極意+',sub:'最上',   react:650,  jitter:200, err:0.004,note:'最速。ほぼ正確に取ってきます。'}
 ];
 
-/* ===== 状態 ===== */
+/* ===== ゲーム状態 ===== */
 const S={
   color:COLORS[0], diff:DIFFS[1],
   my:[], cpu:[], order:[], idx:0,
   cur:null, resolved:true, phase:'idle',
-  cpuTimer:null, rafId:null, forceTimer:null, memoTimer:null,
+  pot:0,              // 場の溜まり札（お手つきで出された札）
+  myTakeCount:0,      // 自分の獲得数
+  cpuTakeCount:0,     // 相手の獲得数
+  myRest:false,       // 自分の1回休み
+  cpuRest:false,      // 相手の1回休み
+  isSuddenDeath:false,// サドンデスフラグ
+  speechEnded:false,  // 朗詠が終了したか
+  cpuTimer:null, rafId:null, forceTimer:null, memoTimer:null, waitTimer:null,
   stat:{myTake:0,cpuTake:0,myFault:0,cpuFault:0,missed:0},
   opts:{num:false,kami:true,voice:true,slow:false}
 };
@@ -421,14 +434,14 @@ const $=id=>document.getElementById(id);
 const setupScr=$('setup'),gameScr=$('game'),resultScr=$('result');
 const colorPick=$('colorpick'),diffPick=$('diffpick'),diffNote=$('diffNote');
 const myField=$('myField'),cpuField=$('cpuField');
-const myCountEl=$('myCount'),cpuCountEl=$('cpuCount'),phaseText=$('phaseText');
+const myCountEl=$('myCount'),cpuCountEl=$('cpuCount'),phaseText=$('phaseText'),potText=$('potText');
 const reader=$('reader'),kamiText=$('kamiText'),subText=$('subText'),barFill=$('barFill'),replayBtn=$('replayBtn');
 const memoOv=$('memoOv'),memoNum=$('memoNum'),memoMsg=$('memoMsg'),memoSkip=$('memoSkip');
 const readyOv=$('readyOv'),toastEl=$('toast'),voiceTest=$('voiceTest');
 
 const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));const t=a[i];a[i]=a[j];a[j]=t;}return a;};
 
-/* ===== 音声（無料・ブラウザ内蔵の読み上げ） ===== */
+/* ===== 音声（Web Speech API） ===== */
 let JA=null,voiceReady=false;
 function loadVoices(){
   if(!('speechSynthesis' in window))return;
@@ -447,20 +460,59 @@ function warmup(){
   if(!('speechSynthesis' in window))return;
   try{const u=new SpeechSynthesisUtterance(' ');u.volume=0;u.lang='ja-JP';speechSynthesis.speak(u);}catch(e){}
 }
-function speak(text,rate,force){
-  if(!force && !S.opts.voice)return;
-  if(!('speechSynthesis' in window))return;
-  try{speechSynthesis.cancel();}catch(e){}
-  const u=new SpeechSynthesisUtterance(text);
-  u.lang='ja-JP';
-  u.rate=rate||(S.opts.slow?0.72:0.96);
-  u.pitch=1;u.volume=1;
-  if(JA)u.voice=JA;
-  try{speechSynthesis.speak(u);}catch(e){}
+function stopSpeak(){
+  if('speechSynthesis' in window){
+    try{speechSynthesis.cancel();}catch(e){}
+  }
 }
-function stopSpeak(){try{speechSynthesis.cancel();}catch(e){}}
 
-/* ===== 設定画面の組み立て ===== */
+/* 百人一首風の朗詠音声生成 */
+function speakPoem(poem, onEndCallback){
+  stopSpeak();
+  if(!S.opts.voice || !('speechSynthesis' in window)){
+    S.speechEnded = true;
+    if(onEndCallback) onEndCallback();
+    return;
+  }
+
+  S.speechEnded = false;
+
+  // 上の句（溜めを入れて朗詠風に）
+  const kText = poem.k.join('…… ') + '……';
+  const uKami = new SpeechSynthesisUtterance(kText);
+  uKami.lang = 'ja-JP';
+  uKami.rate = S.opts.slow ? 0.65 : 0.80;
+  uKami.pitch = 0.95;
+  uKami.volume = 1;
+  if(JA) uKami.voice = JA;
+
+  // 下の句
+  const sText = '…… ' + poem.s.join('…… ') + '。';
+  const uShimo = new SpeechSynthesisUtterance(sText);
+  uShimo.lang = 'ja-JP';
+  uShimo.rate = S.opts.slow ? 0.65 : 0.80;
+  uShimo.pitch = 0.95;
+  uShimo.volume = 1;
+  if(JA) uShimo.voice = JA;
+
+  uKami.onend = ()=>{
+    // 上の句終了後、下の句を表示して少し間を置いて朗詠
+    subText.textContent = '下の句 ' + poem.s[0] + ' ' + poem.s[1];
+    subText.style.opacity = '1';
+    setTimeout(()=>{
+      try { speechSynthesis.speak(uShimo); } catch(e){}
+    }, 600);
+  };
+
+  uShimo.onend = ()=>{
+    S.speechEnded = true;
+    if(onEndCallback) onEndCallback();
+  };
+
+  try { speechSynthesis.speak(uKami); } catch(e){}
+}
+
+/* ===== 設定画面 ===== */
 function selectColor(c){
   S.color=c;
   [...colorPick.children].forEach(b=>b.classList.toggle('sel',b.dataset.id===c.id));
@@ -503,8 +555,10 @@ chk('chkVoice','voice','cbVoice');
 chk('chkSlow','slow','cbSlow');
 
 voiceTest.addEventListener('click',()=>{
-  warmup();speak('あしびきの　やまどりのをの　しだりをの',0.96,true);
-  voiceTest.textContent=JA?('🔊 音声テスト（'+JA.name+'）'):'🔊 音声テスト（日本語音声が 見つかりません／文字表示のみ）';
+  warmup();
+  const sample = {k:['あしびきの','やまどりのをの','しだりをの'],s:['ながながしよを','ひとりかもねむ']};
+  speakPoem(sample, null);
+  voiceTest.textContent=JA?('🔊 音声テスト（'+JA.name+'）'):'🔊 音声テスト（日本語音声未検出／文字表示のみ）';
 });
 
 /* ===== 描画 ===== */
@@ -519,14 +573,15 @@ function cardHTML(p,own){
 function render(){
   myField.innerHTML=S.my.map(p=>cardHTML(p,'me')).join('');
   cpuField.innerHTML=S.cpu.map(p=>cardHTML(p,'cpu')).join('');
-  myCountEl.textContent=S.my.length;
-  cpuCountEl.textContent=S.cpu.length;
+  myCountEl.textContent=S.myTakeCount;
+  cpuCountEl.textContent=S.cpuTakeCount;
+  potText.textContent = S.pot > 0 ? ('（場の払い札: ' + S.pot + '枚）') : '';
   myCountEl.classList.toggle('hot',S.phase==='read');
 }
 function toast(msg,ms){
-  toastEl.textContent=msg;toastEl.classList.add('show');
+  toastEl.innerHTML=msg;toastEl.classList.add('show');
   clearTimeout(toast._t);
-  toast._t=setTimeout(()=>toastEl.classList.remove('show'),ms||1500);
+  toast._t=setTimeout(()=>toastEl.classList.remove('show'),ms||1600);
 }
 
 /* ===== 進行バー ===== */
@@ -550,22 +605,29 @@ function start(){
   S.cpu=pool.slice(10,20);
   S.order=shuffle(pool.slice());
   S.idx=0;S.resolved=true;S.phase='ready';
+  S.pot=0;
+  S.myTakeCount=0;
+  S.cpuTakeCount=0;
+  S.myRest=false;
+  S.cpuRest=false;
+  S.isSuddenDeath=false;
   S.stat={myTake:0,cpuTake:0,myFault:0,cpuFault:0,missed:0};
-  clearTimeout(S.cpuTimer);clearTimeout(S.forceTimer);stopBar();stopSpeak();
+  clearTimeout(S.cpuTimer);clearTimeout(S.forceTimer);clearTimeout(S.waitTimer);
+  stopBar();stopSpeak();
   render();
   setupScr.classList.remove('on');resultScr.classList.remove('on');gameScr.classList.add('on');
-  phaseText.textContent='じゅんび';
+  phaseText.textContent='準備';
   subText.textContent='';kamiText.textContent='―';
   reader.classList.remove('done');
   readyOv.classList.add('on');
   setTimeout(()=>{readyOv.classList.remove('on');startMemo();},500);
 }
 
-/* ===== 覚える時間（60秒） ===== */
+/* ===== 暗記時間（60秒） ===== */
 function startMemo(){
   S.phase='memo';
   let t=60;memoNum.textContent=t;
-  memoMsg.textContent='自分の陣（下側）の下の句を よく見て 場所をおぼえよう';
+  memoMsg.textContent='自分の陣（下段）の下の句をよく見て場所を覚えよう';
   memoOv.classList.add('on');
   clearInterval(S.memoTimer);
   S.memoTimer=setInterval(()=>{
@@ -582,90 +644,157 @@ function begin(){
   nextPoem();
 }
 
-/* ===== 1首ずつ ===== */
+/* ===== 1首ずつ進行 ===== */
 function nextPoem(){
-  if(S.my.length===0||S.cpu.length===0)return finish();
-  if(S.idx>=S.order.length)return finish();
-  const p=S.order[S.idx];
-  S.cur=p;S.resolved=false;S.phase='read';
-  phaseText.textContent='第'+(S.idx+1)+'首／'+S.order.length+'首';
-  const k=p.k.join('');
+  S.cur=S.order[S.idx];
+  S.resolved=false;S.phase='read';
+  
+  if(S.isSuddenDeath){
+    phaseText.textContent='サドンデス';
+  }else{
+    phaseText.textContent='第'+(S.idx+1)+'首／17首';
+  }
+
+  const k=S.cur.k.join('');
   kamiText.textContent=k;
   subText.textContent='';
+  subText.style.opacity='0';
   reader.classList.toggle('hide',!S.opts.kami);
   reader.classList.remove('done');
   replayBtn.disabled=false;
-  speak(k);
-  const d=S.diff;
-  const ms=Math.max(280,d.react+(Math.random()*2-1)*d.jitter);
-  clearTimeout(S.cpuTimer);
-  S.cpuTimer=setTimeout(cpuAct,ms);
-  startBar(ms);
-  clearTimeout(S.forceTimer);
-  S.forceTimer=setTimeout(forceResolve,12000);
-}
-replayBtn.addEventListener('click',()=>{if(S.cur&&S.phase==='read'&&!S.resolved)speak(S.cur.k.join(''));});
 
-/* ===== あいて（コンピュータ）の動き ===== */
-function cpuAct(){
-  if(S.resolved||S.phase!=='read')return;
-  const p=S.cur;
-  if(Math.random()<S.diff.err){
-    if(penaltyFrom('cpu')){
-      clearTimeout(S.cpuTimer);
-      S.cpuTimer=setTimeout(cpuAct,900);
-      return;
-    }
+  // 1回休みの表示と適用
+  let restMsg = '';
+  if(S.myRest && S.cpuRest){
+    restMsg = '【双方 1回休み】';
+  }else if(S.myRest){
+    restMsg = '【自分 1回休み】';
+  }else if(S.cpuRest){
+    restMsg = '【相手 1回休み】';
   }
+  if(restMsg) toast(restMsg, 1400);
+
+  // 朗詠の開始
+  speakPoem(S.cur, ()=>{
+    checkAutoAdvance();
+  });
+
+  // CPU思考処理
+  if(!S.cpuRest){
+    const d=S.diff;
+    const ms=Math.max(300, d.react+(Math.random()*2-1)*d.jitter);
+    clearTimeout(S.cpuTimer);
+    S.cpuTimer=setTimeout(cpuAct,ms);
+    startBar(ms);
+  }else{
+    startBar(8000);
+  }
+
+  // 強制タイムアウト（15秒応答なし時）
+  clearTimeout(S.forceTimer);
+  S.forceTimer=setTimeout(forceResolve, 15000);
+}
+
+replayBtn.addEventListener('click',()=>{
+  if(S.cur&&S.phase==='read'&&!S.resolved){
+    speakPoem(S.cur, ()=>{ checkAutoAdvance(); });
+  }
+});
+
+/* ===== 相手（コンピュータ）の動き ===== */
+function cpuAct(){
+  if(S.resolved||S.phase!=='read'||S.cpuRest)return;
+  const p=S.cur;
+
+  // お手つき判定
+  if(Math.random()<S.diff.err){
+    penaltyFrom('cpu');
+    clearTimeout(S.cpuTimer);
+    S.cpuTimer=setTimeout(cpuAct,1200);
+    return;
+  }
+
   const own=S.my.some(x=>x.n===p.n)?'me':'cpu';
   takeCard(p.n,own,'cpu');
 }
 
-/* ===== お手つき（まちがえた人が あいての札を1枚もらう） ===== */
+/* ===== お手つき処理 ===== */
 function penaltyFrom(tapper){
-  const victim=tapper==='me'?'cpu':'me';
-  const vsrc=victim==='me'?S.my:S.cpu;
-  const tsrc=tapper==='me'?S.my:S.cpu;
-  if(!vsrc.length)return false;
-  const i=Math.floor(Math.random()*vsrc.length);
-  const card=vsrc.splice(i,1)[0];
-  tsrc.push(card);
-  if(tapper==='me'){S.stat.myFault++;toast('お手つき！ あいての札を 1枚 もらった');}
-  else{S.stat.cpuFault++;toast('あいてが お手つき！ 自分の札を 1枚 あげた');}
+  const isMe = (tapper === 'me');
+  if(isMe) S.stat.myFault++; else S.stat.cpuFault++;
+
+  const takeCnt = isMe ? S.myTakeCount : S.cpuTakeCount;
+
+  if(takeCnt > 0){
+    // 獲得札から1枚を場に出す
+    if(isMe) S.myTakeCount--; else S.cpuTakeCount--;
+    S.pot++;
+    toast(isMe ? 'お手つき！獲得札から1枚を場に出しました。' : '相手がお手つき！獲得札から1枚が場に出されました。');
+  }else{
+    // 獲得札がない場合は1回休み
+    if(isMe) S.myRest = true; else S.cpuRest = true;
+    toast(isMe ? 'お手つき！獲得札がないため、次の1首は1回休みです。' : '相手がお手つき！獲得札がないため、次の1首は1回休みです。');
+  }
   render();
-  return true;
 }
 
 /* ===== 札を取る ===== */
 function takeCard(n,owner,taker){
+  if(S.resolved) return;
   S.resolved=true;S.phase='read';
   clearTimeout(S.cpuTimer);clearTimeout(S.forceTimer);stopBar();replayBtn.disabled=true;
-  const src=owner==='me'?S.my:S.cpu;
-  const i=src.findIndex(x=>x.n===n);
+  
+  const isMe = (taker === 'me');
+  const src = owner==='me'?S.my:S.cpu;
+  const i = src.findIndex(x=>x.n===n);
   if(i<0)return;
+
   const card=src[i];
   const el=document.querySelector('.card[data-num="'+n+'"]');
   if(el)el.classList.add('hit');
-  if(taker==='me')S.stat.myTake++;else S.stat.cpuTake++;
-  subText.textContent='下の句　'+card.s[0]+'　'+card.s[1];
+
+  // 1回休みの解除（1首終了時）
+  if(isMe) S.myRest = false; else S.cpuRest = false;
+
+  let gained = 1;
+  let bonusTxt = '';
+  if(S.pot > 0){
+    gained += 1;
+    S.pot -= 1;
+    bonusTxt = '<br><small>（場に出ていた札も1枚獲得！）</small>';
+  }
+
+  if(isMe){
+    S.myTakeCount += gained;
+    S.stat.myTake++;
+  }else{
+    S.cpuTakeCount += gained;
+    S.stat.cpuTake++;
+  }
+
+  subText.textContent='下の句 '+card.s[0]+' '+card.s[1];
+  subText.style.opacity = '1';
   reader.classList.add('done');
   reader.classList.remove('hide');
-  toast(taker==='me'?'自分が 取りました！':'あいてが 取りました',1100);
+
+  toast((isMe ? '自分が取りました！' : '相手が取りました！') + bonusTxt, 1600);
+
   setTimeout(()=>{
     src.splice(i,1);
     render();
-    if(S.my.length===0||S.cpu.length===0){setTimeout(finish,600);return;}
-    S.idx++;
-    setTimeout(nextPoem,850);
-  },620);
+  },500);
+
+  // 朗詠が完了していれば2秒後に自動進行
+  checkAutoAdvance();
 }
 
-/* ===== 誰も取れなかった時 ===== */
+/* ===== 誰も取れなかった場合 ===== */
 function forceResolve(){
   if(S.resolved||!S.cur)return;
   S.resolved=true;S.phase='read';
   clearTimeout(S.cpuTimer);stopBar();replayBtn.disabled=true;
   S.stat.missed++;
+  
   const n=S.cur.n;
   const owner=S.my.some(x=>x.n===n)?'me':'cpu';
   const src=owner==='me'?S.my:S.cpu;
@@ -673,25 +802,92 @@ function forceResolve(){
   const card=src[i];
   const el=document.querySelector('.card[data-num="'+n+'"]');
   if(el)el.classList.add('dim');
-  subText.textContent='下の句　'+card.s[0]+'　'+card.s[1];
+
+  subText.textContent='下の句 '+card.s[0]+' '+card.s[1];
+  subText.style.opacity = '1';
   reader.classList.add('done');
-  toast('時間切れ… この札は 場から なくなりました',1600);
+  toast('時間切れ… この札は場に残ります',1600);
+
   setTimeout(()=>{
     src.splice(i,1);render();
-    if(S.my.length===0||S.cpu.length===0){setTimeout(finish,600);return;}
-    S.idx++;
-    setTimeout(nextPoem,700);
-  },750);
+  },600);
+
+  checkAutoAdvance();
 }
 
-/* ===== タップ ===== */
+/* ===== 読み上げ完了チェックと2秒後の自動進行 ===== */
+function checkAutoAdvance(){
+  if(!S.resolved) return; // まだ札が解決していない場合は待ち
+  if(!S.speechEnded) return; // まだ読み上げが終わっていない場合は待ち
+
+  clearTimeout(S.waitTimer);
+  S.waitTimer = setTimeout(()=>{
+    advanceNext();
+  }, 2000); // 読み終わって2秒後に自動進行
+}
+
+/* ===== 次の首または終了の判定 ===== */
+function advanceNext(){
+  // 1回休みのフラグクリア
+  S.myRest = false;
+  S.cpuRest = false;
+
+  // 17首終了時点の判定
+  if(!S.isSuddenDeath && S.idx >= 16){ // 第17首（インデックス16）まで完了
+    if(S.myTakeCount !== S.cpuTakeCount){
+      return finish();
+    }else{
+      // 同点のためサドンデス移行
+      S.isSuddenDeath = true;
+      S.idx++;
+      if(S.idx >= S.order.length) return finish();
+      toast('同点のため、サドンデス（1首勝負）に入ります！', 2200);
+      setTimeout(nextPoem, 1200);
+      return;
+    }
+  }else if(S.isSuddenDeath){
+    // サドンデス中
+    if(S.myTakeCount !== S.cpuTakeCount){
+      return finish();
+    }else{
+      // まだ決着がつかない場合は次の札へ
+      S.idx++;
+      if(S.idx >= S.order.length) return finish();
+      nextPoem();
+      return;
+    }
+  }
+
+  // 通常の次の首へ
+  S.idx++;
+  if(S.idx >= S.order.length){
+    finish();
+  }else{
+    nextPoem();
+  }
+}
+
+/* ===== タップ処理 ===== */
 function onTap(e){
   const el=e.target.closest?e.target.closest('.card'):null;
   if(!el)return;
   if(S.phase!=='read'||S.resolved||!S.cur)return;
+
+  // 自分1回休み中の場合
+  if(S.myRest){
+    toast('【1回休み中】この首は札を取れません', 1200);
+    return;
+  }
+
   const n=parseInt(el.dataset.num,10);
   const owner=el.dataset.own;
-  if(n===S.cur.n){takeCard(n,owner,'me');return;}
+
+  if(n===S.cur.n){
+    takeCard(n,owner,'me');
+    return;
+  }
+
+  // お手つき
   el.classList.add('bad');
   setTimeout(()=>el.classList.remove('bad'),450);
   penaltyFrom('me');
@@ -699,29 +895,43 @@ function onTap(e){
 myField.addEventListener('click',onTap);
 cpuField.addEventListener('click',onTap);
 
-/* ===== 結果 ===== */
+/* ===== 結果表示 ===== */
 function finish(){
   S.phase='over';S.resolved=true;
-  clearTimeout(S.cpuTimer);clearTimeout(S.forceTimer);stopBar();stopSpeak();
-  const m=S.my.length,c=S.cpu.length;
+  clearTimeout(S.cpuTimer);clearTimeout(S.forceTimer);clearTimeout(S.waitTimer);
+  stopBar();stopSpeak();
+
+  const m=S.myTakeCount, c=S.cpuTakeCount;
   let v,why;
-  if(m===0&&c===0){v='引き分け';why='同時に 0枚になりました';}
-  else if(m===0){v='勝ち';why='先に 自分の札が 0枚になりました';}
-  else if(c===0){v='負け';why='あいての札が 先に 0枚になりました';}
-  else{v=m<c?'勝ち':(m>c?'負け':'引き分け');why='20首 読み終えました。のこりの枚数で きまりました';}
+
+  if(m > c){
+    v = '勝利！';
+    why = S.isSuddenDeath ? 'サドンデスで取って勝利しました！' : '17首終了時、獲得枚数が多いため勝利しました！';
+  }else if(m < c){
+    v = '敗北…';
+    why = S.isSuddenDeath ? 'サドンデスで相手に取られました。' : '17首終了時、相手の獲得枚数が多いため敗北しました。';
+  }else{
+    v = '引き分け';
+    why = '全ての札を読み終え、完全同点でした。';
+  }
+
   $('verdict').textContent=v;
-  $('whyText').textContent=why+'（'+S.color.name+'札・あいて '+S.diff.name+'）';
-  $('rMy').textContent=m;$('rCpu').textContent=c;
+  $('whyText').textContent=why+'（'+S.color.name+'札・相手: '+S.diff.name+'）';
+  $('rMy').textContent=m;
+  $('rCpu').textContent=c;
+  
   $('statText').innerHTML=
-    '自分が取った札　'+S.stat.myTake+'枚<br>'+
-    'あいてが取った札　'+S.stat.cpuTake+'枚<br>'+
-    '自分のお手つき　'+S.stat.myFault+'回<br>'+
-    'あいてのお手つき　'+S.stat.cpuFault+'回'+
-    (S.stat.missed?('<br>どちらも取れなかった札　'+S.stat.missed+'枚'):'');
+    '自分が取った札：'+S.stat.myTake+'枚<br>'+
+    '相手が取った札：'+S.stat.cpuTake+'枚<br>'+
+    '自分のお手つき：'+S.stat.myFault+'回<br>'+
+    '相手のお手つき：'+S.stat.cpuFault+'回'+
+    (S.pot ? ('<br>場に残った払い札（無効）：'+S.pot+'枚') : '')+
+    (S.stat.missed ? ('<br>どちらも取れなかった札：'+S.stat.missed+'枚') : '');
+
   gameScr.classList.remove('on');resultScr.classList.add('on');
 }
 
-/* ===== ボタン ===== */
+/* ===== ボタンイベント ===== */
 $('startBtn').addEventListener('click',start);
 $('againBtn').addEventListener('click',start);
 $('backBtn').addEventListener('click',()=>{
