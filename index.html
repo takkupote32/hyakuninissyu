@@ -97,7 +97,7 @@ body{
 .hist-item .draw{color:var(--dim);font-weight:700;}
 .hist-del{border:0;background:transparent;color:var(--dim);cursor:pointer;font-size:11px;padding:0 2px;}
 
-/* ===== 対戦画面（固定スロットレイアウト） ===== */
+/* ===== 対戦画面 ===== */
 #game{
   padding:calc(4px + env(safe-area-inset-top)) 6px calc(6px + env(safe-area-inset-bottom));
   gap:4px;height:100svh;height:100dvh;overflow:hidden;
@@ -130,7 +130,7 @@ body{
 }
 .field.cpu{transform:rotate(180deg);}
 
-/* スロット＆札の表示（7・7変形防止＆位置固定） */
+/* スロット＆札の表示 */
 .slot{
   width:100%;height:100%;min-height:0;position:relative;
 }
@@ -148,15 +148,30 @@ body{
   position:absolute;left:3px;top:2px;font-size:8px;color:var(--c-ink);opacity:.6;
   line-height:1;letter-spacing:0;
 }
-/* 下の句 7・7 改行防止構造 */
+
+/* 下の句 7・7 縦書き2行表示構造（はみ出し防止改修） */
 .card .shimo{
-  writing-mode:vertical-rl;display:flex;flex-direction:row-reverse;
-  justify-content:center;align-items:center;gap:4px;height:92%;margin:0 auto;color:var(--c-ink);
+  writing-mode:vertical-rl;
+  -webkit-writing-mode:vertical-rl;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  gap:4px;
+  height:100%;
+  width:100%;
+  padding:2px;
+  margin:0 auto;
+  color:var(--c-ink);
 }
 .card .shimo span{
-  display:block;white-space:nowrap;font-size:clamp(10px, 3.4vw, 15px);
-  line-height:1.12;letter-spacing:0.04em;font-weight:600;
+  display:block;
+  white-space:nowrap;
+  font-size:clamp(8px, 2.3vh, 13px);
+  line-height:1.1;
+  letter-spacing:0.01em;
+  font-weight:600;
 }
+
 .slot.taken .card{display:none;}
 .slot.taken::before{
   content:"";position:absolute;inset:0;border-radius:6px;
@@ -212,7 +227,7 @@ body{
   color:#251c07;background:linear-gradient(180deg,#f2dda6,#d9b46a);cursor:pointer;white-space:nowrap;
 }
 
-/* ===== 対戦結果ポップアップ（モーダル） ===== */
+/* ===== 対戦結果ポップアップ ===== */
 .modal-ov{
   position:fixed;inset:0;background:rgba(4,7,12,0.85);backdrop-filter:blur(8px);
   display:none;align-items:center;justify-content:center;z-index:100;padding:20px;
@@ -290,7 +305,7 @@ body{
     </div>
   </div>
 
-  <!-- 対戦履歴（ベスト10） -->
+  <!-- 対戦履歴 -->
   <div class="history-sec">
     <div class="history-hdr">
       <h3>対戦履歴（最新10件）</h3>
@@ -337,7 +352,7 @@ body{
   <button class="btn" id="memoSkip">覚えた！</button>
 </div>
 
-<!-- 対戦結果モーダル（ポップアップ） -->
+<!-- 対戦結果モーダル -->
 <div class="modal-ov" id="resultModal">
   <div class="modal-box">
     <div class="verdict" id="mVerdict">勝利！</div>
@@ -490,7 +505,7 @@ const DIFFS=[
 /* ===== ゲーム状態 ===== */
 const S={
   color:COLORS[0], diff:DIFFS[1],
-  mySlots:[], cpuSlots:[], // 固定位置を保持する配列 (長さ10)
+  mySlots:[], cpuSlots:[],
   order:[], idx:0, cur:null, resolved:true, phase:'idle',
   pot:0, myTakeCount:0, cpuTakeCount:0,
   myRest:false, cpuRest:false, isSuddenDeath:false, speechEnded:false,
@@ -511,7 +526,7 @@ const histList=$('histList'),clearHistBtn=$('clearHistBtn');
 
 const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));const t=a[i];a[i]=a[j];a[j]=t;}return a;};
 
-/* ===== 朗詠音声（句ごとのポーズ・高低差で百人一首っぽく改善） ===== */
+/* ===== 朗詠音声 ===== */
 let JA=null;
 function loadVoices(){
   if(!('speechSynthesis' in window))return;
@@ -535,7 +550,6 @@ function stopSpeak(){
   }
 }
 
-/* 百人一首風朗詠（句ごとのピッチ・スピード制御） */
 function speakPoem(poem, onEndCallback){
   stopSpeak();
   if(!S.opts.voice || !('speechSynthesis' in window)){
@@ -547,10 +561,8 @@ function speakPoem(poem, onEndCallback){
   S.speechEnded = false;
   const baseRate = S.opts.slow ? 0.60 : 0.72;
 
-  // 上の句：3句をピッチを少しずつ下げながらゆったり再生
   const speakKamiPart = (index) => {
     if(index >= 3){
-      // 下の句へ移行
       subText.textContent = '下の句 ' + poem.s[0] + ' ' + poem.s[1];
       subText.style.opacity = '1';
       setTimeout(()=> speakShimoPart(0), 650);
@@ -561,17 +573,16 @@ function speakPoem(poem, onEndCallback){
     const u = new SpeechSynthesisUtterance(text);
     u.lang = 'ja-JP';
     u.rate = baseRate;
-    u.pitch = 1.15 - (index * 0.05); // 上の句は高めから自然に下げる
+    u.pitch = 1.15 - (index * 0.05);
     u.volume = 1;
     if(JA) u.voice = JA;
 
     u.onend = ()=>{
-      setTimeout(()=> speakKamiPart(index + 1), 400); // 句間にの間（ポーズ）
+      setTimeout(()=> speakKamiPart(index + 1), 400);
     };
     try { speechSynthesis.speak(u); } catch(e){}
   };
 
-  // 下の句：2句を少し落ち着いた低めのトーンで朗詠
   const speakShimoPart = (index) => {
     if(index >= 2){
       S.speechEnded = true;
@@ -583,7 +594,7 @@ function speakPoem(poem, onEndCallback){
     const u = new SpeechSynthesisUtterance(text);
     u.lang = 'ja-JP';
     u.rate = baseRate * 0.92;
-    u.pitch = 0.90 - (index * 0.05); // 低めで余韻
+    u.pitch = 0.90 - (index * 0.05);
     u.volume = 1;
     if(JA) u.voice = JA;
 
@@ -601,14 +612,14 @@ function speakPoem(poem, onEndCallback){
   speakKamiPart(0);
 }
 
-/* ===== 対戦履歴（LocalStorage） ===== */
+/* ===== 対戦履歴 ===== */
 function getHistory(){
   try{ return JSON.parse(localStorage.getItem('karuta_hist')||'[]'); }catch(e){ return []; }
 }
 function saveHistoryItem(item){
   const list = getHistory();
   list.unshift(item);
-  if(list.length > 10) list.pop(); // 最新10件保持
+  if(list.length > 10) list.pop();
   try{ localStorage.setItem('karuta_hist', JSON.stringify(list)); }catch(e){}
   renderHistory();
 }
@@ -691,7 +702,7 @@ voiceTest.addEventListener('click',()=>{
   voiceTest.textContent=JA?('🔊 音声テスト（'+JA.name+'）'):'🔊 音声テスト（日本語音声未検出）';
 });
 
-/* ===== フィールド描画（スロット位置の固定） ===== */
+/* ===== フィールド描画 ===== */
 function slotHTML(slotData, own, index){
   if(!slotData || slotData.taken){
     return `<div class="slot taken" data-idx="${index}" data-own="${own}"></div>`;
@@ -741,7 +752,6 @@ function start(){
   warmup();
   const pool=shuffle(S.color.poems.slice());
   
-  // 10枚ずつスロットオブジェクトとして固定配列で構築
   S.mySlots = pool.slice(0,10).map(p => ({ poem: p, taken: false }));
   S.cpuSlots = pool.slice(10,20).map(p => ({ poem: p, taken: false }));
   
@@ -846,7 +856,6 @@ function cpuAct(){
     return;
   }
 
-  // 該当札を探す
   let targetSlot = S.mySlots.find(s => !s.taken && s.poem.n === S.cur.n);
   let own = 'me';
   if(!targetSlot){
@@ -875,7 +884,7 @@ function penaltyFrom(tapper){
   render();
 }
 
-/* ===== 札取り実行（初期位置固定） ===== */
+/* ===== 札取り実行 ===== */
 function takeCard(n, owner, taker){
   if(S.resolved) return;
   S.resolved=true;S.phase='read';
@@ -911,7 +920,7 @@ function takeCard(n, owner, taker){
   toast((isMe ? '自分が取りました！' : '相手が取りました！') + bonusTxt, 1600);
 
   setTimeout(()=>{
-    slotObj.taken = true; // 位置は残して非表示状態に
+    slotObj.taken = true;
     render();
   },500);
 
@@ -946,7 +955,7 @@ function forceResolve(){
   checkAutoAdvance();
 }
 
-/* ===== 自動進行（2秒間待機） ===== */
+/* ===== 自動進行 ===== */
 function checkAutoAdvance(){
   if(!S.resolved || !S.speechEnded) return;
 
@@ -1034,13 +1043,11 @@ function finish(){
     resFlag = 'DRAW';
   }
 
-  // ポップアップへの設定
   $('mVerdict').textContent = v;
   $('mWhy').textContent = why;
   $('mMy').textContent = m;
   $('mCpu').textContent = c;
 
-  // 履歴へ保存
   const now = new Date();
   const dateStr = `${now.getMonth()+1}/${now.getDate()} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
   saveHistoryItem({
