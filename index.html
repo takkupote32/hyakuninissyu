@@ -154,7 +154,6 @@ body{
   line-height:1;letter-spacing:0;
 }
 
-/* 下の句 文字を大きめに調整 */
 .card .shimo{
   writing-mode:vertical-rl;
   -webkit-writing-mode:vertical-rl;
@@ -205,7 +204,6 @@ body{
 .bar i{display:block;height:100%;width:100%;background:linear-gradient(90deg,#7de08a,#d9b46a,#ff6b6b);
   transform-origin:left center;transform:scaleX(1);}
 
-/* 読手エリア内に収まる暗記タイマー（横幅縮小） */
 .memo-bar{
   position:absolute;inset:0;margin:auto;
   width:clamp(200px, 80%, 270px);height:calc(100% - 8px);
@@ -263,7 +261,6 @@ body{
   border-radius:12px;padding:11px;font-family:inherit;font-size:12px;cursor:pointer;
 }
 
-/* オーバーレイ */
 .ov{position:fixed;inset:0;background:rgba(5,8,13,.93);display:none;
   flex-direction:column;align-items:center;justify-content:center;gap:16px;z-index:80;padding:24px;text-align:center;}
 .ov.on{display:flex;}
@@ -355,7 +352,6 @@ body{
     <button class="rep" id="replayBtn" aria-label="もう一度聞く">↻ もう一度</button>
     <div class="bar"><i id="barFill"></i></div>
 
-    <!-- 暗記タイマーバー（幅縮小） -->
     <div class="memo-bar" id="memoBar">
       <div class="time" id="memoNum">60</div>
       <div class="txt">札の場所を<br>覚えよう！</div>
@@ -383,7 +379,6 @@ body{
   </div>
 </div>
 
-<!-- 準備中オーバーレイ -->
 <div class="ov" id="readyOv">
   <div class="spin"></div>
   <div style="font-size:12px;color:var(--dim);margin-top:10px;">札を並べています…</div>
@@ -394,7 +389,7 @@ body{
 <script>
 "use strict";
 
-/* ====== 百人一首データ ====== */
+/* ====== 百人一首ローカルデータ（全100首定義済み） ====== */
 const COLORS=[
 {id:'ao',name:'青',base:'#2f6fb3',dark:'#12395e',ink:'#eaf4ff',poems:[
  {n:3,k:['あしびきの','やまどりのをの','しだりをの'],s:['ながながしよを','ひとりかもねむ']},
@@ -540,7 +535,7 @@ const histList=$('histList'),clearHistBtn=$('clearHistBtn');
 
 const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));const t=a[i];a[i]=a[j];a[j]=t;}return a;};
 
-/* ===== 朗詠音声と言語エンジンの管理 ===== */
+/* ===== 朗詠音声の管理（ブラウザ音声制限アンロック機能付き） ===== */
 let speakTimers=[];
 let currentSpeakId=0;
 
@@ -559,13 +554,26 @@ function getVoiceByGender(gender){
   }else if(gender === 'male'){
     return ja.find(v => maleKeys.some(k => (v.name||'').includes(k))) || ja.find(v => !(femaleKeys.some(k => (v.name||'').includes(k)))) || ja[0];
   }
-  // auto
   return ja.find(v => femaleKeys.concat(maleKeys).some(k => (v.name||'').includes(k))) || ja[0];
 }
 
+/* 音声リストが後から読み込まれた場合のコールバック対応 */
+if('speechSynthesis' in window){
+  speechSynthesis.onvoiceschanged = () => {
+    getVoiceByGender(S.opts.voiceGender);
+  };
+}
+
+/* ユーザーのタップ直後に実行してブラウザの音声再生ブロック（User Gesture制限）を解除する */
 function warmup(){
-  if(!('speechSynthesis' in window))return;
-  try{const u=new SpeechSynthesisUtterance(' ');u.volume=0;u.lang='ja-JP';speechSynthesis.speak(u);}catch(e){}
+  if(!('speechSynthesis' in window)) return;
+  try {
+    speechSynthesis.resume();
+    const u = new SpeechSynthesisUtterance('');
+    u.volume = 0;
+    u.lang = 'ja-JP';
+    speechSynthesis.speak(u);
+  } catch(e) {}
 }
 
 /* 朗詠の完全停止 */
@@ -578,8 +586,8 @@ function stopSpeak(){
   }
 }
 
-// 自然な朗詠調整を施した読み上げ（百人一首API連携・自動再生ブロック対策版）
-async function speakPoem(poemNo = null, onEndCallback){
+// ローカルデータ読み上げ関数
+function speakPoem(poem, onEndCallback){
   stopSpeak();
   const speakId = currentSpeakId;
 
@@ -589,58 +597,27 @@ async function speakPoem(poemNo = null, onEndCallback){
     return;
   }
 
-  // ★【重要】通信前にダミー発音を挟み、ブラウザの音声ブロック（User Gesture制限）を解除する
+  // 自動再生制限（User Gesture）対策の無音ダミー発声
   try {
     const dummyUttr = new SpeechSynthesisUtterance('');
     speechSynthesis.speak(dummyUttr);
   } catch(e) {}
 
-  // --- 1. APIから歌データを取得 ---
-  let poem = { k: [], s: [] };
-  try {
-    const apiUrl = poemNo 
-      ? `https://api.aoikujira.com/hyakunin/get2.php?fmt=json&no=${poemNo}`
-      : `https://api.aoikujira.com/hyakunin/get2.php?fmt=json`;
-
-    const res = await fetch(apiUrl);
-    const data = await res.json();
-
-    poem.k = data.kami ? data.kami.split(' ') : [];
-    poem.s = data.shimo ? data.shimo.split(' ') : [];
-
-    if (poem.k.length === 1) poem.k = [data.kami];
-    if (poem.s.length === 1) poem.s = [data.shimo];
-
-    if (typeof subText !== 'undefined' && subText) {
-      subText.textContent = `[${data.no}番 ${data.author}] 上の句: ${data.kami}`;
-      subText.style.opacity = '1';
-    }
-  } catch (e) {
-    console.error("API取得失敗:", e);
-    S.speechEnded = true;
-    if(onEndCallback) onEndCallback();
-    return;
-  }
-
-  if(currentSpeakId !== speakId) return;
-
-  // --- 2. 朗詠設定 ---
   S.speechEnded = false;
   const baseRate = S.opts.slow ? 0.62 : 0.72;
   const targetVoice = getVoiceByGender(S.opts.voiceGender);
 
+  // 男性音声が端末にない場合のフォールバックピッチ調整
   let isMaleFallback = (S.opts.voiceGender === 'male' && targetVoice && !(['Otoya','Ichiro','Keita','Hattori','Takumi'].some(k=>(targetVoice.name||'').includes(k))));
   const pitchBase = isMaleFallback ? 0.75 : 1.0;
 
-  // --- 3. 上の句の再生 ---
+  // 上の句の朗詠（配列の0,1,2要素）
   const speakKamiPart = (index) => {
     if(currentSpeakId !== speakId) return;
 
-    if(index >= poem.k.length){
-      if (typeof subText !== 'undefined' && subText) {
-        subText.textContent = '下の句 ' + poem.s.join(' ');
-        subText.style.opacity = '1';
-      }
+    if(index >= 3){
+      subText.textContent = '下の句 ' + poem.s[0] + ' ' + poem.s[1];
+      subText.style.opacity = '1';
       const t = setTimeout(()=>{
         if(currentSpeakId === speakId) speakShimoPart(0);
       }, 700);
@@ -666,17 +643,17 @@ async function speakPoem(poemNo = null, onEndCallback){
     try { speechSynthesis.speak(u); } catch(e){}
   };
 
-  // --- 4. 下の句の再生 ---
+  // 下の句の朗詠（配列の0,1要素）
   const speakShimoPart = (index) => {
     if(currentSpeakId !== speakId) return;
 
-    if(index >= poem.s.length){
+    if(index >= 2){
       S.speechEnded = true;
       if(onEndCallback && currentSpeakId === speakId) onEndCallback();
       return;
     }
 
-    const phraseText = poem.s[index] + (index === poem.s.length - 1 ? '。' : '、');
+    const phraseText = poem.s[index] + (index === 1 ? '。' : '、');
     const u = new SpeechSynthesisUtterance(phraseText);
     u.lang = 'ja-JP';
     u.rate = baseRate * 0.90;
@@ -686,9 +663,9 @@ async function speakPoem(poemNo = null, onEndCallback){
 
     u.onend = ()=>{
       if(currentSpeakId !== speakId) return;
-      if(index < poem.s.length - 1){
+      if(index === 0){
         const t = setTimeout(()=>{
-          if(currentSpeakId === speakId) speakShimoPart(index + 1);
+          if(currentSpeakId === speakId) speakShimoPart(1);
         }, 500);
         speakTimers.push(t);
       }else{
@@ -701,8 +678,6 @@ async function speakPoem(poemNo = null, onEndCallback){
 
   speakKamiPart(0);
 }
-
-
 
 /* ===== 対戦履歴 ===== */
 function getHistory(){
@@ -776,7 +751,6 @@ DIFFS.forEach(d=>{
 });
 selectColor(COLORS[0]);selectDiff(DIFFS[1]);renderHistory();
 
-// 性別ラジオボタン制御
 document.querySelectorAll('input[name="vGender"]').forEach(r => {
   r.addEventListener('change', (e) => {
     S.opts.voiceGender = e.target.value;
@@ -829,7 +803,7 @@ function render(){
   cpuField.innerHTML = S.cpuSlots.map((item, i)=> slotHTML(item, 'cpu', i)).join('');
   myCountEl.textContent = S.myTakeCount;
   cpuCountEl.textContent = S.cpuTakeCount;
-  hudDiffEl.textContent = S.diff.name; // 対戦中ヘッダーに難易度表示
+  hudDiffEl.textContent = S.diff.name;
   potText.textContent = S.pot > 0 ? ('（場の払い札: ' + S.pot + '枚）') : '';
   myCountEl.classList.toggle('hot', S.phase === 'read');
 }
@@ -1125,7 +1099,7 @@ function onTap(e){
 myField.addEventListener('click',onTap);
 cpuField.addEventListener('click',onTap);
 
-/* ===== 勝敗結果ポップアップ表示＆履歴保存 ===== */
+/* ===== 勝敗結果表示＆履歴保存 ===== */
 function finish(){
   S.phase='over';S.resolved=true;
   clearTimeout(S.cpuTimer);clearTimeout(S.forceTimer);clearTimeout(S.waitTimer);clearInterval(S.memoTimer);
@@ -1188,7 +1162,10 @@ $('mBackBtn').addEventListener('click', ()=>{
   setupScr.classList.add('on');
 });
 
-$('startBtn').addEventListener('click',start);
+$('startBtn').addEventListener('click',()=>{
+  warmup();
+  start();
+});
 document.addEventListener('gesturestart',e=>e.preventDefault());
 </script>
 </body>
