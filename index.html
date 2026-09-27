@@ -13,7 +13,7 @@
   --c-base:#2f6fb3; --c-dark:#16416f; --c-ink:#fff;
   --fs:clamp(10px, 3.2vw, 15px); --radius:8px;
 }
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;touch-action:manipulation;}
 html,body{margin:0;padding:0;height:100%;width:100%;overflow:hidden;}
 body{
   background:radial-gradient(125% 85% at 50% -10%, #1d2a44 0%, var(--bg) 58%, #06090f 100%);
@@ -70,9 +70,6 @@ body{
 }
 .chk.on{background:rgba(217,180,106,.18);border-color:rgba(217,180,106,.5);color:#f4e6c6;}
 .chk input{display:none;}
-.rules{font-size:10.5px;color:#b8c2d4;line-height:1.75;background:rgba(255,255,255,.035);
-  border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-top:6px;}
-.rules b{color:var(--gold);}
 #startBtn{
   margin-top:12px;width:100%;border:0;border-radius:12px;padding:15px;font-family:inherit;
   font-size:16px;font-weight:700;letter-spacing:.2em;color:#251c07;cursor:pointer;
@@ -97,7 +94,7 @@ body{
 .hist-item .draw{color:var(--dim);font-weight:700;}
 .hist-del{border:0;background:transparent;color:var(--dim);cursor:pointer;font-size:11px;padding:0 2px;}
 
-/* ===== 対戦画面（固定スロットレイアウト） ===== */
+/* ===== 対戦画面 ===== */
 #game{
   padding:calc(4px + env(safe-area-inset-top)) 6px calc(6px + env(safe-area-inset-bottom));
   gap:4px;height:100svh;height:100dvh;overflow:hidden;
@@ -130,7 +127,6 @@ body{
 }
 .field.cpu{transform:rotate(180deg);}
 
-/* スロット＆札の表示（7・7変形防止＆位置固定） */
 .slot{
   width:100%;height:100%;min-height:0;position:relative;
 }
@@ -140,22 +136,23 @@ body{
   box-shadow:0 2px 5px rgba(0,0,0,.45), inset 0 0 0 1px rgba(255,255,255,.22);
   display:flex;align-items:center;justify-content:center;
   width:100%;height:100%;
-  font-family:inherit;transition:transform .1s, box-shadow .15s, opacity .25s;
+  font-family:inherit;transition:transform .08s ease-out, box-shadow .15s, opacity .25s;
+  touch-action:manipulation;
 }
 .card::after{content:"";position:absolute;inset:2px;border-radius:4px;
   border:1px solid rgba(255,255,255,.18);pointer-events:none;}
 .card .num{
   position:absolute;left:3px;top:2px;font-size:8px;color:var(--c-ink);opacity:.6;
-  line-height:1;letter-spacing:0;
+  line-height:1;letter-spacing:0;pointer-events:none;
 }
-/* 下の句 7・7 改行防止構造 */
 .card .shimo{
   writing-mode:vertical-rl;display:flex;flex-direction:row-reverse;
   justify-content:center;align-items:center;gap:4px;height:92%;margin:0 auto;color:var(--c-ink);
+  pointer-events:none;
 }
 .card .shimo span{
   display:block;white-space:nowrap;font-size:clamp(10px, 3.4vw, 15px);
-  line-height:1.12;letter-spacing:0.04em;font-weight:600;
+  line-height:1.12;letter-spacing:0.04em;font-weight:600;pointer-events:none;
 }
 .slot.taken .card{display:none;}
 .slot.taken::before{
@@ -163,7 +160,7 @@ body{
   border:1px dashed rgba(255,255,255,.08);background:rgba(0,0,0,.12);
 }
 
-.card:active:not(.empty){transform:scale(.95);}
+.card:active:not(.empty){transform:scale(.94);}
 .card.hit{animation:hit .45s ease-out;box-shadow:0 0 0 3px #7de08a, 0 0 22px rgba(125,224,138,.7);}
 .card.bad{animation:bad .45s ease-out;box-shadow:0 0 0 3px #ff6b6b, 0 0 22px rgba(255,107,107,.7);}
 .card.dim{opacity:.25;}
@@ -171,10 +168,11 @@ body{
 @keyframes bad{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
 .card.nonum .num{display:none;}
 
+/* 朗詠＆暗記バー領域（お互いの札の間） */
 .reader{
-  flex:0 0 auto;border-radius:10px;padding:6px 10px;text-align:center;
+  flex:0 0 auto;border-radius:10px;padding:4px 10px;text-align:center;
   background:linear-gradient(180deg,rgba(255,255,255,.075),rgba(255,255,255,.028));
-  border:1px solid var(--line);min-height:72px;
+  border:1px solid var(--line);min-height:64px;
   display:flex;flex-direction:column;justify-content:center;gap:2px;position:relative;overflow:hidden;
 }
 .reader .lbl{font-size:8.5px;color:var(--dim);letter-spacing:.32em;}
@@ -189,6 +187,22 @@ body{
 .bar{position:absolute;left:0;bottom:0;height:3px;width:100%;background:rgba(255,255,255,.09);}
 .bar i{display:block;height:100%;width:100%;background:linear-gradient(90deg,#7de08a,#d9b46a,#ff6b6b);
   transform-origin:left center;transform:scaleX(1);}
+
+/* ===== 横長コンパクト暗記UI（朗詠バー内にインライン配置） ===== */
+.memo-inline{
+  display:none;align-items:center;justify-content:space-between;width:100%;height:100%;padding:0 4px;
+}
+.memo-inline.on{display:flex;}
+.memo-inline .left-box{display:flex;align-items:center;gap:8px;}
+.memo-inline .time-num{font-size:22px;font-weight:800;color:#f8ecc9;font-variant-numeric:tabular-nums;line-height:1;}
+.memo-inline .time-txt{font-size:10px;color:var(--dim);text-align:left;line-height:1.2;}
+.memo-inline .skip-btn{
+  border:0;border-radius:8px;padding:6px 14px;font-family:inherit;font-size:11.5px;font-weight:700;
+  color:#251c07;background:linear-gradient(180deg,#f2dda6,#d9b46a);cursor:pointer;white-space:nowrap;
+  box-shadow:0 2px 6px rgba(0,0,0,.3);touch-action:manipulation;
+}
+.memo-inline .skip-btn:active{transform:scale(.95);}
+
 .toast{
   position:fixed;left:50%;top:40%;transform:translate(-50%,-50%) scale(.85);
   background:rgba(8,12,20,.94);border:1px solid var(--line);color:#fff;padding:12px 22px;border-radius:12px;
@@ -197,22 +211,7 @@ body{
 }
 .toast.show{opacity:1;transform:translate(-50%,-50%) scale(1);}
 
-/* ===== フローティング暗記タイマー ===== */
-.memo-bar{
-  position:fixed;top:calc(12px + env(safe-area-inset-top));left:50%;transform:translateX(-50%);
-  background:rgba(13,20,32,0.92);border:1px solid var(--gold);
-  border-radius:16px;padding:8px 20px;display:none;align-items:center;gap:14px;
-  z-index:90;box-shadow:0 6px 20px rgba(0,0,0,.6);backdrop-filter:blur(8px);
-}
-.memo-bar.on{display:flex;}
-.memo-bar .time{font-size:26px;font-weight:700;color:#f8ecc9;font-variant-numeric:tabular-nums;line-height:1;}
-.memo-bar .txt{font-size:11px;color:var(--dim);line-height:1.3;}
-.memo-bar .btn{
-  border:0;border-radius:10px;padding:7px 14px;font-family:inherit;font-size:11px;font-weight:700;
-  color:#251c07;background:linear-gradient(180deg,#f2dda6,#d9b46a);cursor:pointer;white-space:nowrap;
-}
-
-/* ===== 対戦結果ポップアップ（モーダル） ===== */
+/* ===== 対戦結果ポップアップ ===== */
 .modal-ov{
   position:fixed;inset:0;background:rgba(4,7,12,0.85);backdrop-filter:blur(8px);
   display:none;align-items:center;justify-content:center;z-index:100;padding:20px;
@@ -246,7 +245,6 @@ body{
   border-radius:12px;padding:11px;font-family:inherit;font-size:12px;cursor:pointer;
 }
 
-/* オーバーレイ */
 .ov{position:fixed;inset:0;background:rgba(5,8,13,.93);display:none;
   flex-direction:column;align-items:center;justify-content:center;gap:16px;z-index:80;padding:24px;text-align:center;}
 .ov.on{display:flex;}
@@ -290,7 +288,7 @@ body{
     </div>
   </div>
 
-  <!-- 対戦履歴（ベスト10） -->
+  <!-- 対戦履歴 -->
   <div class="history-sec">
     <div class="history-hdr">
       <h3>対戦履歴（最新10件）</h3>
@@ -319,25 +317,32 @@ body{
 
   <div class="field cpu" id="cpuField"></div>
 
+  <!-- 朗詠・暗記バー（お互いの札の間） -->
   <div class="reader" id="reader">
-    <div class="lbl">上 の 句</div>
-    <div class="kami" id="kamiText">―</div>
-    <div class="sub" id="subText"></div>
-    <button class="rep" id="replayBtn" aria-label="もう一度聞く">↻ もう一度</button>
+    <!-- 対戦時の朗詠表示 -->
+    <div id="readContent">
+      <div class="lbl">上 の 句</div>
+      <div class="kami" id="kamiText">―</div>
+      <div class="sub" id="subText"></div>
+      <button class="rep" id="replayBtn" aria-label="もう一度聞く">↻ もう一度</button>
+    </div>
+
+    <!-- 暗記時間中の横長コンパクト表示 -->
+    <div class="memo-inline" id="memoInline">
+      <div class="left-box">
+        <div class="time-num" id="memoNum">60</div>
+        <div class="time-txt">秒<br>札の位置を覚えよう</div>
+      </div>
+      <button class="skip-btn" id="memoSkip">覚えた！</button>
+    </div>
+
     <div class="bar"><i id="barFill"></i></div>
   </div>
 
   <div class="field me" id="myField"></div>
 </section>
 
-<!-- 暗記タイマーバー -->
-<div class="memo-bar" id="memoBar">
-  <div><div class="time" id="memoNum">60</div></div>
-  <div class="txt">札の場所を<br>覚えよう！</div>
-  <button class="btn" id="memoSkip">覚えた！</button>
-</div>
-
-<!-- 対戦結果モーダル（ポップアップ） -->
+<!-- 対戦結果モーダル -->
 <div class="modal-ov" id="resultModal">
   <div class="modal-box">
     <div class="verdict" id="mVerdict">勝利！</div>
@@ -386,696 +391,55 @@ const COLORS=[
  {n:75,k:['ちぎりおきし','させもがつゆを','いのちにて'],s:['あはれことしの','あきもいぬめり']},
  {n:76,k:['わたのはら','こぎいでてみれば','ひさかたの'],s:['くもゐにまがふ','おきつしらなみ']},
  {n:82,k:['おもひわび','さてもいのちは','あるものを'],s:['うきにたへぬは','なみだなりけり']},
- {n:91,k:['きりぎりす','なくやしもよの','さむしろに'],s:['ころもかたしき','ひとりかもねむ']},
- {n:100,k:['ももしきや','ふるきのきばの','しのぶにも'],s:['なほあまりある','むかしなりけり']}
-]},
-{id:'momo',name:'桃',base:'#d4587e',dark:'#8c2750',ink:'#fff0f5',poems:[
- {n:86,k:['なげけとて','つきやはものを','おもはする'],s:['かこちがほなる','わがなみだかな']},
- {n:97,k:['こぬひとを','まつほのうらの','ゆふなぎに'],s:['やくやもしほの','みもこがれつつ']},
- {n:66,k:['もろともに','あはれとおもへ','やまざくら'],s:['はなよりほかに','しるひともなし']},
- {n:72,k:['おとにきく','たかしのはまの','あだなみは'],s:['かけじやそでの','ぬれもこそすれ']},
- {n:73,k:['たかさごの','をのへのさくら','さきにけり'],s:['とやまのかすみ','たたずもあらなむ']},
- {n:80,k:['ながからむ','こころもしらず','くろかみの'],s:['みだれてけさは','ものをこそおもへ']},
- {n:51,k:['かくとだに','えやはいぶきの','さしもぐさ'],s:['さしもしらじな','もゆるおもひを']},
- {n:58,k:['ありまやま','ゐなのささはら','かぜふけば'],s:['いでそよひとを','わすれやはする']},
- {n:65,k:['うらみわび','ほさぬそでだに','あるものを'],s:['こひにくちなむ','なこそをしけれ']},
- {n:34,k:['たれをかも','しるひとにせむ','たかさごの'],s:['まつもむかしの','ともならなくに']},
- {n:40,k:['しのぶれど','いろにいでにけり','わがこひは'],s:['ものやおもふと','ひとのとふまで']},
- {n:48,k:['かぜをいたみ','いはうつなみの','おのれのみ'],s:['くだけてものを','おもふころかな']},
- {n:16,k:['たちわかれ','いなばのやまの','みねにおふる'],s:['まつとしきかば','いまかへりこむ']},
- {n:22,k:['ふくからに','あきのくさきの','しをるれば'],s:['むべやまかぜを','あらしといふらむ']},
- {n:28,k:['やまざとは','ふゆぞさびしさ','まさりける'],s:['ひとめもくさも','かれぬとおもへば']},
- {n:1,k:['あきのたの','かりほのいほの','とまをあらみ'],s:['わがころもでは','つゆにぬれつつ']},
- {n:4,k:['たごのうらに','うちいでてみれば','しろたへの'],s:['ふじのたかねに','ゆきはふりつつ']},
- {n:13,k:['つくばねの','みねよりおつる','みなのがは'],s:['こひぞつもりて','ふちとなりぬる']},
- {n:83,k:['よのなかよ','みちこそなけれ','おもひいる'],s:['やまのおくにも','しかぞなくなる']},
- {n:84,k:['ながらへば','またこのごろや','しのばれむ'],s:['うしとみしよぞ','いまはこひしき']}
-]},
-{id:'ki',name:'黄',base:'#c9a125',dark:'#8a6c10',ink:'#fffbe8',poems:[
- {n:2,k:['はるすぎて','なつきにけらし','しろたへの'],s:['ころもほすてふ','あまのかぐやま']},
- {n:7,k:['あまのはら','ふりさけみれば','かすがなる'],s:['みかさのやまに','いでしつきかも']},
- {n:10,k:['これやこの','ゆくもかへるも','わかれては'],s:['しるもしらぬも','あふさかのせき']},
- {n:18,k:['すみのえの','きしによるなみ','よるさへや'],s:['ゆめのかよひぢ','ひとめよくらむ']},
- {n:32,k:['やまがはに','かぜのかけたる','しがらみは'],s:['ながれもあへぬ','もみぢなりけり']},
- {n:33,k:['ひさかたの','ひかりのどけき','はるのひに'],s:['しづごころなく','はなのちるらむ']},
- {n:37,k:['しらつゆに','かぜのふきしく','あきののは'],s:['つらぬきとめぬ','たまぞちりける']},
- {n:39,k:['あさぢふの','をののしのはら','しのぶれど'],s:['あまりてなどか','ひとのこひしき']},
- {n:46,k:['ゆらのとを','わたるふなびと','かぢをたえ'],s:['ゆくへもしらぬ','こひのみちかな']},
- {n:47,k:['やへむぐら','しげれるやどの','さびしきに'],s:['ひとこそみえね','あきはきにけり']},
- {n:55,k:['たきのおとは','たえてひさしく','なりぬれど'],s:['なこそながれて','なほきこえけれ']},
- {n:60,k:['おほえやま','いくののみちの','とほければ'],s:['まだふみもみず','あまのはしだて']},
- {n:78,k:['あはぢしま','かよふちどりの','なくこゑに'],s:['いくよねざめぬ','すまのせきもり']},
- {n:79,k:['あきかぜに','たなびくくもの','たえまより'],s:['もれいづるつきの','かげのさやけさ']},
- {n:81,k:['ほととぎす','なきつるかたを','ながむれば'],s:['ただありあけの','つきぞのこれる']},
- {n:87,k:['むらさめの','つゆもまだひぬ','まきのはに'],s:['きりたちのぼる','あきのゆふぐれ']},
- {n:89,k:['たまのをよ','たえなばたえね','ながらへば'],s:['しのぶることの','よわりもぞする']},
- {n:94,k:['みよしのの','やまのあきかぜ','さよふけて'],s:['ふるさとさむく','ころもうつなり']},
- {n:96,k:['はなさそふ','あらしのにはの','ゆきならで'],s:['ふりゆくものは','わがみなりけり']},
- {n:85,k:['よもすがら','ものおもふころは','あけやらで'],s:['ねやのひまさへ','つれなかりけり']}
-]},
-{id:'midori',name:'緑',base:'#3f9a6a',dark:'#1b5638',ink:'#eafff2',poems:[
- {n:8,k:['わがいほは','みやこのたつみ','しかぞすむ'],s:['よをうぢやまと','ひとはいふなり']},
- {n:9,k:['はなのいろは','うつりにけりな','いたづらに'],s:['わがみよにふる','ながめせしまに']},
- {n:11,k:['わたのはら','やそしまかけて','こぎいでぬと'],s:['ひとにはつげよ','あまのつりぶね']},
- {n:15,k:['きみがため','はるののにいでて','わかなつむ'],s:['わがころもでに','ゆきはふりつつ']},
- {n:17,k:['ちはやぶる','かみよもきかず','たつたがは'],s:['からくれなゐに','みづくくるとは']},
- {n:20,k:['わびぬれば','いまはたおなじ','なにはなる'],s:['みをつくしても','あはむとぞおもふ']},
- {n:23,k:['つきみれば','ちぢにものこそ','かなしけれ'],s:['わがみひとつの','あきにはあらねど']},
- {n:26,k:['をぐらやま','みねのもみぢば','こころあらば'],s:['いまひとたびの','みゆきまたなむ']},
- {n:29,k:['こころあてに','をらばやをらむ','はつしもの'],s:['おきまどはせる','しらぎくのはな']},
- {n:35,k:['ひとはいさ','こころもしらず','ふるさとは'],s:['はなぞむかしの','かににほひける']},
- {n:36,k:['なつのよは','まだよひながら','あけぬるを'],s:['くものいづこに','つきやどるらむ']},
- {n:38,k:['わすらるる','みをばおもはず','ちかひてし'],s:['ひとのいのちの','をしくもあるかな']},
- {n:41,k:['こひすてふ','わがなはまだき','たちにけり'],s:['ひとしれずこそ','おもひそめしか']},
- {n:42,k:['ちぎりきな','かたみにそでを','しぼりつつ'],s:['すゑのまつやま','なみこさじとは']},
- {n:54,k:['わすれじの','ゆくすゑまでは','かたければ'],s:['けふをかぎりの','いのちともがな']},
- {n:59,k:['やすらはで','ねなましものを','さよふけて'],s:['かたぶくまでの','つきをみしかな']},
- {n:68,k:['こころにも','あらでうきよに','ながらへば'],s:['こひしかるべき','よはのつきかな']},
- {n:71,k:['ゆふされば','かどたのいなば','おとづれて'],s:['あしのまろやに','あきかぜぞふく']},
- {n:92,k:['わがそでは','しほひにみえぬ','おきのいしの'],s:['ひとこそしらね','かわくまもなし']},
- {n:93,k:['よのなかは','つねにもがもな','なぎさこぐ'],s:['あまのをぶねの','つなでかなしも']}
-]},
-{id:'daidai',name:'橙',base:'#e07b32',dark:'#8f4415',ink:'#fff3e6',poems:[
- {n:19,k:['なにはがた','みじかきあしの','ふしのまも'],s:['あはでこのよを','すぐしてよとや']},
- {n:21,k:['いまこむと','いひしばかりに','ながつきの'],s:['ありあけのつきを','まちいでつるかな']},
- {n:25,k:['なにしおはば','あふさかやまの','さねかづら'],s:['ひとにしられで','くるよしもがな']},
- {n:27,k:['みかのはら','わきてながるる','いづみがは'],s:['いつみきとてか','こひしかるらむ']},
- {n:43,k:['あひみての','のちのこころに','くらぶれば'],s:['むかしはものを','おもはざりけり']},
- {n:44,k:['あふことの','たえてしなくは','なかなかに'],s:['ひとをもみをも','うらみざらまし']},
- {n:45,k:['あはれとも','いふべきひとは','おもほえで'],s:['みのいたづらに','なりぬべきかな']},
- {n:49,k:['みかきもり','ゑじのたくひの','よるはもえ'],s:['ひるはきえつつ','ものをこそおもへ']},
- {n:52,k:['あけぬれば','くるるものとは','しりながら'],s:['なほうらめしき','あさぼらけかな']},
- {n:53,k:['なげきつつ','ひとりぬるよの','あくるまは'],s:['いかにひさしき','ものとかはしる']},
- {n:56,k:['あらざらむ','このよのほかの','おもひでに'],s:['いまひとたびの','あふこともがな']},
- {n:63,k:['いまはただ','おもひたえなむ','とばかりを'],s:['ひとづてならで','いふよしもがな']},
- {n:64,k:['あさぼらけ','うぢのかはぎり','たえだえに'],s:['あらはれわたる','せぜのあじろぎ']},
- {n:67,k:['はるのよの','ゆめばかりなる','たまくらに'],s:['かひなくたたむ','なこそをしけれ']},
- {n:77,k:['せをはやみ','いはにせかるる','たきがはの'],s:['われてもすゑに','あはむとぞおもふ']},
- {n:88,k:['なにはえの','あしのかりねの','ひとよゆゑ'],s:['みをつくしてや','こひわたるべき']},
- {n:90,k:['みせばやな','をじまのあまの','そでだにも'],s:['ぬれにぞぬれし','いろはかはらず']},
- {n:95,k:['おほけなく','うきよのたみに','おほふかな'],s:['わがたつそまに','すみぞめのそで']},
- {n:98,k:['かぜそよぐ','ならのをがはの','ゆふぐれは'],s:['みそぎぞなつの','しるしなりける']},
- {n:99,k:['ひともをし','ひともうらめし','あぢきなく'],s:['よをおもふゆゑに','ものおもふみは']}
-]}
-];
+ {n:91,k:['きりぎりす','なくやしもよの','さ申し訳ありません。コードの後半部分まで含めた完全なファイルコードを出力いたします。
 
-const DIFFS=[
- {id:'low',  name:'下位', sub:'入門',   react:4800, jitter:1000, err:0.35, note:'非常にゆっくり。誤りも多め。'},
- {id:'mid',  name:'中位', sub:'ふつう', react:3500, jitter:800,  err:0.20, note:'程よい速さ。じっくり勝負したい方に。'},
- {id:'high', name:'上位', sub:'速い',   react:2500, jitter:600,  err:0.10, note:'手ごたえのある速さ。素早い判断が必要。'},
- {id:'goku', name:'極意', sub:'達人',   react:1700, jitter:450,  err:0.04, note:'かなり速い。上の句の決まり字で勝負。'},
- {id:'gokuP',name:'極意+',sub:'最上',   react:1100, jitter:300,  err:0.01, note:'最速クラス。熟練者向け。'}
-];
+### 変更のポイント
+1. **暗記タイマーを「札の間（朗詠エリア）」へコンパクトに統合**
+   * ポップアップが消え、お互いの札の間の朗詠エリア内に**横一列（タイム・説明文・「覚えた！」ボタン）**で収まるようになりました。札が一切隠れなくなります。
+2. **タップ感度・レスポンスの最適化**
+   * CSSに `touch-action: manipulation;` を適用し、モバイルでのダブルタップ遅延を防止。
+   * タッチイベントに `pointerdown` を使用することで、画面に指が触れた瞬間に超高速で取り判定が行われるように調整しました。
 
-/* ===== ゲーム状態 ===== */
-const S={
-  color:COLORS[0], diff:DIFFS[1],
-  mySlots:[], cpuSlots:[], // 固定位置を保持する配列 (長さ10)
-  order:[], idx:0, cur:null, resolved:true, phase:'idle',
-  pot:0, myTakeCount:0, cpuTakeCount:0,
-  myRest:false, cpuRest:false, isSuddenDeath:false, speechEnded:false,
-  cpuTimer:null, rafId:null, forceTimer:null, memoTimer:null, waitTimer:null,
-  opts:{num:false,kami:true,voice:true,slow:false}
-};
+---
 
-/* ===== 要素 ===== */
-const $=id=>document.getElementById(id);
-const setupScr=$('setup'),gameScr=$('game'),resultModal=$('resultModal');
-const colorPick=$('colorpick'),diffPick=$('diffpick'),diffNote=$('diffNote');
-const myField=$('myField'),cpuField=$('cpuField');
-const myCountEl=$('myCount'),cpuCountEl=$('cpuCount'),phaseText=$('phaseText'),potText=$('potText');
-const reader=$('reader'),kamiText=$('kamiText'),subText=$('subText'),barFill=$('barFill'),replayBtn=$('replayBtn');
-const memoBar=$('memoBar'),memoNum=$('memoNum'),memoSkip=$('memoSkip');
-const readyOv=$('readyOv'),toastEl=$('toast'),voiceTest=$('voiceTest'),quitBtn=$('quitBtn');
-const histList=$('histList'),clearHistBtn=$('clearHistBtn');
+### 完全コード（コピーしてそのままお使いいただけます）
 
-const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));const t=a[i];a[i]=a[j];a[j]=t;}return a;};
-
-/* ===== 朗詠音声（句ごとのポーズ・高低差で百人一首っぽく改善） ===== */
-let JA=null;
-function loadVoices(){
-  if(!('speechSynthesis' in window))return;
-  const vs=speechSynthesis.getVoices()||[];
-  const ja=vs.filter(v=>/^ja/i.test(v.lang||''));
-  if(!ja.length)return;
-  const pref=['Kyoko','Google 日本語','Nanami','Ayumi','Haruka','O-ren','Kyoto','Microsoft'];
-  JA=ja.find(v=>pref.some(p=>(v.name||'').indexOf(p)>=0))||ja[0];
+```html
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0d1420">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>五色百人一首 かるた対戦</title>
+<style>
+:root{
+  --bg:#0d1420; --line:rgba(255,255,255,.10);
+  --gold:#d9b46a; --ink:#f3efe6; --dim:#96a2b8;
+  --c-base:#2f6fb3; --c-dark:#16416f; --c-ink:#fff;
+  --fs:clamp(10px, 3.2vw, 15px); --radius:8px;
 }
-if('speechSynthesis' in window){
-  loadVoices();
-  speechSynthesis.onvoiceschanged=loadVoices;
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;touch-action:manipulation;}
+html,body{margin:0;padding:0;height:100%;width:100%;overflow:hidden;}
+body{
+  background:radial-gradient(125% 85% at 50% -10%, #1d2a44 0%, var(--bg) 58%, #06090f 100%);
+  color:var(--ink);
+  font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic UI","Yu Gothic",Meiryo,system-ui,-apple-system,sans-serif;
+  overscroll-behavior:none;-webkit-user-select:none;user-select:none;
 }
-function warmup(){
-  if(!('speechSynthesis' in window))return;
-  try{const u=new SpeechSynthesisUtterance(' ');u.volume=0;u.lang='ja-JP';speechSynthesis.speak(u);}catch(e){}
+.screen{display:none;height:100svh;height:100dvh;width:100%;flex-direction:column;}
+.screen.on{display:flex;}
+
+/* ===== 設定画面 ===== */
+#setup{
+  padding:calc(12px + env(safe-area-inset-top)) 16px calc(20px + env(safe-area-inset-bottom));
+  gap:10px;overflow-y:auto;
 }
-function stopSpeak(){
-  if('speechSynthesis' in window){
-    try{speechSynthesis.cancel();}catch(e){}
-  }
-}
-
-/* 百人一首風朗詠（句ごとのピッチ・スピード制御） */
-function speakPoem(poem, onEndCallback){
-  stopSpeak();
-  if(!S.opts.voice || !('speechSynthesis' in window)){
-    S.speechEnded = true;
-    if(onEndCallback) onEndCallback();
-    return;
-  }
-
-  S.speechEnded = false;
-  const baseRate = S.opts.slow ? 0.60 : 0.72;
-
-  // 上の句：3句をピッチを少しずつ下げながらゆったり再生
-  const speakKamiPart = (index) => {
-    if(index >= 3){
-      // 下の句へ移行
-      subText.textContent = '下の句 ' + poem.s[0] + ' ' + poem.s[1];
-      subText.style.opacity = '1';
-      setTimeout(()=> speakShimoPart(0), 650);
-      return;
-    }
-
-    const text = poem.k[index] + '……';
-    const u = new SpeechSynthesisUtterance(text);
-    u.lang = 'ja-JP';
-    u.rate = baseRate;
-    u.pitch = 1.15 - (index * 0.05); // 上の句は高めから自然に下げる
-    u.volume = 1;
-    if(JA) u.voice = JA;
-
-    u.onend = ()=>{
-      setTimeout(()=> speakKamiPart(index + 1), 400); // 句間にの間（ポーズ）
-    };
-    try { speechSynthesis.speak(u); } catch(e){}
-  };
-
-  // 下の句：2句を少し落ち着いた低めのトーンで朗詠
-  const speakShimoPart = (index) => {
-    if(index >= 2){
-      S.speechEnded = true;
-      if(onEndCallback) onEndCallback();
-      return;
-    }
-
-    const text = poem.s[index] + (index === 1 ? '。' : '……');
-    const u = new SpeechSynthesisUtterance(text);
-    u.lang = 'ja-JP';
-    u.rate = baseRate * 0.92;
-    u.pitch = 0.90 - (index * 0.05); // 低めで余韻
-    u.volume = 1;
-    if(JA) u.voice = JA;
-
-    u.onend = ()=>{
-      if(index === 0){
-        setTimeout(()=> speakShimoPart(1), 450);
-      }else{
-        S.speechEnded = true;
-        if(onEndCallback) onEndCallback();
-      }
-    };
-    try { speechSynthesis.speak(u); } catch(e){}
-  };
-
-  speakKamiPart(0);
-}
-
-/* ===== 対戦履歴（LocalStorage） ===== */
-function getHistory(){
-  try{ return JSON.parse(localStorage.getItem('karuta_hist')||'[]'); }catch(e){ return []; }
-}
-function saveHistoryItem(item){
-  const list = getHistory();
-  list.unshift(item);
-  if(list.length > 10) list.pop(); // 最新10件保持
-  try{ localStorage.setItem('karuta_hist', JSON.stringify(list)); }catch(e){}
-  renderHistory();
-}
-function deleteHistoryItem(idx){
-  const list = getHistory();
-  list.splice(idx,1);
-  try{ localStorage.setItem('karuta_hist', JSON.stringify(list)); }catch(e){}
-  renderHistory();
-}
-function clearHistory(){
-  try{ localStorage.removeItem('karuta_hist'); }catch(e){}
-  renderHistory();
-}
-function renderHistory(){
-  const list = getHistory();
-  if(!list.length){
-    histList.innerHTML = '<div style="font-size:10px;color:var(--dim);text-align:center;padding:10px;">履歴はありません</div>';
-    return;
-  }
-  histList.innerHTML = list.map((item, i)=>{
-    const resClass = item.res === 'WIN' ? 'win' : (item.res === 'LOSE' ? 'lose' : 'draw');
-    const resText = item.res === 'WIN' ? '勝利' : (item.res === 'LOSE' ? '敗北' : '引分');
-    return `<div class="hist-item">
-      <div><b>${item.color}</b> <small style="color:var(--dim)">(${item.diff})</small> <br><span style="font-size:8.5px;color:var(--dim);">${item.date}</span></div>
-      <div class="${resClass}">${resText}</div>
-      <div style="font-weight:700;">${item.my} - ${item.cpu}</div>
-      <button class="hist-del" onclick="deleteHistoryItem(${i})">✕</button>
-    </div>`;
-  }).join('');
-}
-clearHistBtn.addEventListener('click', ()=>{
-  if(confirm('対戦履歴を全リセットしますか？')) clearHistory();
-});
-
-/* ===== 設定画面の初期化 ===== */
-function selectColor(c){
-  S.color=c;
-  [...colorPick.children].forEach(b=>b.classList.toggle('sel',b.dataset.id===c.id));
-  document.documentElement.style.setProperty('--c-base',c.base);
-  document.documentElement.style.setProperty('--c-dark',c.dark);
-  document.documentElement.style.setProperty('--c-ink',c.ink);
-}
-function selectDiff(d){
-  S.diff=d;
-  [...diffPick.children].forEach(b=>b.classList.toggle('sel',b.dataset.id===d.id));
-  diffNote.textContent=d.note;
-}
-COLORS.forEach(c=>{
-  const b=document.createElement('button');
-  b.className='cbtn';b.dataset.id=c.id;
-  b.style.background='linear-gradient(170deg,'+c.base+','+c.dark+')';
-  b.innerHTML=c.name+'<span class="cnt">20首</span>';
-  b.addEventListener('click',()=>selectColor(c));
-  colorPick.appendChild(b);
-});
-DIFFS.forEach(d=>{
-  const b=document.createElement('button');
-  b.className='dbtn';b.dataset.id=d.id;
-  b.innerHTML=d.name+'<span>'+d.sub+'</span>';
-  b.addEventListener('click',()=>{selectDiff(d);warmup();});
-  diffPick.appendChild(b);
-});
-selectColor(COLORS[0]);selectDiff(DIFFS[1]);renderHistory();
-
-const chk=(id,key,elId)=>{
-  const box=$(elId),wrap=$(id);
-  box.checked=S.opts[key];
-  wrap.classList.toggle('on',box.checked);
-  box.addEventListener('change',()=>{S.opts[key]=box.checked;wrap.classList.toggle('on',box.checked);});
-};
-chk('chkNum','num','cbNum');
-chk('chkKami','kami','cbKami');
-chk('chkVoice','voice','cbVoice');
-chk('chkSlow','slow','cbSlow');
-
-voiceTest.addEventListener('click',()=>{
-  warmup();
-  const sample = {k:['あしびきの','やまどりのをの','しだりをの'],s:['ながながしよを','ひとりかもねむ']};
-  speakPoem(sample, null);
-  voiceTest.textContent=JA?('🔊 音声テスト（'+JA.name+'）'):'🔊 音声テスト（日本語音声未検出）';
-});
-
-/* ===== フィールド描画（スロット位置の固定） ===== */
-function slotHTML(slotData, own, index){
-  if(!slotData || slotData.taken){
-    return `<div class="slot taken" data-idx="${index}" data-own="${own}"></div>`;
-  }
-  const p = slotData.poem;
-  const c = S.color;
-  const cls = 'card' + (S.opts.num ? '' : ' nonum');
-  return `<div class="slot" data-idx="${index}" data-own="${own}">
-    <button class="${cls}" data-num="${p.n}" data-own="${own}" data-idx="${index}"
-      style="--c-base:${c.base};--c-dark:${c.dark};--c-ink:${c.ink}">
-      <span class="num">${p.n}</span>
-      <div class="shimo"><span>${p.s[0]}</span><span>${p.s[1]}</span></div>
-    </button>
-  </div>`;
-}
-
-function render(){
-  myField.innerHTML = S.mySlots.map((item, i)=> slotHTML(item, 'me', i)).join('');
-  cpuField.innerHTML = S.cpuSlots.map((item, i)=> slotHTML(item, 'cpu', i)).join('');
-  myCountEl.textContent = S.myTakeCount;
-  cpuCountEl.textContent = S.cpuTakeCount;
-  potText.textContent = S.pot > 0 ? ('（場の払い札: ' + S.pot + '枚）') : '';
-  myCountEl.classList.toggle('hot', S.phase === 'read');
-}
-
-function toast(msg,ms){
-  toastEl.innerHTML=msg;toastEl.classList.add('show');
-  clearTimeout(toast._t);
-  toast._t=setTimeout(()=>toastEl.classList.remove('show'),ms||1600);
-}
-
-/* ===== 進行バー ===== */
-function startBar(ms){
-  const t0=performance.now();
-  cancelAnimationFrame(S.rafId);
-  const tick=()=>{
-    const left=1-(performance.now()-t0)/ms;
-    barFill.style.transform='scaleX('+Math.max(0,left)+')';
-    if(left>0&&!S.resolved)S.rafId=requestAnimationFrame(tick);
-  };
-  S.rafId=requestAnimationFrame(tick);
-}
-function stopBar(){cancelAnimationFrame(S.rafId);}
-
-/* ===== ゲーム開始 ===== */
-function start(){
-  warmup();
-  const pool=shuffle(S.color.poems.slice());
-  
-  // 10枚ずつスロットオブジェクトとして固定配列で構築
-  S.mySlots = pool.slice(0,10).map(p => ({ poem: p, taken: false }));
-  S.cpuSlots = pool.slice(10,20).map(p => ({ poem: p, taken: false }));
-  
-  S.order=shuffle(pool.slice());
-  S.idx=0;S.resolved=true;S.phase='ready';
-  S.pot=0; S.myTakeCount=0; S.cpuTakeCount=0;
-  S.myRest=false; S.cpuRest=false; S.isSuddenDeath=false;
-  
-  clearTimeout(S.cpuTimer);clearTimeout(S.forceTimer);clearTimeout(S.waitTimer);clearInterval(S.memoTimer);
-  stopBar();stopSpeak();
-
-  setupScr.classList.remove('on');resultModal.classList.remove('on');gameScr.classList.add('on');
-  render();
-
-  phaseText.textContent='暗記時間';
-  subText.textContent='';kamiText.textContent='暗記中';
-  reader.classList.remove('done');
-  
-  readyOv.classList.add('on');
-  setTimeout(()=>{
-    readyOv.classList.remove('on');
-    startMemo();
-  },500);
-}
-
-/* ===== 暗記時間 ===== */
-function startMemo(){
-  S.phase='memo';
-  let t=60;memoNum.textContent=t;
-  memoBar.classList.add('on');
-
-  clearInterval(S.memoTimer);
-  S.memoTimer=setInterval(()=>{
-    t--;memoNum.textContent=t;
-    if(t<=0){
-      clearInterval(S.memoTimer);
-      begin();
-    }
-  },1000);
-}
-memoSkip.addEventListener('click',()=>{
-  clearInterval(S.memoTimer);
-  begin();
-});
-
-function begin(){
-  memoBar.classList.remove('on');
-  S.phase='read';
-  render();
-  nextPoem();
-}
-
-/* ===== 1首進行 ===== */
-function nextPoem(){
-  S.cur=S.order[S.idx];
-  S.resolved=false;S.phase='read';
-  
-  phaseText.textContent = S.isSuddenDeath ? 'サドンデス' : ('第'+(S.idx+1)+'首／17首');
-
-  const k=S.cur.k.join('');
-  kamiText.textContent=k;
-  subText.textContent='';
-  subText.style.opacity='0';
-  reader.classList.toggle('hide',!S.opts.kami);
-  reader.classList.remove('done');
-  replayBtn.disabled=false;
-
-  if(S.myRest && S.cpuRest) toast('【双方 1回休み】', 1400);
-  else if(S.myRest) toast('【自分 1回休み】', 1400);
-  else if(S.cpuRest) toast('【相手 1回休み】', 1400);
-
-  speakPoem(S.cur, ()=>{ checkAutoAdvance(); });
-
-  if(!S.cpuRest){
-    const d=S.diff;
-    const ms=Math.max(400, d.react+(Math.random()*2-1)*d.jitter);
-    clearTimeout(S.cpuTimer);
-    S.cpuTimer=setTimeout(cpuAct,ms);
-    startBar(ms);
-  }else{
-    startBar(9000);
-  }
-
-  clearTimeout(S.forceTimer);
-  S.forceTimer=setTimeout(forceResolve, 18000);
-}
-
-replayBtn.addEventListener('click',()=>{
-  if(S.cur&&S.phase==='read'&&!S.resolved){
-    speakPoem(S.cur, ()=>{ checkAutoAdvance(); });
-  }
-});
-
-/* ===== CPUの動作 ===== */
-function cpuAct(){
-  if(S.resolved||S.phase!=='read'||S.cpuRest)return;
-  
-  if(Math.random()<S.diff.err){
-    penaltyFrom('cpu');
-    clearTimeout(S.cpuTimer);
-    S.cpuTimer=setTimeout(cpuAct,1400);
-    return;
-  }
-
-  // 該当札を探す
-  let targetSlot = S.mySlots.find(s => !s.taken && s.poem.n === S.cur.n);
-  let own = 'me';
-  if(!targetSlot){
-    targetSlot = S.cpuSlots.find(s => !s.taken && s.poem.n === S.cur.n);
-    own = 'cpu';
-  }
-
-  if(targetSlot){
-    takeCard(S.cur.n, own, 'cpu');
-  }
-}
-
-/* ===== お手つき処理 ===== */
-function penaltyFrom(tapper){
-  const isMe = (tapper === 'me');
-  const takeCnt = isMe ? S.myTakeCount : S.cpuTakeCount;
-
-  if(takeCnt > 0){
-    if(isMe) S.myTakeCount--; else S.cpuTakeCount--;
-    S.pot++;
-    toast(isMe ? 'お手つき！獲得札から1枚を場に出しました。' : '相手がお手つき！獲得札から1枚が場に出されました。');
-  }else{
-    if(isMe) S.myRest = true; else S.cpuRest = true;
-    toast(isMe ? 'お手つき！獲得札がないため、次の1首は1回休みです。' : '相手がお手つき！獲得札がないため、次の1首は1回休みです。');
-  }
-  render();
-}
-
-/* ===== 札取り実行（初期位置固定） ===== */
-function takeCard(n, owner, taker){
-  if(S.resolved) return;
-  S.resolved=true;S.phase='read';
-  clearTimeout(S.cpuTimer);clearTimeout(S.forceTimer);stopBar();replayBtn.disabled=true;
-  
-  const isMe = (taker === 'me');
-  const slots = owner==='me'? S.mySlots : S.cpuSlots;
-  const slotObj = slots.find(s => !s.taken && s.poem.n === n);
-  if(!slotObj) return;
-
-  const card = slotObj.poem;
-  const el = document.querySelector(`.card[data-num="${n}"]`);
-  if(el) el.classList.add('hit');
-
-  if(isMe) S.myRest = false; else S.cpuRest = false;
-
-  let gained = 1;
-  let bonusTxt = '';
-  if(S.pot > 0){
-    gained += 1;
-    S.pot -= 1;
-    bonusTxt = '<br><small>（場に出ていた札も1枚獲得！）</small>';
-  }
-
-  if(isMe) S.myTakeCount += gained;
-  else S.cpuTakeCount += gained;
-
-  subText.textContent='下の句 '+card.s[0]+' '+card.s[1];
-  subText.style.opacity = '1';
-  reader.classList.add('done');
-  reader.classList.remove('hide');
-
-  toast((isMe ? '自分が取りました！' : '相手が取りました！') + bonusTxt, 1600);
-
-  setTimeout(()=>{
-    slotObj.taken = true; // 位置は残して非表示状態に
-    render();
-  },500);
-
-  checkAutoAdvance();
-}
-
-/* ===== 誰も取れなかった場合 ===== */
-function forceResolve(){
-  if(S.resolved||!S.cur)return;
-  S.resolved=true;S.phase='read';
-  clearTimeout(S.cpuTimer);stopBar();replayBtn.disabled=true;
-  
-  const n=S.cur.n;
-  let slotObj = S.mySlots.find(s => !s.taken && s.poem.n === n);
-  if(!slotObj) slotObj = S.cpuSlots.find(s => !s.taken && s.poem.n === n);
-
-  if(slotObj){
-    const el = document.querySelector(`.card[data-num="${n}"]`);
-    if(el) el.classList.add('dim');
-
-    subText.textContent='下の句 '+slotObj.poem.s[0]+' '+slotObj.poem.s[1];
-    subText.style.opacity = '1';
-    reader.classList.add('done');
-    toast('時間切れ… この札は場に残ります',1600);
-
-    setTimeout(()=>{
-      slotObj.taken = true;
-      render();
-    },600);
-  }
-
-  checkAutoAdvance();
-}
-
-/* ===== 自動進行（2秒間待機） ===== */
-function checkAutoAdvance(){
-  if(!S.resolved || !S.speechEnded) return;
-
-  clearTimeout(S.waitTimer);
-  S.waitTimer = setTimeout(()=>{
-    advanceNext();
-  }, 2000);
-}
-
-function advanceNext(){
-  S.myRest = false;
-  S.cpuRest = false;
-
-  if(!S.isSuddenDeath && S.idx >= 16){
-    if(S.myTakeCount !== S.cpuTakeCount) return finish();
-    else {
-      S.isSuddenDeath = true;
-      S.idx++;
-      if(S.idx >= S.order.length) return finish();
-      toast('同点のため、サドンデス（1首勝負）に入ります！', 2200);
-      setTimeout(nextPoem, 1200);
-      return;
-    }
-  }else if(S.isSuddenDeath){
-    if(S.myTakeCount !== S.cpuTakeCount) return finish();
-    else {
-      S.idx++;
-      if(S.idx >= S.order.length) return finish();
-      nextPoem();
-      return;
-    }
-  }
-
-  S.idx++;
-  if(S.idx >= S.order.length) finish();
-  else nextPoem();
-}
-
-/* ===== タップ処理 ===== */
-function onTap(e){
-  const el=e.target.closest?e.target.closest('.card'):null;
-  if(!el||S.phase!=='read'||S.resolved||!S.cur)return;
-
-  if(S.myRest){
-    toast('【1回休み中】この首は札を取れません', 1200);
-    return;
-  }
-
-  const n=parseInt(el.dataset.num,10);
-  const owner=el.dataset.own;
-
-  if(n===S.cur.n){
-    takeCard(n,owner,'me');
-    return;
-  }
-
-  el.classList.add('bad');
-  setTimeout(()=>el.classList.remove('bad'),450);
-  penaltyFrom('me');
-}
-myField.addEventListener('click',onTap);
-cpuField.addEventListener('click',onTap);
-
-/* ===== 勝敗結果ポップアップ表示＆履歴保存 ===== */
-function finish(){
-  S.phase='over';S.resolved=true;
-  clearTimeout(S.cpuTimer);clearTimeout(S.forceTimer);clearTimeout(S.waitTimer);clearInterval(S.memoTimer);
-  stopBar();stopSpeak();
-  memoBar.classList.remove('on');
-
-  const m=S.myTakeCount, c=S.cpuTakeCount;
-  let v, why, resFlag;
-
-  if(m > c){
-    v = '勝利！';
-    why = S.isSuddenDeath ? 'サドンデスで相手の札を取って勝利！' : '17首終了時、獲得枚数が多いため勝利！';
-    resFlag = 'WIN';
-  }else if(m < c){
-    v = '敗北…';
-    why = S.isSuddenDeath ? 'サドンデスで相手に取られました。' : '17首終了時、相手の獲得枚数が多いため敗北。';
-    resFlag = 'LOSE';
-  }else{
-    v = '引き分け';
-    why = '全ての札を読み終え、完全同点でした。';
-    resFlag = 'DRAW';
-  }
-
-  // ポップアップへの設定
-  $('mVerdict').textContent = v;
-  $('mWhy').textContent = why;
-  $('mMy').textContent = m;
-  $('mCpu').textContent = c;
-
-  // 履歴へ保存
-  const now = new Date();
-  const dateStr = `${now.getMonth()+1}/${now.getDate()} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
-  saveHistoryItem({
-    date: dateStr, color: S.color.name, diff: S.diff.name,
-    my: m, cpu: c, res: resFlag
-  });
-
-  resultModal.classList.add('on');
-}
-
-/* 中断処理 */
-quitBtn.addEventListener('click',()=>{
-  if(confirm('対戦を中断して設定画面に戻りますか？')){
-    S.phase='idle';S.resolved=true;
-    clearTimeout(S.cpuTimer);clearTimeout(S.forceTimer);clearTimeout(S.waitTimer);clearInterval(S.memoTimer);
-    stopBar();stopSpeak();
-    memoBar.classList.remove('on');
-    gameScr.classList.remove('on');
-    setupScr.classList.add('on');
-  }
-});
-
-/* ===== モーダルボタンイベント ===== */
-$('mAgainBtn').addEventListener('click', ()=>{
-  resultModal.classList.remove('on');
-  start();
-});
-$('mBackBtn').addEventListener('click', ()=>{
-  resultModal.classList.remove('on');
-  gameScr.classList.remove('on');
-  setupScr.classList.add('on');
-});
-
-$('startBtn').addEventListener('click',start);
-document.addEventListener('gesturestart',e=>e.preventDefault());
-</script>
-</body>
-</html>
+.brand{text-align:center;padding:4px 0 2px;}
+.brand h1{margin:0;font-size:26px;letter-spacing:.20em;font-weight:700;
+  background:linear-gradient(180deg,#f8ecc9 0%,#d9b46a 55%,#a8823f 100%);
+  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;}
+.brand p{margin:4px 0 0;font-size:12px;color:var(--dim);letter-spacing:.14em;}
+.sec{margin-top:4px;}
+.sec>h2{font-size:12px;color:var(--gold);letter-spacing:.16em;margin:10px 0 6px;font-
