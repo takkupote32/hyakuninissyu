@@ -180,6 +180,7 @@ body{
 @keyframes bad{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
 .card.nonum .num{display:none;}
 
+/* 読手エリア */
 .reader{
   flex:0 0 auto;border-radius:10px;padding:6px 10px;text-align:center;
   background:linear-gradient(180deg,rgba(255,255,255,.075),rgba(255,255,255,.028));
@@ -198,6 +199,22 @@ body{
 .bar{position:absolute;left:0;bottom:0;height:3px;width:100%;background:rgba(255,255,255,.09);}
 .bar i{display:block;height:100%;width:100%;background:linear-gradient(90deg,#7de08a,#d9b46a,#ff6b6b);
   transform-origin:left center;transform:scaleX(1);}
+
+/* 読手エリア内に収まる暗記タイマー（札に被らない設計） */
+.memo-bar{
+  position:absolute;inset:0;
+  background:rgba(13,20,32,0.96);border:1px solid var(--gold);
+  border-radius:9px;padding:4px 14px;display:none;align-items:center;justify-content:space-between;
+  z-index:10;backdrop-filter:blur(6px);
+}
+.memo-bar.on{display:flex;}
+.memo-bar .time{font-size:24px;font-weight:700;color:#f8ecc9;font-variant-numeric:tabular-nums;line-height:1;}
+.memo-bar .txt{font-size:11px;color:var(--dim);line-height:1.2;text-align:left;}
+.memo-bar .btn{
+  border:0;border-radius:8px;padding:6px 12px;font-family:inherit;font-size:11px;font-weight:700;
+  color:#251c07;background:linear-gradient(180deg,#f2dda6,#d9b46a);cursor:pointer;white-space:nowrap;
+}
+
 .toast{
   position:fixed;left:50%;top:40%;transform:translate(-50%,-50%) scale(.85);
   background:rgba(8,12,20,.94);border:1px solid var(--line);color:#fff;padding:12px 22px;border-radius:12px;
@@ -205,21 +222,6 @@ body{
   white-space:nowrap;backdrop-filter:blur(6px);text-align:center;line-height:1.4;
 }
 .toast.show{opacity:1;transform:translate(-50%,-50%) scale(1);}
-
-/* ===== フローティング暗記タイマー ===== */
-.memo-bar{
-  position:fixed;top:calc(12px + env(safe-area-inset-top));left:50%;transform:translateX(-50%);
-  background:rgba(13,20,32,0.92);border:1px solid var(--gold);
-  border-radius:16px;padding:8px 20px;display:none;align-items:center;gap:14px;
-  z-index:90;box-shadow:0 6px 20px rgba(0,0,0,.6);backdrop-filter:blur(8px);
-}
-.memo-bar.on{display:flex;}
-.memo-bar .time{font-size:26px;font-weight:700;color:#f8ecc9;font-variant-numeric:tabular-nums;line-height:1;}
-.memo-bar .txt{font-size:11px;color:var(--dim);line-height:1.3;}
-.memo-bar .btn{
-  border:0;border-radius:10px;padding:7px 14px;font-family:inherit;font-size:11px;font-weight:700;
-  color:#251c07;background:linear-gradient(180deg,#f2dda6,#d9b46a);cursor:pointer;white-space:nowrap;
-}
 
 /* ===== 対戦結果ポップアップ ===== */
 .modal-ov{
@@ -334,17 +336,17 @@ body{
     <div class="sub" id="subText"></div>
     <button class="rep" id="replayBtn" aria-label="もう一度聞く">↻ もう一度</button>
     <div class="bar"><i id="barFill"></i></div>
+
+    <!-- 暗記タイマーバー（読手エリア内に配置） -->
+    <div class="memo-bar" id="memoBar">
+      <div class="time" id="memoNum">60</div>
+      <div class="txt">札の場所を<br>覚えよう！</div>
+      <button class="btn" id="memoSkip">覚えた！</button>
+    </div>
   </div>
 
   <div class="field me" id="myField"></div>
 </section>
-
-<!-- 暗記タイマーバー -->
-<div class="memo-bar" id="memoBar">
-  <div><div class="time" id="memoNum">60</div></div>
-  <div class="txt">札の場所を<br>覚えよう！</div>
-  <button class="btn" id="memoSkip">覚えた！</button>
-</div>
 
 <!-- 対戦結果ポップアップ -->
 <div class="modal-ov" id="resultModal">
@@ -520,8 +522,11 @@ const histList=$('histList'),clearHistBtn=$('clearHistBtn');
 
 const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));const t=a[i];a[i]=a[j];a[j]=t;}return a;};
 
-/* ===== 朗詠音声 ===== */
+/* ===== 朗詠音声とタイマーの完全制御 ===== */
 let JA=null;
+let speakTimers=[];
+let currentSpeakId=0;
+
 function loadVoices(){
   if(!('speechSynthesis' in window))return;
   const vs=speechSynthesis.getVoices()||[];
@@ -538,7 +543,12 @@ function warmup(){
   if(!('speechSynthesis' in window))return;
   try{const u=new SpeechSynthesisUtterance(' ');u.volume=0;u.lang='ja-JP';speechSynthesis.speak(u);}catch(e){}
 }
+
+/* 朗詠の完全停止 */
 function stopSpeak(){
+  currentSpeakId++; // 朗詠トークン更新（既存の非同期ステップをすべて無効化）
+  speakTimers.forEach(t => clearTimeout(t));
+  speakTimers = [];
   if('speechSynthesis' in window){
     try{speechSynthesis.cancel();}catch(e){}
   }
@@ -546,6 +556,8 @@ function stopSpeak(){
 
 function speakPoem(poem, onEndCallback){
   stopSpeak();
+  const speakId = currentSpeakId;
+
   if(!S.opts.voice || !('speechSynthesis' in window)){
     S.speechEnded = true;
     if(onEndCallback) onEndCallback();
@@ -556,10 +568,15 @@ function speakPoem(poem, onEndCallback){
   const baseRate = S.opts.slow ? 0.60 : 0.72;
 
   const speakKamiPart = (index) => {
+    if(currentSpeakId !== speakId) return;
+
     if(index >= 3){
       subText.textContent = '下の句 ' + poem.s[0] + ' ' + poem.s[1];
       subText.style.opacity = '1';
-      setTimeout(()=> speakShimoPart(0), 650);
+      const t = setTimeout(()=>{
+        if(currentSpeakId === speakId) speakShimoPart(0);
+      }, 650);
+      speakTimers.push(t);
       return;
     }
 
@@ -572,15 +589,21 @@ function speakPoem(poem, onEndCallback){
     if(JA) u.voice = JA;
 
     u.onend = ()=>{
-      setTimeout(()=> speakKamiPart(index + 1), 400);
+      if(currentSpeakId !== speakId) return;
+      const t = setTimeout(()=>{
+        if(currentSpeakId === speakId) speakKamiPart(index + 1);
+      }, 400);
+      speakTimers.push(t);
     };
     try { speechSynthesis.speak(u); } catch(e){}
   };
 
   const speakShimoPart = (index) => {
+    if(currentSpeakId !== speakId) return;
+
     if(index >= 2){
       S.speechEnded = true;
-      if(onEndCallback) onEndCallback();
+      if(onEndCallback && currentSpeakId === speakId) onEndCallback();
       return;
     }
 
@@ -593,11 +616,15 @@ function speakPoem(poem, onEndCallback){
     if(JA) u.voice = JA;
 
     u.onend = ()=>{
+      if(currentSpeakId !== speakId) return;
       if(index === 0){
-        setTimeout(()=> speakShimoPart(1), 450);
+        const t = setTimeout(()=>{
+          if(currentSpeakId === speakId) speakShimoPart(1);
+        }, 450);
+        speakTimers.push(t);
       }else{
         S.speechEnded = true;
-        if(onEndCallback) onEndCallback();
+        if(onEndCallback && currentSpeakId === speakId) onEndCallback();
       }
     };
     try { speechSynthesis.speak(u); } catch(e){}
@@ -1073,6 +1100,7 @@ $('mAgainBtn').addEventListener('click', ()=>{
   start();
 });
 $('mBackBtn').addEventListener('click', ()=>{
+  stopSpeak();
   resultModal.classList.remove('on');
   gameScr.classList.remove('on');
   setupScr.classList.add('on');
