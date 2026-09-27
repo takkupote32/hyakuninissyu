@@ -579,7 +579,8 @@ function stopSpeak(){
 }
 
 // 自然な朗詠調整を施した読み上げ
-function speakPoem(poem, onEndCallback){
+// 自然な朗詠調整を施した読み上げ（百人一首API連携版）
+async function speakPoem(poemNo = null, onEndCallback){
   stopSpeak();
   const speakId = currentSpeakId;
 
@@ -589,6 +590,41 @@ function speakPoem(poem, onEndCallback){
     return;
   }
 
+  // --- 1. APIから歌データを取得 ---
+  let poem = { k: [], s: [] };
+  try {
+    // poemNo の指定があればその番号、なければランダム取得
+    const apiUrl = poemNo 
+      ? `https://api.aoikujira.com/hyakunin/get2.php?fmt=json&no=${poemNo}`
+      : `https://api.aoikujira.com/hyakunin/get2.php?fmt=json`;
+
+    const res = await fetch(apiUrl);
+    const data = await res.json();
+
+    // APIの文字列（スペース区切り）を既存ロジック用の配列 [句1, 句2, 句3] に分割
+    poem.k = data.kami ? data.kami.split(' ') : [];
+    poem.s = data.shimo ? data.shimo.split(' ') : [];
+
+    // 万が一スペース区切りで取得できなかった場合のフォールバック
+    if (poem.k.length === 1) poem.k = [data.kami];
+    if (poem.s.length === 1) poem.s = [data.shimo];
+
+    // 画面に作者や歌を表示（必要に応じて）
+    if (typeof subText !== 'undefined' && subText) {
+      subText.textContent = `[${data.no}番 ${data.author}] 上の句: ${data.kami}`;
+      subText.style.opacity = '1';
+    }
+  } catch (e) {
+    console.error("API取得失敗:", e);
+    S.speechEnded = true;
+    if(onEndCallback) onEndCallback();
+    return;
+  }
+
+  // API通信中にストップや別の読み上げが実行された場合は中断
+  if(currentSpeakId !== speakId) return;
+
+  // --- 2. 朗詠設定 ---
   S.speechEnded = false;
   const baseRate = S.opts.slow ? 0.62 : 0.72;
   const targetVoice = getVoiceByGender(S.opts.voiceGender);
@@ -597,12 +633,15 @@ function speakPoem(poem, onEndCallback){
   let isMaleFallback = (S.opts.voiceGender === 'male' && targetVoice && !(['Otoya','Ichiro','Keita','Hattori','Takumi'].some(k=>(targetVoice.name||'').includes(k))));
   const pitchBase = isMaleFallback ? 0.75 : 1.0;
 
+  // --- 3. 上の句の再生 ---
   const speakKamiPart = (index) => {
     if(currentSpeakId !== speakId) return;
 
-    if(index >= 3){
-      subText.textContent = '下の句 ' + poem.s[0] + ' ' + poem.s[1];
-      subText.style.opacity = '1';
+    if(index >= poem.k.length){
+      if (typeof subText !== 'undefined' && subText) {
+        subText.textContent = '下の句 ' + poem.s.join(' ');
+        subText.style.opacity = '1';
+      }
       const t = setTimeout(()=>{
         if(currentSpeakId === speakId) speakShimoPart(0);
       }, 700);
@@ -610,7 +649,7 @@ function speakPoem(poem, onEndCallback){
       return;
     }
 
-    // 自然なアクセント間隔のために句尾の長音・読点を微調整
+    // 自然なアクセント間隔のために句尾に読点を追加
     const phraseText = poem.k[index] + '、';
     const u = new SpeechSynthesisUtterance(phraseText);
     u.lang = 'ja-JP';
@@ -629,16 +668,17 @@ function speakPoem(poem, onEndCallback){
     try { speechSynthesis.speak(u); } catch(e){}
   };
 
+  // --- 4. 下の句の再生 ---
   const speakShimoPart = (index) => {
     if(currentSpeakId !== speakId) return;
 
-    if(index >= 2){
+    if(index >= poem.s.length){
       S.speechEnded = true;
       if(onEndCallback && currentSpeakId === speakId) onEndCallback();
       return;
     }
 
-    const phraseText = poem.s[index] + (index === 1 ? '。' : '、');
+    const phraseText = poem.s[index] + (index === poem.s.length - 1 ? '。' : '、');
     const u = new SpeechSynthesisUtterance(phraseText);
     u.lang = 'ja-JP';
     u.rate = baseRate * 0.90;
@@ -648,9 +688,9 @@ function speakPoem(poem, onEndCallback){
 
     u.onend = ()=>{
       if(currentSpeakId !== speakId) return;
-      if(index === 0){
+      if(index < poem.s.length - 1){
         const t = setTimeout(()=>{
-          if(currentSpeakId === speakId) speakShimoPart(1);
+          if(currentSpeakId === speakId) speakShimoPart(index + 1);
         }, 500);
         speakTimers.push(t);
       }else{
@@ -663,6 +703,7 @@ function speakPoem(poem, onEndCallback){
 
   speakKamiPart(0);
 }
+
 
 /* ===== 対戦履歴 ===== */
 function getHistory(){
