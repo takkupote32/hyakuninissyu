@@ -442,4 +442,983 @@ body{
   -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;}
 .brand p{margin:4px 0 0;font-size:12px;color:var(--dim);letter-spacing:.14em;}
 .sec{margin-top:4px;}
-.sec>h2{font-size:12px;color:var(--gold);letter-spacing:.16em;margin:10px 0 6px;font-
+.sec>h2{font-size:12px;color:var(--gold);letter-spacing:.16em;margin:10px 0 6px;font-weight:600;}
+.sec>h2 small{color:var(--dim);letter-spacing:0;font-weight:400;margin-left:6px;font-size:10.5px;}
+.colors{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;}
+.cbtn{
+  border:0;border-radius:var(--radius);padding:10px 0 8px;cursor:pointer;
+  color:#fff;font-family:inherit;font-size:14px;font-weight:700;letter-spacing:.1em;
+  box-shadow:0 3px 0 rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.32);
+  position:relative;transition:transform .12s, outline-color .12s;
+  outline:3px solid transparent;outline-offset:2px;
+}
+.cbtn:active{transform:translateY(2px);}
+.cbtn .cnt{display:block;font-size:9px;opacity:.85;letter-spacing:0;margin-top:2px;font-weight:500;}
+.cbtn.sel{outline-color:var(--gold);}
+.diffs{display:grid;grid-template-columns:repeat(5,1fr);gap:5px;}
+.dbtn{
+  border:1px solid var(--line);background:rgba(255,255,255,.045);color:var(--ink);
+  border-radius:var(--radius);padding:9px 2px;font-family:inherit;font-size:11.5px;font-weight:600;
+  cursor:pointer;letter-spacing:.02em;transition:all .15s;
+}
+.dbtn span{display:block;font-size:8.5px;color:var(--dim);font-weight:400;margin-top:2px;}
+.dbtn.sel{background:linear-gradient(180deg,rgba(217,180,106,.30),rgba(217,180,106,.13));
+  border-color:var(--gold);color:#f8ecc9;}
+.dbtn.sel span{color:#d9c39a;}
+.note{
+  font-size:11px;color:#c8bfa8;background:rgba(217,180,106,.09);
+  border-left:2px solid var(--gold);border-radius:0 6px 6px 0;padding:7px 10px;margin-top:6px;line-height:1.5;
+}
+.opts{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;}
+.chk{
+  display:flex;align-items:center;gap:5px;font-size:11px;color:#cfd6e2;
+  background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:20px;padding:6px 10px;cursor:pointer;
+}
+.chk.on{background:rgba(217,180,106,.18);border-color:rgba(217,180,106,.5);color:#f4e6c6;}
+.chk input{display:none;}
+#startBtn{
+  margin-top:12px;width:100%;border:0;border-radius:12px;padding:15px;font-family:inherit;
+  font-size:16px;font-weight:700;letter-spacing:.2em;color:#251c07;cursor:pointer;
+  background:linear-gradient(180deg,#f2dda6,#d9b46a 60%,#bb9247);
+  box-shadow:0 5px 16px rgba(217,180,106,.28), inset 0 1px 0 rgba(255,255,255,.7);
+}
+#startBtn:active{transform:translateY(2px);}
+.ghost{
+  margin-top:8px;width:100%;border:1px solid var(--line);background:transparent;color:var(--dim);
+  border-radius:10px;padding:10px;font-family:inherit;font-size:11px;cursor:pointer;
+}
+
+/* 履歴セクション */
+.history-sec{margin-top:14px;background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:10px;padding:12px;}
+.history-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+.history-hdr h3{margin:0;font-size:12px;color:var(--gold);font-weight:600;}
+.clear-btn{border:1px solid rgba(255,107,107,.4);background:rgba(255,107,107,.1);color:#ff9f6b;border-radius:12px;padding:2px 8px;font-size:10px;cursor:pointer;}
+.hist-list{display:flex;flex-direction:column;gap:6px;max-height:160px;overflow-y:auto;}
+.hist-item{display:grid;grid-template-columns:1fr auto auto auto;align-items:center;gap:8px;font-size:10.5px;padding:6px 8px;background:rgba(255,255,255,.04);border-radius:6px;border:1px solid rgba(255,255,255,.05);}
+.hist-item .win{color:#7de08a;font-weight:700;}
+.hist-item .lose{color:#ff6b6b;font-weight:700;}
+.hist-item .draw{color:var(--dim);font-weight:700;}
+.hist-del{border:0;background:transparent;color:var(--dim);cursor:pointer;font-size:11px;padding:0 2px;}
+
+/* ===== 対戦画面 ===== */
+#game{
+  padding:calc(4px + env(safe-area-inset-top)) 6px calc(6px + env(safe-area-inset-bottom));
+  gap:4px;height:100svh;height:100dvh;overflow:hidden;
+  display:flex;flex-direction:column;justify-content:space-between;
+}
+.hud{
+  display:grid;grid-template-columns:auto 1fr auto 1fr;align-items:center;gap:6px;
+  font-size:11px;padding:2px 4px;flex:0 0 auto;
+}
+.hud .quit-btn{
+  border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.06);color:var(--dim);
+  border-radius:14px;padding:4px 9px;font-size:10px;cursor:pointer;font-family:inherit;
+  white-space:nowrap;
+}
+.hud .quit-btn:active{background:rgba(255,255,255,.18);color:#fff;}
+.hud .side{display:flex;align-items:center;gap:4px;color:var(--dim);}
+.hud .side.r{justify-content:flex-end;}
+.hud b{font-size:15px;color:var(--ink);font-variant-numeric:tabular-nums;}
+.hud b.hot{color:#ff9f6b;}
+.hud .mid{
+  font-size:10.5px;color:var(--gold);letter-spacing:.06em;text-align:center;
+  border:1px solid rgba(217,180,106,.35);border-radius:20px;padding:3px 8px;white-space:nowrap;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+}
+.hud .pot-info{font-size:8.5px;color:#ff9f6b;margin-top:1px;}
+
+.field{
+  display:grid;grid-template-columns:repeat(5,1fr);grid-template-rows:repeat(2,1fr);
+  gap:5px;flex:1 1 0;min-height:0;width:100%;align-items:stretch;justify-items:stretch;
+}
+.field.cpu{transform:rotate(180deg);}
+
+.slot{width:100%;height:100%;min-height:0;position:relative;}
+.card{
+  position:absolute;inset:0;border:0;padding:2px;border-radius:6px;overflow:hidden;cursor:pointer;
+  background:linear-gradient(160deg,var(--c-base),var(--c-dark));
+  box-shadow:0 2px 5px rgba(0,0,0,.45), inset 0 0 0 1px rgba(255,255,255,.22);
+  display:flex;align-items:center;justify-content:center;
+  width:100%;height:100%;font-family:inherit;
+  transition:transform .06s ease-out, box-shadow .12s, opacity .2s;
+  touch-action:manipulation;
+}
+.card::after{content:"";position:absolute;inset:2px;border-radius:4px;
+  border:1px solid rgba(255,255,255,.18);pointer-events:none;}
+.card .num{
+  position:absolute;left:3px;top:2px;font-size:8px;color:var(--c-ink);opacity:.6;
+  line-height:1;letter-spacing:0;pointer-events:none;
+}
+.card .shimo{
+  writing-mode:vertical-rl;display:flex;flex-direction:row-reverse;
+  justify-content:center;align-items:center;gap:4px;height:92%;margin:0 auto;color:var(--c-ink);
+  pointer-events:none;
+}
+.card .shimo span{
+  display:block;white-space:nowrap;font-size:clamp(10px, 3.4vw, 15px);
+  line-height:1.12;letter-spacing:0.04em;font-weight:600;pointer-events:none;
+}
+.slot.taken .card{display:none;}
+.slot.taken::before{
+  content:"";position:absolute;inset:0;border-radius:6px;
+  border:1px dashed rgba(255,255,255,.08);background:rgba(0,0,0,.12);
+}
+
+.card:active:not(.empty){transform:scale(.94);}
+.card.hit{animation:hit .45s ease-out;box-shadow:0 0 0 3px #7de08a, 0 0 22px rgba(125,224,138,.7);}
+.card.bad{animation:bad .45s ease-out;box-shadow:0 0 0 3px #ff6b6b, 0 0 22px rgba(255,107,107,.7);}
+.card.dim{opacity:.25;}
+@keyframes hit{0%{transform:scale(1.1)}100%{transform:scale(1)}}
+@keyframes bad{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+.card.nonum .num{display:none;}
+
+/* 朗詠＆暗記バー領域（お互いの札の間） */
+.reader{
+  flex:0 0 auto;border-radius:10px;padding:4px 10px;text-align:center;
+  background:linear-gradient(180deg,rgba(255,255,255,.075),rgba(255,255,255,.028));
+  border:1px solid var(--line);min-height:64px;
+  display:flex;flex-direction:column;justify-content:center;gap:2px;position:relative;overflow:hidden;
+}
+.reader .lbl{font-size:8.5px;color:var(--dim);letter-spacing:.32em;}
+.reader .kami{font-size:14.5px;font-weight:600;letter-spacing:.06em;line-height:1.45;word-break:break-all;}
+.reader .sub{font-size:10px;color:#8fa8c4;letter-spacing:.05em;min-height:13px;line-height:1.3;}
+.reader.hide .kami{filter:blur(7px);opacity:.55;}
+.reader.done .kami{color:var(--gold);}
+.reader .rep{position:absolute;right:6px;top:5px;border:1px solid var(--line);background:rgba(255,255,255,.07);
+  color:#cbd4e2;border-radius:14px;font-family:inherit;font-size:9px;padding:3px 7px;cursor:pointer;}
+.reader .rep:active{transform:scale(.94);}
+.reader .rep[disabled]{opacity:.3;}
+.bar{position:absolute;left:0;bottom:0;height:3px;width:100%;background:rgba(255,255,255,.09);}
+.bar i{display:block;height:100%;width:100%;background:linear-gradient(90deg,#7de08a,#d9b46a,#ff6b6b);
+  transform-origin:left center;transform:scaleX(1);}
+
+/* ===== 横長コンパクト暗記UI（お互いの札の間の朗詠エリア内に挿入） ===== */
+.memo-inline{
+  display:none;align-items:center;justify-content:space-between;width:100%;height:100%;padding:0 4px;
+}
+.memo-inline.on{display:flex;}
+.memo-inline .left-box{display:flex;align-items:center;gap:10px;}
+.memo-inline .time-num{font-size:24px;font-weight:800;color:#f8ecc9;font-variant-numeric:tabular-nums;line-height:1;}
+.memo-inline .time-txt{font-size:10.5px;color:var(--dim);text-align:left;line-height:1.25;}
+.memo-inline .skip-btn{
+  border:0;border-radius:8px;padding:8px 16px;font-family:inherit;font-size:12px;font-weight:700;
+  color:#251c07;background:linear-gradient(180deg,#f2dda6,#d9b46a);cursor:pointer;white-space:nowrap;
+  box-shadow:0 2px 6px rgba(0,0,0,.3);touch-action:manipulation;
+}
+.memo-inline .skip-btn:active{transform:scale(.95);}
+
+.toast{
+  position:fixed;left:50%;top:40%;transform:translate(-50%,-50%) scale(.85);
+  background:rgba(8,12,20,.94);border:1px solid var(--line);color:#fff;padding:12px 22px;border-radius:12px;
+  font-size:13px;font-weight:700;letter-spacing:.08em;opacity:0;pointer-events:none;transition:all .2s;z-index:95;
+  white-space:nowrap;backdrop-filter:blur(6px);text-align:center;line-height:1.4;
+}
+.toast.show{opacity:1;transform:translate(-50%,-50%) scale(1);}
+
+/* モーダル */
+.modal-ov{
+  position:fixed;inset:0;background:rgba(4,7,12,0.85);backdrop-filter:blur(8px);
+  display:none;align-items:center;justify-content:center;z-index:100;padding:20px;
+}
+.modal-ov.on{display:flex;}
+.modal-box{
+  background:linear-gradient(180deg,#18253d,#0d1420);border:1px solid var(--gold);
+  border-radius:20px;padding:24px 20px;width:100%;max-width:340px;text-align:center;
+  box-shadow:0 12px 32px rgba(0,0,0,.8);animation:modalUp .3s cubic-bezier(0.18, 0.89, 0.32, 1.28);
+}
+@keyframes modalUp{from{transform:scale(.8);opacity:0}to{transform:scale(1);opacity:1}}
+.modal-box .verdict{
+  font-size:34px;font-weight:800;letter-spacing:.15em;margin-bottom:4px;
+  background:linear-gradient(180deg,#f8ecc9,#d9b46a);-webkit-background-clip:text;-webkit-text-fill-color:transparent;
+}
+.modal-box .why{font-size:11.5px;color:var(--dim);margin-bottom:16px;line-height:1.5;}
+.scorebox{
+  display:grid;grid-template-columns:1fr auto 1fr;gap:10px;align-items:center;
+  background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:16px;
+}
+.scorebox .n{font-size:30px;font-weight:700;font-variant-numeric:tabular-nums;}
+.scorebox .t{font-size:10px;color:var(--dim);margin-top:2px;}
+.scorebox .vs{font-size:10px;color:var(--gold);font-weight:700;}
+.modal-btns{display:flex;flex-direction:column;gap:8px;}
+.modal-btn-main{
+  border:0;border-radius:12px;padding:13px;font-family:inherit;font-size:14px;font-weight:700;
+  color:#251c07;background:linear-gradient(180deg,#f2dda6,#d9b46a);cursor:pointer;letter-spacing:.1em;
+}
+.modal-btn-sub{
+  border:1px solid var(--line);background:rgba(255,255,255,.06);color:var(--ink);
+  border-radius:12px;padding:11px;font-family:inherit;font-size:12px;cursor:pointer;
+}
+
+.ov{position:fixed;inset:0;background:rgba(5,8,13,.93);display:none;
+  flex-direction:column;align-items:center;justify-content:center;gap:16px;z-index:80;padding:24px;text-align:center;}
+.ov.on{display:flex;}
+.spin{width:40px;height:40px;border-radius:50%;border:3px solid rgba(217,180,106,.22);
+  border-top-color:var(--gold);animation:sp 1s linear infinite;}
+@keyframes sp{to{transform:rotate(360deg)}}
+
+@media (min-width:600px){
+  :root{--fs:14px;}
+  .screen{max-width:480px;margin:0 auto;}
+}
+</style>
+</head>
+<body>
+
+<!-- ========== 設定画面 ========== -->
+<section id="setup" class="screen on">
+  <div class="brand">
+    <h1>五色百人一首</h1>
+    <p>かるた対戦</p>
+  </div>
+
+  <div class="sec">
+    <h2>色を選ぶ <small>20枚 ずつ</small></h2>
+    <div class="colors" id="colorpick"></div>
+  </div>
+
+  <div class="sec">
+    <h2>相手の強さ</h2>
+    <div class="diffs" id="diffpick"></div>
+    <div class="note" id="diffNote"></div>
+  </div>
+
+  <div class="sec">
+    <h2>設定</h2>
+    <div class="opts">
+      <label class="chk" id="chkNum"><input type="checkbox" id="cbNum">札に番号を表示</label>
+      <label class="chk on" id="chkKami"><input type="checkbox" id="cbKami" checked>上の句を表示</label>
+      <label class="chk on" id="chkVoice"><input type="checkbox" id="cbVoice" checked>音声で読み上げ</label>
+      <label class="chk" id="chkSlow"><input type="checkbox" id="cbSlow">ゆっくり詠む</label>
+    </div>
+  </div>
+
+  <div class="history-sec">
+    <div class="history-hdr">
+      <h3>対戦履歴（最新10件）</h3>
+      <button class="clear-btn" id="clearHistBtn">全リセット</button>
+    </div>
+    <div class="hist-list" id="histList">
+      <div style="font-size:10px;color:var(--dim);text-align:center;padding:10px;">履歴はありません</div>
+    </div>
+  </div>
+
+  <button id="startBtn">対 戦 ス タ ー ト</button>
+  <button id="voiceTest" class="ghost">🔊 読み上げの音声テスト</button>
+</section>
+
+<!-- ========== 対戦画面 ========== -->
+<section id="game" class="screen">
+  <div class="hud">
+    <button class="quit-btn" id="quitBtn">✕ 中断</button>
+    <div class="side"><span>相手</span> <b id="cpuCount">0</b><span>枚</span></div>
+    <div class="mid">
+      <span id="phaseText">準備</span>
+      <span id="potText" class="pot-info"></span>
+    </div>
+    <div class="side r"><span>自分</span> <b id="myCount" class="hot">0</b><span>枚</span></div>
+  </div>
+
+  <div class="field cpu" id="cpuField"></div>
+
+  <!-- お互いの札の間（朗詠＆暗記エリア） -->
+  <div class="reader" id="reader">
+    <!-- 朗詠表示 -->
+    <div id="readContent">
+      <div class="lbl">上 の 句</div>
+      <div class="kami" id="kamiText">―</div>
+      <div class="sub" id="subText"></div>
+      <button class="rep" id="replayBtn" aria-label="もう一度聞く">↻ もう一度</button>
+    </div>
+
+    <!-- 暗記時間中の横長コンパクト表示 -->
+    <div class="memo-inline" id="memoInline">
+      <div class="left-box">
+        <div class="time-num" id="memoNum">60</div>
+        <div class="time-txt">秒<br>札の位置を覚えよう</div>
+      </div>
+      <button class="skip-btn" id="memoSkip">覚えた！</button>
+    </div>
+
+    <div class="bar"><i id="barFill"></i></div>
+  </div>
+
+  <div class="field me" id="myField"></div>
+</section>
+
+<!-- 結果モーダル -->
+<div class="modal-ov" id="resultModal">
+  <div class="modal-box">
+    <div class="verdict" id="mVerdict">勝利！</div>
+    <div class="why" id="mWhy">17首終了時、獲得枚数が多いため勝利しました！</div>
+    <div class="scorebox">
+      <div><div class="n" id="mMy">0</div><div class="t">自分</div></div>
+      <div class="vs">VS</div>
+      <div><div class="n" id="mCpu">0</div><div class="t">相手</div></div>
+    </div>
+    <div class="modal-btns">
+      <button class="modal-btn-main" id="mAgainBtn">もう一度対戦</button>
+      <button class="modal-btn-sub" id="mBackBtn">設定画面に戻る</button>
+    </div>
+  </div>
+</div>
+
+<div class="ov" id="readyOv">
+  <div class="spin"></div>
+  <div style="font-size:12px;color:var(--dim);margin-top:10px;">札を並べています…</div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+
+/* ====== 百人一首データ ====== */
+const COLORS=[
+{id:'ao',name:'青',base:'#2f6fb3',dark:'#16416f',ink:'#fff',poems:[
+ {n:3,k:['あしびきの','やまどりのをの','しだりをの'],s:['ながながしよを','ひとりかもねむ']},
+ {n:5,k:['おくやまに','もみぢふみわけ','なくしかの'],s:['こゑきくときぞ','あきはかなしき']},
+ {n:6,k:['かささぎの','わたせるはしに','おくしもの'],s:['しろきをみれば','よぞふけにける']},
+ {n:12,k:['あまつかぜ','くものかよひぢ','ふきとぢよ'],s:['をとめのすがた','しばしとどめむ']},
+ {n:14,k:['みちのくの','しのぶもぢずり','たれゆゑに'],s:['みだれそめにし','われならなくに']},
+ {n:24,k:['このたびは','ぬさもとりあへず','たむけやま'],s:['もみぢのにしき','かみのまにまに']},
+ {n:30,k:['ありあけの','つれなくみえし','わかれより'],s:['あかつきばかり','うきものはなし']},
+ {n:31,k:['あさぼらけ','ありあけのつきと','みるまでに'],s:['よしののさとに','ふれるしらゆき']},
+ {n:50,k:['きみがため','をしからざりし','いのちさへ'],s:['ながくもがなと','おもひけるかな']},
+ {n:57,k:['めぐりあひて','みしやそれとも','わかぬまに'],s:['くもがくれにし','よはのつきかな']},
+ {n:61,k:['いにしへの','ならのみやこの','やへざくら'],s:['けふここのへに','にほひぬるかな']},
+ {n:62,k:['よをこめて','とりのそらねは','はかるとも'],s:['よにあふさかの','せきはゆるさじ']},
+ {n:69,k:['あらしふく','みむろのやまの','もみぢばは'],s:['たつたのかはの','にしきなりけり']},
+ {n:70,k:['さびしさに','やどをたちいでて','ながむれば'],s:['いづこもおなじ','あきのゆふぐれ']},
+ {n:74,k:['うかりける','ひとをはつせの','やまおろしよ'],s:['はげしかれとは','いのらぬものを']},
+ {n:75,k:['ちぎりおきし','させもがつゆを','いのちにて'],s:['あはれことしの','あきもいぬめり']},
+ {n:76,k:['わたのはら','こぎいでてみれば','ひさかたの'],s:['くもゐにまがふ','おきつしらなみ']},
+ {n:82,k:['おもひわび','さてもいのちは','あるものを'],s:['うきにたへぬは','なみだなりけり']},
+ {n:91,k:['きりぎりす','なくやしもよの','さむしろに'],s:['ころもかたたし','ひとりかもねむ']},
+ {n:95,k:['おほけなく','うきよのたみに','おほふかな'],s:['わがたつそまに','すみぞめのそで']}
+]},
+{id:'pink',name:'ピンク',base:'#c2527a',dark:'#7a2846',ink:'#fff',poems:[
+ {n:2,k:['はるすぎて','なつくにけらし','しろたへの'],s:['ころもほすてふ','あめのかぐやま']},
+ {n:7,k:['あまのはら','ふりさけみれば','かすがのやまに'],s:['いでしつきかも','くもゐにいだし']},
+ {n:17,k:['ちはやぶる','かみよもきかず','たつたがは'],s:['からくれなゐに','みずくくるとは']},
+ {n:18,k:['すみのえの','きしによるなみ','よるさえや'],s:['ゆめのかよひぢ','ひとめよくらむ']},
+ {n:22,k:['ふくからに','あきのくさきの','しをるれば'],s:['むべやまかぜを','あらしといふらむ']},
+ {n:28,k:['やまざとは','ふゆぞさびしさ','まさりける'],s:['ひとめもくさも','かれぬとおもへば']},
+ {n:32,k:['やまがわに','かぜのかけたる','しがらみは'],s:['ながれもあへぬ','もみぢなりけり']},
+ {n:38,k:['わすらるる','みをばおもはず','ちかひつる'],s:['ひとのいのちの','惜しくもあるかな']},
+ {n:41,k:['恋すふて','わがなはまだき','たちにけり'],s:['ものやおもふと','ひとのとふまで']},
+ {n:45,k:['あはれとも','いうべきひとは','おもほえで'],s:['みのいたづらに','なりぬべきかな']},
+ {n:51,k:['かくとだに','えやはいぶきの','さしもぐさ'],s:['さしもしらじな','もゆるおもひを']},
+ {n:63,k:['いまはただ','おもひたへなむ','とばかりを'],s:['ひとづてならで','いうよしもがな']},
+ {n:65,k:['うらみわび','ほさぬそでだに','あるものを'],s:['恋にくちなむ','なこそ惜しけれ']},
+ {n:83,k:['よのなかよ','みちこそなけれ','おもひ入る'],s:['やまのおくにも','しかぞなくなる']},
+ {n:84,k:['ながらへば','まだふみみむ','これのよの'],s:['うきにたへぬは','なみだなりけり']},
+ {n:88,k:['なにわえの','あしのかりねの','ひとよゆゑ'],s:['みをつくしてや','恋わたるべき']},
+ {n:89,k:['たまのおよ','たえなばたえね','ながらへば'],s:['しのぶの工夫の','よわりもぞする']},
+ {n:92,k:['わがそでは','しほひにみえぬ','おきのいしの'],s:['人こそしらね','かわくまもなし']},
+ {n:93,k:['世のなかは','つねにもがもな','なぎさこぐ'],s:['あまのをつねの','つなでかなしも']},
+ {n:99,k:['人もしほ','人もうらめし','あじきなく'],s:['世をおもふゆゑに','物おもふ身は']}
+]},
+{id:'ki',name:'黄',base:'#d49e2a',dark:'#7c580e',ink:'#fff',poems:[
+ {n:1,k:['秋のたの','かりほのいほの','とまをあらみ'],s:['わがころもでは','つゆにぬれつつ']},
+ {n:8,k:['わが庵は','みやこのたつみ','しかぞすむ'],s:['世をうぢやまと','人はいふなり']},
+ {n:11,k:['わたのはら','やそしまかけて','こぎいでぬと'],s:['人にはつげよ','あまのつりぶね']},
+ {n:15,k:['きみがため','はるのの出でて','わかなつむ'],s:['わが衣手に','ゆきはふりつつ']},
+ {n:20,k:['わびぬれば','いまはたたのむ','なにはなる'],s:['みをつくしても','あはむとぞおもふ']},
+ {n:26,k:['小倉山','みねのもみぢば','心あらば'],s:['いまひとたびの','みゆき待たなむ']},
+ {n:29,k:['心あてに','折らばや折らむ','初霜の'],s:['おきまどはせる','しらぎくの花']},
+ {n:35,k:['人はいさ','心もしらず','ふるさとは'],s:['花ぞ昔の','かににひける']},
+ {n:40,k:['忍ぶれど','色に出でにけり','わが恋は'],s:['ものやおもふと','人の問ふまで']},
+ {n:42,k:['ちぎりきな','かたみに袖を','しぼりつつ'],s:['末の松山','なみこさじとは']},
+ {n:54,k:['忘れじの','ゆくすゑまでは','かたければ'],s:['けふを限りの','いのちともがな']},
+ {n:64,k:['朝ぼらけ','宇治の川霧','たえたえに'],s:['あらはれわたる','瀬々のあじろ木']},
+ {n:67,k:['春の夜の','夢ばかりなる','たまくらに'],s:['かひなくたたむ','名こそ惜しけれ']},
+ {n:77,k:['瀬をはやみ','岩にせかるる','たき川の'],s:['われてもすゑに','あはむとぞおもふ']},
+ {n:78,k:['淡路島','かよふちどりの','なく声に'],s:['いく夜ね覚めぬ','須磨の関もり']},
+ {n:85,k:['夜もすがら','物思ふころは','明けやらで'],s:['ねやのひさしの','間もりするかな']},
+ {n:87,k:['むらさめの','露もまだひぬ','まきの葉に'],s:['霧とのぼる','秋の夕ぐれ']},
+ {n:94,k:['みよしのの','山の秋風','さよふけて'],s:['ふるさとさむく','衣うつなり']},
+ {n:96,k:['花さそふ','嵐の庭の','雪ならで'],s:['ふりゆくものは','わが身なりけり']},
+ {n:100,k:['ももしきや','古きのきばの','しのぶにも'],s:['なほあまりある','昔なりけり']}
+]},
+{id:'midori',name:'緑',base:'#318a56',dark:'#154a2c',ink:'#fff',poems:[
+ {n:4,k:['田ごとの','ふじのたかねに','雪はふりつつ'],s:['ふじのたかねに','雪はふりつつ']},
+ {n:9,k:['花の色は','うつりにけりな','いたづらに'],s:['わが身世にふる','ながめせしまに']},
+ {n:10,k:['これやこの','ゆくもかへるも','わかれては'],s:['知るもしらぬも','あふさかの関']},
+ {n:13,k:['筑波嶺の','みねより落つる','みなの川'],s:['恋ぞつもりて','淵となりぬる']},
+ {n:19,k:['難波潟','みじかきあしの','ふしの間も'],s:['あはでこの世を','すぐしてよとや']},
+ {n:21,k:['今こむと','いひしばかりに','長月の'],s:['有明けの月を','待ちいでつるかな']},
+ {n:23,k:['月みれば','ちぢに物こそ','悲しけれ'],s:['わが身ひとつの','秋にはあらねど']},
+ {n:27,k:['みかの原','わきて流れる','いづみ川'],s:['いつみきとてか','恋しかるらむ']},
+ {n:36,k:['夏の夜は','まだ宵ながら','明けぬるを'],s:['雲のいづこに','月やどるらむ']},
+ {n:39,k:['浅茅生の','小野の篠原','しのぶれど'],s:['あまりてなどか','人の恋しき']},
+ {n:43,k:['逢ひみての','のちの心に','くらぶれば'],s:['昔はものを','思はざりけり']},
+ {n:47,k:['八重むぐら','しげれる宿の','さびしきに'],s:['人こそ見えね','秋は来にけり']},
+ {n:53,k:['嘆きつつ','ひとりぬる夜の','明くる間は'],s:['いかに久しい','ものとかは知る']},
+ {n:58,k:['有馬山','猪名の笹原','風ふけば'],s:['いでそよ人を','忘れやはする']},
+ {n:60,k:['大江山','いくのの道の','遠ければ'],s:['まだふみも見ず','天の橋立']},
+ {n:68,k:['心にも','あらでうき世に','ながらへば'],s:['恋しかるべき','夜半の月かな']},
+ {n:72,k:['音にきく','高師の浜の','あだ波は'],s:['かけじや袖の','ぬれもこそすれ']},
+ {n:80,k:['長む夜の','あくるまはただ','つれなくぞ'],s:['人こそ見えね','秋は来にけり']},
+ {n:86,k:['嘆けとて','月やはものを','思はする'],s:['かこち顔なる','わが涙かな']},
+ {n:98,k:['風そよぐ','ならの小川の','夕ぐれは'],s:['みそぎぞ夏の','しるしなりける']}
+]},
+{id:'orange',name:'橙',base:'#ca682b',dark:'#73340f',ink:'#fff',poems:[
+ {n:16,k:['立ちわかれ','いなばの山の','みねに生ふる'],s:['まつとしきかば','今かへりこむ']},
+ {n:25,k:['名にし負はば','逢坂山の','さねかづら'],s:['人に知られで','くるよしもがな']},
+ {n:33,k:['ひさかたの','光のどけき','春の日に'],s:['しづ心なく','花のちるらむ']},
+ {n:34,k:['誰をかも','知る人にせむ','高砂の'],s:['松も昔の','友ならなくに']},
+ {n:37,k:['白露に','風のふきしく','秋の野は'],s:['つらぬきとめぬ','玉ぞ散りける']},
+ {n:44,k:['逢ふことの','たえてしなくは','なかなかに'],s:['人をも身をも','恨みざらまし']},
+ {n:46,k:['由良の門を','わたる舟人','かぢをたえ'],s:['ゆくへも知らぬ','恋の道かな']},
+ {n:48,k:['風をいたみ','岩うつ波の','おれのみぞ'],s:['くだけてものを','思ふころかな']},
+ {n:49,k:['御垣守','衛士のたく火の','夜はもえて'],s:['昼はきえつつ','ものをこそ思へ']},
+ {n:52,k:['明けぬれば','暮くるものと','しりながら'],s:['なほうらめしき','朝ぼらけかな']},
+ {n:55,k:['滝の音は','絶えて久しく','なりぬれど'],s:['名こそ流れて','なほきこえけれ']},
+ {n:56,k:['あらざらむ','この世のほかの','思い出に'],s:['今ひとたびの','逢ふこともがな']},
+ {n:59,k:['やすらはで','寝なましものを','小夜ふけて'],s:['かたぶくまでの','月を見しかな']},
+ {n:66,k:['もろともに','あはれと思へ','山ざくら'],s:['花よりほかに','知る人もなし']},
+ {n:71,k:['夕されば','小門の田の面','秋風に'],s:['あしのまろやに','秋風ぞふく']},
+ {n:73,k:['高砂の','尾上の桜','しづに咲く'],s:['外の山の桜','咲きにけりな']},
+ {n:79,k:['秋風に','たなびく雲の','たえまより'],s:['もれいづる月の','影のさやけさ']},
+ {n:81,k:['ほととぎす','ききつるかたを','ながむれば'],s:['ただ有明けの','月ぞのこれる']},
+ {n:90,k:['見せばやな','雄島のあまの','袖だにも'],s:['濡れにぞ濡れし','色はかわらず']},
+ {n:97,k:['来ぬ人を','まつほの浦の','夕なぎに'],s:['焼くや塩焼き','身もこがれつつ']}
+]}
+];
+
+const DIFFS=[
+ {id:'easy', name:'超初級', sub:'遅い / お手つきなし', delay:3800, wrong:false, missPct:0.4, memo:60},
+ {id:'mid',  name:'初級',   sub:'ふつう / お手つきなし', delay:2300, wrong:false, missPct:0.25, memo:60},
+ {id:'hard', name:'中級',   sub:'速い / お手つき判定あり', delay:1400, wrong:true,  missPct:0.12, memo:60},
+ {id:'pro',  name:'上級',   sub:'超速 / お手つき判定あり', delay:800,  wrong:true,  missPct:0.04, memo:60},
+ {id:'god',  name:'名人',   sub:'神速 / 完全無欠', delay:420,  wrong:true,  missPct:0.0, memo:60}
+];
+
+/* ===== アプリ状態 ===== */
+let curColor = COLORS[0];
+let curDiff = DIFFS[1];
+let showNum = false;
+let showKami = true;
+let useVoice = true;
+let slowMode = false;
+
+let deck = [];
+let cpuBoard = [], myBoard = [];
+let curPoem = null;
+let phase = 'idle'; 
+let myScore = 0, cpuScore = 0;
+let potOwner = null, potPongs = 0;
+let timers = {};
+let speechSynth = window.speechSynthesis || null;
+let jaVoice = null;
+let playLogs = [];
+
+/* ====== 初期化 ====== */
+window.addEventListener('DOMContentLoaded', ()=>{
+  loadHist();
+  renderSetup();
+  initVoice();
+  bindEvents();
+});
+
+function loadHist(){
+  try{
+    const d = localStorage.getItem('karuta_hist');
+    if(d) playLogs = JSON.parse(d);
+  }catch(e){}
+}
+function saveHist(){
+  try{
+    localStorage.setItem('karuta_hist', JSON.stringify(playLogs.slice(0,10)));
+  }catch(e){}
+}
+
+function renderSetup(){
+  const cp = document.getElementById('colorpick');
+  cp.innerHTML = COLORS.map(c=>`
+    <button class="cbtn ${c.id===curColor.id?'sel':''}" data-id="${c.id}" style="background:linear-gradient(145deg,${c.base},${c.dark})">
+      ${c.name}<span class="cnt">20首</span>
+    </button>
+  `).join('');
+
+  const dp = document.getElementById('diffpick');
+  dp.innerHTML = DIFFS.map(d=>`
+    <button class="dbtn ${d.id===curDiff.id?'sel':''}" data-id="${d.id}">
+      ${d.name}<span>${d.sub.split('/')[0]}</span>
+    </button>
+  `).join('');
+
+  updateDiffNote();
+  renderHistUI();
+}
+
+function updateDiffNote(){
+  document.getElementById('diffNote').innerHTML = 
+    `<b>【${curDiff.name}】</b> ${curDiff.sub}（暗記時間: ${curDiff.memo}秒）`;
+}
+
+function renderHistUI(){
+  const hl = document.getElementById('histList');
+  if(!playLogs || playLogs.length === 0){
+    hl.innerHTML = `<div style="font-size:10px;color:var(--dim);text-align:center;padding:10px;">履歴はありません</div>`;
+    return;
+  }
+  hl.innerHTML = playLogs.map((item, idx)=>`
+    <div class="hist-item">
+      <div><b>${item.color}</b> <span style="color:var(--dim);font-size:9px;">${item.diff}</span></div>
+      <div>${item.my} - ${item.cpu}</div>
+      <div class="${item.res==='win'?'win':(item.res==='lose'?'lose':'draw')}">${item.res==='win'?'勝ち':(item.res==='lose'?'負け':'引分')}</div>
+      <button class="hist-del" data-idx="${idx}">✕</button>
+    </div>
+  `).join('');
+}
+
+function initVoice(){
+  if(!speechSynth) return;
+  const loadV = ()=>{
+    const vs = speechSynth.getVoices();
+    jaVoice = vs.find(v=>v.lang==='ja-JP'||v.lang.startsWith('ja')) || vs[0];
+  };
+  loadV();
+  if(speechSynth.onvoiceschanged !== undefined) speechSynth.onvoiceschanged = loadV;
+}
+
+function speak(text, rate=1.0){
+  if(!useVoice || !speechSynth) return;
+  speechSynth.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  if(jaVoice) u.voice = jaVoice;
+  u.lang = 'ja-JP';
+  u.rate = slowMode ? rate * 0.75 : rate;
+  u.pitch = 1.0;
+  speechSynth.speak(u);
+}
+
+/* ====== イベントバインド ====== */
+function bindEvents(){
+  // 色選択
+  document.getElementById('colorpick').addEventListener('click', e=>{
+    const b = e.target.closest('.cbtn'); if(!b) return;
+    curColor = COLORS.find(c=>c.id===b.dataset.id);
+    renderSetup();
+  });
+
+  // 難易度選択
+  document.getElementById('diffpick').addEventListener('click', e=>{
+    const b = e.target.closest('.dbtn'); if(!b) return;
+    curDiff = DIFFS.find(d=>d.id===b.dataset.id);
+    renderSetup();
+  });
+
+  // 設定トグル
+  const setupOpt = (id, setter) => {
+    const el = document.getElementById(id);
+    el.addEventListener('click', ()=>{
+      const cb = el.querySelector('input');
+      cb.checked = !cb.checked;
+      el.classList.toggle('on', cb.checked);
+      setter(cb.checked);
+    });
+  };
+  setupOpt('chkNum', v=> showNum = v);
+  setupOpt('chkKami', v=> showKami = v);
+  setupOpt('chkVoice', v=> useVoice = v);
+  setupOpt('chkSlow', v=> slowMode = v);
+
+  document.getElementById('startBtn').addEventListener('click', startGame);
+  document.getElementById('voiceTest').addEventListener('click', ()=> speak('秋のたの、かりほのいほの、とまをあらみ'));
+  document.getElementById('quitBtn').addEventListener('click', endGameQuit);
+  document.getElementById('replayBtn').addEventListener('click', replayVoice);
+  document.getElementById('memoSkip').addEventListener('click', skipMemo);
+
+  document.getElementById('clearHistBtn').addEventListener('click', ()=>{
+    playLogs = [];
+    saveHist();
+    renderHistUI();
+  });
+
+  document.getElementById('histList').addEventListener('click', e=>{
+    const btn = e.target.closest('.hist-del');
+    if(!btn) return;
+    const idx = parseInt(btn.dataset.idx, 10);
+    playLogs.splice(idx, 1);
+    saveHist();
+    renderHistUI();
+  });
+
+  document.getElementById('mAgainBtn').addEventListener('click', ()=>{
+    document.getElementById('resultModal').classList.remove('on');
+    startGame();
+  });
+  document.getElementById('mBackBtn').addEventListener('click', ()=>{
+    document.getElementById('resultModal').classList.remove('on');
+    showScreen('setup');
+  });
+
+  // タップ感度を最適化したポインターイベント処理（感度向上）
+  const myF = document.getElementById('myField');
+  const cpuF = document.getElementById('cpuField');
+
+  const handleCardTouch = (e) => {
+    const card = e.target.closest('.card');
+    if(!card || card.classList.contains('empty')) return;
+    e.preventDefault(); // 遅延・二重発火を防止
+    
+    const num = parseInt(card.dataset.num, 10);
+    const side = card.dataset.side;
+    userTapCard(num, side);
+  };
+
+  myF.addEventListener('pointerdown', handleCardTouch);
+  cpuF.addEventListener('pointerdown', handleCardTouch);
+}
+
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));
+  document.getElementById(id).classList.add('on');
+}
+
+/* ====== ゲーム開始 ====== */
+function startGame(){
+  clearAllTimers();
+  if(speechSynth) speechSynth.cancel();
+
+  showScreen('game');
+  document.getElementById('readyOv').classList.add('on');
+
+  document.documentElement.style.setProperty('--c-base', curColor.base);
+  document.documentElement.style.setProperty('--c-dark', curColor.dark);
+  document.documentElement.style.setProperty('--c-ink', curColor.ink);
+
+  // 札をシャッフル
+  const ps = [...curColor.poems];
+  for(let i=ps.length-1; i>0; i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [ps[i], ps[j]] = [ps[j], ps[i]];
+  }
+
+  deck = ps;
+  cpuBoard = deck.slice(0, 10);
+  myBoard = deck.slice(10, 20);
+
+  myScore = 0; cpuScore = 0;
+  potOwner = null; potPongs = 0;
+  updateHUD();
+
+  renderBoard();
+
+  setTimeout(()=>{
+    document.getElementById('readyOv').classList.remove('on');
+    startMemoPhase();
+  }, 400);
+}
+
+function renderBoard(){
+  renderSide('cpuField', cpuBoard, 'cpu');
+  renderSide('myField', myBoard, 'me');
+}
+
+function renderSide(fieldId, list, side){
+  const el = document.getElementById(fieldId);
+  el.innerHTML = '';
+  for(let i=0; i<10; i++){
+    const p = list[i];
+    const slot = document.createElement('div');
+    slot.className = 'slot' + (p ? '' : ' taken');
+    slot.id = `slot-${side}-${i}`;
+
+    if(p){
+      const card = document.createElement('button');
+      card.className = `card ${showNum?'':'nonum'}`;
+      card.dataset.num = p.n;
+      card.dataset.side = side;
+      
+      const s1 = p.s[0] || '', s2 = p.s[1] || '';
+      card.innerHTML = `
+        <span class="num">${p.n}</span>
+        <div class="shimo">
+          <span>${s1}</span>
+          <span>${s2}</span>
+        </div>
+      `;
+      slot.appendChild(card);
+    }
+    el.appendChild(slot);
+  }
+}
+
+/* ====== 暗記フェーズ（札の間・朗詠バー内にインライン表示） ====== */
+function startMemoPhase(){
+  phase = 'memo';
+  document.getElementById('phaseText').textContent = '暗記時間';
+  
+  // UIの表示切り替え（朗詠テキストを隠してコンパクト表示に）
+  document.getElementById('readContent').style.display = 'none';
+  const memoUI = document.getElementById('memoInline');
+  memoUI.classList.add('on');
+
+  let rem = curDiff.memo;
+  const numEl = document.getElementById('memoNum');
+  const barFill = document.getElementById('barFill');
+  numEl.textContent = rem;
+  barFill.style.transform = 'scaleX(1)';
+
+  speak('暗記時間です。札の位置を覚えてください。');
+
+  timers.memo = setInterval(()=>{
+    rem--;
+    numEl.textContent = rem;
+    barFill.style.transform = `scaleX(${rem / curDiff.memo})`;
+    if(rem <= 0){
+      skipMemo();
+    }
+  }, 1000);
+}
+
+function skipMemo(){
+  if(phase !== 'memo') return;
+  clearInterval(timers.memo);
+  document.getElementById('memoInline').classList.remove('on');
+  document.getElementById('readContent').style.display = 'block';
+  toast('競技スタート！');
+  startNextTurn();
+}
+
+/* ====== 競技フェーズ ====== */
+function startNextTurn(){
+  const allCards = [...cpuBoard.filter(Boolean), ...myBoard.filter(Boolean)];
+  if(allCards.length === 0){
+    finishGame();
+    return;
+  }
+
+  phase = 'read';
+  document.getElementById('phaseText').textContent = '朗詠中';
+  document.getElementById('replayBtn').disabled = true;
+
+  // 全カードの演出解除
+  document.querySelectorAll('.card').forEach(c=> c.classList.remove('hit','bad','dim'));
+
+  // 読み札決定（残りの札からランダム）
+  curPoem = allCards[Math.floor(Math.random() * allCards.length)];
+
+  const kamiStr = curPoem.k.join(' ');
+  const kamiEl = document.getElementById('kamiText');
+  kamiEl.textContent = showKami ? kamiStr : '（朗詠を聞いて取ってください）';
+  
+  const rEl = document.getElementById('reader');
+  rEl.classList.remove('done');
+  if(!showKami) rEl.classList.add('hide'); else rEl.classList.remove('hide');
+
+  document.getElementById('subText').textContent = 'きいて…';
+
+  // 音声朗詠
+  speak(kamiStr);
+
+  // CPU思考のタイマー発動
+  scheduleCpu();
+}
+
+function replayVoice(){
+  if(curPoem && phase === 'read'){
+    speak(curPoem.k.join(' '));
+  }
+}
+
+/* ====== CPU思考AI ====== */
+function scheduleCpu(){
+  clearTimeout(timers.cpu);
+  
+  // CPUのお手つきミス率
+  const isMiss = Math.random() < curDiff.missPct;
+  const targetTime = curDiff.delay + (Math.random() * 400 - 200);
+
+  timers.cpu = setTimeout(()=>{
+    if(phase !== 'read') return;
+
+    if(isMiss){
+      // お手つきミス
+      const myCards = myBoard.filter(Boolean);
+      if(myCards.length > 0 && curDiff.wrong){
+        const dummy = myCards[Math.floor(Math.random()*myCards.length)];
+        if(dummy.n !== curPoem.n){
+          cpuTapCard(dummy.n, 'me');
+          return;
+        }
+      }
+    }
+
+    // 正解を取る
+    const cpuHas = cpuBoard.some(p=> p && p.n === curPoem.n);
+    const side = cpuHas ? 'cpu' : 'me';
+    cpuTapCard(curPoem.n, side);
+  }, Math.max(300, targetTime));
+}
+
+function cpuTapCard(num, side){
+  if(phase !== 'read') return;
+  
+  if(num === curPoem.n){
+    // CPU正解
+    phase = 'taken';
+    clearTimeout(timers.cpu);
+    highlightCard(num, side, 'hit');
+    
+    if(side === 'cpu'){
+      cpuScore++;
+      toast('相手に取られました！');
+    } else {
+      // 陣取り（自分の札を取られた）
+      cpuScore++;
+      toast('相手に取られました！（陣奪い）');
+    }
+    
+    finishTurn('cpu');
+  } else {
+    // CPUお手つき
+    highlightCard(num, side, 'bad');
+    toast('相手がお手つき！');
+  }
+}
+
+/* ====== プレイヤーのタップ処理 ====== */
+function userTapCard(num, side){
+  if(phase !== 'read') return;
+
+  if(num === curPoem.n){
+    // プレイヤー正解！
+    phase = 'taken';
+    clearTimeout(timers.cpu);
+    highlightCard(num, side, 'hit');
+
+    if(side === 'me'){
+      myScore++;
+      toast('ナイス！自分の札を獲得！');
+    } else {
+      // 相手の陣から奪った
+      myScore++;
+      toast('ナイス！敵陣から奪いました！');
+    }
+
+    finishTurn('me');
+  } else {
+    // プレイヤーお手つき
+    if(curDiff.wrong){
+      highlightCard(num, side, 'bad');
+      toast('お手つき！相手に1枚入ります');
+      cpuScore++;
+      updateHUD();
+    } else {
+      highlightCard(num, side, 'bad');
+      toast('ちがいます！');
+    }
+  }
+}
+
+function highlightCard(num, side, cls){
+  const el = document.querySelector(`.card[data-num="${num}"][data-side="${side}"]`);
+  if(el){
+    el.classList.add(cls);
+  }
+}
+
+/* ====== ターン終了・札の除去 ====== */
+function finishTurn(winner){
+  document.getElementById('replayBtn').disabled = false;
+  document.getElementById('subText').textContent = `正解: ${curPoem.k.join(' ')} ${curPoem.s.join(' ')}`;
+  document.getElementById('reader').classList.remove('hide');
+  document.getElementById('reader').classList.add('done');
+
+  // 該当する札を消す
+  setTimeout(()=>{
+    const cIdx = cpuBoard.findIndex(p=> p && p.n === curPoem.n);
+    if(cIdx !== -1) cpuBoard[cIdx] = null;
+
+    const mIdx = myBoard.findIndex(p=> p && p.n === curPoem.n);
+    if(mIdx !== -1) myBoard[mIdx] = null;
+
+    renderBoard();
+    updateHUD();
+
+    // 1.2秒後に次の首へ
+    timers.next = setTimeout(startNextTurn, 1400);
+  }, 600);
+}
+
+function updateHUD(){
+  document.getElementById('myCount').textContent = myScore;
+  document.getElementById('cpuCount').textContent = cpuScore;
+}
+
+/* ====== 対戦終了 ====== */
+function finishGame(){
+  phase = 'end';
+  clearAllTimers();
+
+  let res = 'draw';
+  let title = '引き分け';
+  let why = '両者の獲得枚数が同じでした。';
+
+  if(myScore > cpuScore){
+    res = 'win';
+    title = '見事 勝利！';
+    why = `${myScore}対${cpuScore}であなたの勝ちです！`;
+    speak('見事な勝利です！おめでとうございます！');
+  } else if(myScore < cpuScore){
+    res = 'lose';
+    title = '敗 北…';
+    why = `${cpuScore}対${myScore}で相手の勝ちです。`;
+    speak('残念。次回は頑張りましょう。');
+  } else {
+    speak('引き分けです。良い勝負でした。');
+  }
+
+  // 履歴保存
+  playLogs.unshift({
+    date: new Date().toLocaleDateString('ja-JP'),
+    color: curColor.name,
+    diff: curDiff.name,
+    my: myScore,
+    cpu: cpuScore,
+    res: res
+  });
+  saveHist();
+  renderHistUI();
+
+  // モーダル表示
+  document.getElementById('mVerdict').textContent = title;
+  document.getElementById('mWhy').textContent = why;
+  document.getElementById('mMy').textContent = myScore;
+  document.getElementById('mCpu').textContent = cpuScore;
+
+  setTimeout(()=>{
+    document.getElementById('resultModal').classList.add('on');
+  }, 500);
+}
+
+function endGameQuit(){
+  if(confirm('対戦を中断して設定画面に戻りますか？')){
+    clearAllTimers();
+    if(speechSynth) speechSynth.cancel();
+    showScreen('setup');
+  }
+}
+
+function toast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(timers.toast);
+  timers.toast = setTimeout(()=> t.classList.remove('show'), 1200);
+}
+
+function clearAllTimers(){
+  for(let k in timers){
+    clearInterval(timers[k]);
+    clearTimeout(timers[k]);
+  }
+  timers = {};
+}
+</script>
+</body>
+</html>
