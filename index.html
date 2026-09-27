@@ -578,8 +578,7 @@ function stopSpeak(){
   }
 }
 
-// 自然な朗詠調整を施した読み上げ
-// 自然な朗詠調整を施した読み上げ（百人一首API連携版）
+// 自然な朗詠調整を施した読み上げ（百人一首API連携・自動再生ブロック対策版）
 async function speakPoem(poemNo = null, onEndCallback){
   stopSpeak();
   const speakId = currentSpeakId;
@@ -590,10 +589,15 @@ async function speakPoem(poemNo = null, onEndCallback){
     return;
   }
 
+  // ★【重要】通信前にダミー発音を挟み、ブラウザの音声ブロック（User Gesture制限）を解除する
+  try {
+    const dummyUttr = new SpeechSynthesisUtterance('');
+    speechSynthesis.speak(dummyUttr);
+  } catch(e) {}
+
   // --- 1. APIから歌データを取得 ---
   let poem = { k: [], s: [] };
   try {
-    // poemNo の指定があればその番号、なければランダム取得
     const apiUrl = poemNo 
       ? `https://api.aoikujira.com/hyakunin/get2.php?fmt=json&no=${poemNo}`
       : `https://api.aoikujira.com/hyakunin/get2.php?fmt=json`;
@@ -601,15 +605,12 @@ async function speakPoem(poemNo = null, onEndCallback){
     const res = await fetch(apiUrl);
     const data = await res.json();
 
-    // APIの文字列（スペース区切り）を既存ロジック用の配列 [句1, 句2, 句3] に分割
     poem.k = data.kami ? data.kami.split(' ') : [];
     poem.s = data.shimo ? data.shimo.split(' ') : [];
 
-    // 万が一スペース区切りで取得できなかった場合のフォールバック
     if (poem.k.length === 1) poem.k = [data.kami];
     if (poem.s.length === 1) poem.s = [data.shimo];
 
-    // 画面に作者や歌を表示（必要に応じて）
     if (typeof subText !== 'undefined' && subText) {
       subText.textContent = `[${data.no}番 ${data.author}] 上の句: ${data.kami}`;
       subText.style.opacity = '1';
@@ -621,7 +622,6 @@ async function speakPoem(poemNo = null, onEndCallback){
     return;
   }
 
-  // API通信中にストップや別の読み上げが実行された場合は中断
   if(currentSpeakId !== speakId) return;
 
   // --- 2. 朗詠設定 ---
@@ -629,7 +629,6 @@ async function speakPoem(poemNo = null, onEndCallback){
   const baseRate = S.opts.slow ? 0.62 : 0.72;
   const targetVoice = getVoiceByGender(S.opts.voiceGender);
 
-  // 男性音声が端末にない場合にフォールバックでピッチを低く調整
   let isMaleFallback = (S.opts.voiceGender === 'male' && targetVoice && !(['Otoya','Ichiro','Keita','Hattori','Takumi'].some(k=>(targetVoice.name||'').includes(k))));
   const pitchBase = isMaleFallback ? 0.75 : 1.0;
 
@@ -649,7 +648,6 @@ async function speakPoem(poemNo = null, onEndCallback){
       return;
     }
 
-    // 自然なアクセント間隔のために句尾に読点を追加
     const phraseText = poem.k[index] + '、';
     const u = new SpeechSynthesisUtterance(phraseText);
     u.lang = 'ja-JP';
@@ -703,6 +701,7 @@ async function speakPoem(poemNo = null, onEndCallback){
 
   speakKamiPart(0);
 }
+
 
 
 /* ===== 対戦履歴 ===== */
