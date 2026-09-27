@@ -64,12 +64,12 @@ body{
   border-left:2px solid var(--gold);border-radius:0 6px 6px 0;padding:7px 10px;margin-top:6px;line-height:1.5;
 }
 .opts{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;}
-.chk{
+.chk,.rdo{
   display:flex;align-items:center;gap:5px;font-size:11px;color:#cfd6e2;
   background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:20px;padding:6px 10px;cursor:pointer;
 }
-.chk.on{background:rgba(217,180,106,.18);border-color:rgba(217,180,106,.5);color:#f4e6c6;}
-.chk input{display:none;}
+.chk.on,.rdo.on{background:rgba(217,180,106,.18);border-color:rgba(217,180,106,.5);color:#f4e6c6;}
+.chk input,.rdo input{display:none;}
 .rules{font-size:10.5px;color:#b8c2d4;line-height:1.75;background:rgba(255,255,255,.035);
   border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-top:6px;}
 .rules b{color:var(--gold);}
@@ -117,6 +117,11 @@ body{
 .hud .side.r{justify-content:flex-end;}
 .hud b{font-size:15px;color:var(--ink);font-variant-numeric:tabular-nums;}
 .hud b.hot{color:#ff9f6b;}
+.hud .diff-tag{
+  font-size:9.5px;color:var(--gold);background:rgba(217,180,106,.15);
+  border:1px solid rgba(217,180,106,.35);border-radius:4px;padding:1px 5px;
+  font-weight:600;white-space:nowrap;line-height:1.2;
+}
 .hud .mid{
   font-size:10.5px;color:var(--gold);letter-spacing:.06em;text-align:center;
   border:1px solid rgba(217,180,106,.35);border-radius:20px;padding:3px 8px;white-space:nowrap;
@@ -149,7 +154,7 @@ body{
   line-height:1;letter-spacing:0;
 }
 
-/* 下の句 縦書き確実2行表示構造 */
+/* 下の句 文字を大きめに調整 */
 .card .shimo{
   writing-mode:vertical-rl;
   -webkit-writing-mode:vertical-rl;
@@ -160,10 +165,10 @@ body{
 .card .shimo .line{
   display:block;
   white-space:nowrap;
-  font-size:clamp(8.5px, 2.3vh, 12.5px);
-  line-height:1.3;
-  letter-spacing:0.04em;
-  font-weight:600;
+  font-size:clamp(11px, 2.8vh, 16px);
+  line-height:1.2;
+  letter-spacing:0.02em;
+  font-weight:700;
 }
 
 .slot.taken .card{display:none;}
@@ -200,18 +205,19 @@ body{
 .bar i{display:block;height:100%;width:100%;background:linear-gradient(90deg,#7de08a,#d9b46a,#ff6b6b);
   transform-origin:left center;transform:scaleX(1);}
 
-/* 読手エリア内に収まる暗記タイマー（札に被らない設計） */
+/* 読手エリア内に収まる暗記タイマー（横幅縮小） */
 .memo-bar{
-  position:absolute;inset:0;
+  position:absolute;inset:0;margin:auto;
+  width:clamp(200px, 80%, 270px);height:calc(100% - 8px);
   background:rgba(13,20,32,0.96);border:1px solid var(--gold);
-  border-radius:9px;padding:4px 14px;display:none;align-items:center;justify-content:space-between;
-  z-index:10;backdrop-filter:blur(6px);
+  border-radius:10px;padding:4px 12px;display:none;align-items:center;justify-content:space-between;
+  z-index:10;backdrop-filter:blur(6px);box-shadow:0 4px 14px rgba(0,0,0,0.6);
 }
 .memo-bar.on{display:flex;}
-.memo-bar .time{font-size:24px;font-weight:700;color:#f8ecc9;font-variant-numeric:tabular-nums;line-height:1;}
-.memo-bar .txt{font-size:11px;color:var(--dim);line-height:1.2;text-align:left;}
+.memo-bar .time{font-size:22px;font-weight:700;color:#f8ecc9;font-variant-numeric:tabular-nums;line-height:1;}
+.memo-bar .txt{font-size:10.5px;color:var(--dim);line-height:1.2;text-align:left;}
 .memo-bar .btn{
-  border:0;border-radius:8px;padding:6px 12px;font-family:inherit;font-size:11px;font-weight:700;
+  border:0;border-radius:8px;padding:5px 10px;font-family:inherit;font-size:10.5px;font-weight:700;
   color:#251c07;background:linear-gradient(180deg,#f2dda6,#d9b46a);cursor:pointer;white-space:nowrap;
 }
 
@@ -292,7 +298,16 @@ body{
   </div>
 
   <div class="sec">
-    <h2>設定</h2>
+    <h2>読み手の声</h2>
+    <div class="opts">
+      <label class="rdo on" id="rdoVoiceFem"><input type="radio" name="vGender" value="female" checked>女性の声</label>
+      <label class="rdo" id="rdoVoiceMale"><input type="radio" name="vGender" value="male">男性の声</label>
+      <label class="rdo" id="rdoVoiceAuto"><input type="radio" name="vGender" value="auto">自動・標準</label>
+    </div>
+  </div>
+
+  <div class="sec">
+    <h2>表示・設定</h2>
     <div class="opts">
       <label class="chk" id="chkNum"><input type="checkbox" id="cbNum">札に番号を表示</label>
       <label class="chk on" id="chkKami"><input type="checkbox" id="cbKami" checked>上の句を表示</label>
@@ -320,7 +335,10 @@ body{
 <section id="game" class="screen">
   <div class="hud">
     <button class="quit-btn" id="quitBtn">✕ 中断</button>
-    <div class="side"><span>相手</span> <b id="cpuCount">0</b><span>枚</span></div>
+    <div class="side">
+      <span>相手</span> <b id="cpuCount">0</b><span>枚</span>
+      <span class="diff-tag" id="hudDiff">中位</span>
+    </div>
     <div class="mid">
       <span id="phaseText">準備</span>
       <span id="potText" class="pot-info"></span>
@@ -337,7 +355,7 @@ body{
     <button class="rep" id="replayBtn" aria-label="もう一度聞く">↻ もう一度</button>
     <div class="bar"><i id="barFill"></i></div>
 
-    <!-- 暗記タイマーバー（読手エリア内に配置） -->
+    <!-- 暗記タイマーバー（幅縮小） -->
     <div class="memo-bar" id="memoBar">
       <div class="time" id="memoNum">60</div>
       <div class="txt">札の場所を<br>覚えよう！</div>
@@ -506,7 +524,7 @@ const S={
   pot:0, myTakeCount:0, cpuTakeCount:0,
   myRest:false, cpuRest:false, isSuddenDeath:false, speechEnded:false,
   cpuTimer:null, rafId:null, forceTimer:null, memoTimer:null, waitTimer:null,
-  opts:{num:false,kami:true,voice:true,slow:false}
+  opts:{num:false,kami:true,voice:true,slow:false,voiceGender:'female'}
 };
 
 /* ===== 要素 ===== */
@@ -514,7 +532,7 @@ const $=id=>document.getElementById(id);
 const setupScr=$('setup'),gameScr=$('game'),resultModal=$('resultModal');
 const colorPick=$('colorpick'),diffPick=$('diffpick'),diffNote=$('diffNote');
 const myField=$('myField'),cpuField=$('cpuField');
-const myCountEl=$('myCount'),cpuCountEl=$('cpuCount'),phaseText=$('phaseText'),potText=$('potText');
+const myCountEl=$('myCount'),cpuCountEl=$('cpuCount'),hudDiffEl=$('hudDiff'),phaseText=$('phaseText'),potText=$('potText');
 const reader=$('reader'),kamiText=$('kamiText'),subText=$('subText'),barFill=$('barFill'),replayBtn=$('replayBtn');
 const memoBar=$('memoBar'),memoNum=$('memoNum'),memoSkip=$('memoSkip');
 const readyOv=$('readyOv'),toastEl=$('toast'),voiceTest=$('voiceTest'),quitBtn=$('quitBtn');
@@ -522,23 +540,29 @@ const histList=$('histList'),clearHistBtn=$('clearHistBtn');
 
 const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));const t=a[i];a[i]=a[j];a[j]=t;}return a;};
 
-/* ===== 朗詠音声とタイマーの完全制御 ===== */
-let JA=null;
+/* ===== 朗詠音声と言語エンジンの管理 ===== */
 let speakTimers=[];
 let currentSpeakId=0;
 
-function loadVoices(){
-  if(!('speechSynthesis' in window))return;
-  const vs=speechSynthesis.getVoices()||[];
-  const ja=vs.filter(v=>/^ja/i.test(v.lang||''));
-  if(!ja.length)return;
-  const pref=['Kyoko','Google 日本語','Nanami','Ayumi','Haruka','O-ren','Kyoto','Microsoft'];
-  JA=ja.find(v=>pref.some(p=>(v.name||'').indexOf(p)>=0))||ja[0];
+// 性別に適した音声オブジェクトを取得
+function getVoiceByGender(gender){
+  if(!('speechSynthesis' in window)) return null;
+  const vs = speechSynthesis.getVoices() || [];
+  const ja = vs.filter(v => /^ja/i.test(v.lang || ''));
+  if(!ja.length) return null;
+
+  const femaleKeys = ['Kyoko', 'Google 日本語', 'Nanami', 'Ayumi', 'Haruka', 'O-ren', 'Aoi', 'Mayu', 'Sakura'];
+  const maleKeys   = ['Otoya', 'Hattori', 'Ichiro', 'Keita', 'Naoki', 'Takumi'];
+
+  if(gender === 'female'){
+    return ja.find(v => femaleKeys.some(k => (v.name||'').includes(k))) || ja[0];
+  }else if(gender === 'male'){
+    return ja.find(v => maleKeys.some(k => (v.name||'').includes(k))) || ja.find(v => !(femaleKeys.some(k => (v.name||'').includes(k)))) || ja[0];
+  }
+  // auto
+  return ja.find(v => femaleKeys.concat(maleKeys).some(k => (v.name||'').includes(k))) || ja[0];
 }
-if('speechSynthesis' in window){
-  loadVoices();
-  speechSynthesis.onvoiceschanged=loadVoices;
-}
+
 function warmup(){
   if(!('speechSynthesis' in window))return;
   try{const u=new SpeechSynthesisUtterance(' ');u.volume=0;u.lang='ja-JP';speechSynthesis.speak(u);}catch(e){}
@@ -546,7 +570,7 @@ function warmup(){
 
 /* 朗詠の完全停止 */
 function stopSpeak(){
-  currentSpeakId++; // 朗詠トークン更新（既存の非同期ステップをすべて無効化）
+  currentSpeakId++;
   speakTimers.forEach(t => clearTimeout(t));
   speakTimers = [];
   if('speechSynthesis' in window){
@@ -554,6 +578,7 @@ function stopSpeak(){
   }
 }
 
+// 自然な朗詠調整を施した読み上げ
 function speakPoem(poem, onEndCallback){
   stopSpeak();
   const speakId = currentSpeakId;
@@ -565,7 +590,12 @@ function speakPoem(poem, onEndCallback){
   }
 
   S.speechEnded = false;
-  const baseRate = S.opts.slow ? 0.60 : 0.72;
+  const baseRate = S.opts.slow ? 0.62 : 0.72;
+  const targetVoice = getVoiceByGender(S.opts.voiceGender);
+
+  // 男性音声が端末にない場合にフォールバックでピッチを低く調整
+  let isMaleFallback = (S.opts.voiceGender === 'male' && targetVoice && !(['Otoya','Ichiro','Keita','Hattori','Takumi'].some(k=>(targetVoice.name||'').includes(k))));
+  const pitchBase = isMaleFallback ? 0.75 : 1.0;
 
   const speakKamiPart = (index) => {
     if(currentSpeakId !== speakId) return;
@@ -575,24 +605,25 @@ function speakPoem(poem, onEndCallback){
       subText.style.opacity = '1';
       const t = setTimeout(()=>{
         if(currentSpeakId === speakId) speakShimoPart(0);
-      }, 650);
+      }, 700);
       speakTimers.push(t);
       return;
     }
 
-    const text = poem.k[index] + '……';
-    const u = new SpeechSynthesisUtterance(text);
+    // 自然なアクセント間隔のために句尾の長音・読点を微調整
+    const phraseText = poem.k[index] + '、';
+    const u = new SpeechSynthesisUtterance(phraseText);
     u.lang = 'ja-JP';
     u.rate = baseRate;
-    u.pitch = 1.15 - (index * 0.05);
+    u.pitch = pitchBase + (0.05 * (1 - index * 0.5));
     u.volume = 1;
-    if(JA) u.voice = JA;
+    if(targetVoice) u.voice = targetVoice;
 
     u.onend = ()=>{
       if(currentSpeakId !== speakId) return;
       const t = setTimeout(()=>{
         if(currentSpeakId === speakId) speakKamiPart(index + 1);
-      }, 400);
+      }, 450);
       speakTimers.push(t);
     };
     try { speechSynthesis.speak(u); } catch(e){}
@@ -607,20 +638,20 @@ function speakPoem(poem, onEndCallback){
       return;
     }
 
-    const text = poem.s[index] + (index === 1 ? '。' : '……');
-    const u = new SpeechSynthesisUtterance(text);
+    const phraseText = poem.s[index] + (index === 1 ? '。' : '、');
+    const u = new SpeechSynthesisUtterance(phraseText);
     u.lang = 'ja-JP';
-    u.rate = baseRate * 0.92;
-    u.pitch = 0.90 - (index * 0.05);
+    u.rate = baseRate * 0.90;
+    u.pitch = pitchBase - (index * 0.04);
     u.volume = 1;
-    if(JA) u.voice = JA;
+    if(targetVoice) u.voice = targetVoice;
 
     u.onend = ()=>{
       if(currentSpeakId !== speakId) return;
       if(index === 0){
         const t = setTimeout(()=>{
           if(currentSpeakId === speakId) speakShimoPart(1);
-        }, 450);
+        }, 500);
         speakTimers.push(t);
       }else{
         S.speechEnded = true;
@@ -705,6 +736,15 @@ DIFFS.forEach(d=>{
 });
 selectColor(COLORS[0]);selectDiff(DIFFS[1]);renderHistory();
 
+// 性別ラジオボタン制御
+document.querySelectorAll('input[name="vGender"]').forEach(r => {
+  r.addEventListener('change', (e) => {
+    S.opts.voiceGender = e.target.value;
+    document.querySelectorAll('.rdo').forEach(l => l.classList.remove('on'));
+    e.target.parentElement.classList.add('on');
+  });
+});
+
 const chk=(id,key,elId)=>{
   const box=$(elId),wrap=$(id);
   box.checked=S.opts[key];
@@ -720,7 +760,8 @@ voiceTest.addEventListener('click',()=>{
   warmup();
   const sample = {k:['あしびきの','やまどりのをの','しだりをの'],s:['ながながしよを','ひとりかもねむ']};
   speakPoem(sample, null);
-  voiceTest.textContent=JA?('🔊 音声テスト（'+JA.name+'）'):'🔊 音声テスト（日本語音声未検出）';
+  const v = getVoiceByGender(S.opts.voiceGender);
+  voiceTest.textContent = v ? ('🔊 音声テスト（' + v.name + '）') : '🔊 音声テスト（日本語音声未検出）';
 });
 
 /* ===== フィールド描画 ===== */
@@ -748,6 +789,7 @@ function render(){
   cpuField.innerHTML = S.cpuSlots.map((item, i)=> slotHTML(item, 'cpu', i)).join('');
   myCountEl.textContent = S.myTakeCount;
   cpuCountEl.textContent = S.cpuTakeCount;
+  hudDiffEl.textContent = S.diff.name; // 対戦中ヘッダーに難易度表示
   potText.textContent = S.pot > 0 ? ('（場の払い札: ' + S.pot + '枚）') : '';
   myCountEl.classList.toggle('hot', S.phase === 'read');
 }
