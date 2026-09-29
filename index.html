@@ -120,7 +120,6 @@ body{
   font-weight:600;white-space:nowrap;line-height:1.2;
 }
 
-/* 1回休みバッジのスタイル（赤文字表示） */
 .rest-tag{
   font-size:clamp(10px, 1.4vw, 14px);color:#ff4d4d;background:rgba(255,77,77,.18);
   border:1px solid rgba(255,77,77,.6);border-radius:4px;padding:2px 8px;
@@ -144,7 +143,6 @@ body{
 }
 .field.cpu{transform:rotate(180deg);}
 
-/* スロット＆札の表示 */
 .slot{
   width:100%;height:100%;min-height:0;position:relative;
 }
@@ -201,7 +199,6 @@ body{
 @keyframes bad{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
 .card.nonum .num{display:none;}
 
-/* 読手エリア */
 .reader{
   flex:0 0 auto;border-radius:12px;padding:8px 14px;text-align:center;
   background:linear-gradient(180deg,rgba(255,255,255,.075),rgba(255,255,255,.028));
@@ -310,7 +307,7 @@ body{
     <h2>読み手の声</h2>
     <div class="opts">
       <label class="rdo on" id="rdoVoiceFem"><input type="radio" name="vGender" value="female" checked>女性の声</label>
-      <label class="rdo" id="rdoVoiceMale"><input type="radio" name="vGender" value="male">男性の声</label>
+      <label class="rdo" id="rdoVoiceMale"><input type="radio" name="vGender" value="male">男性の声（録音ファイル）</label>
       <label class="rdo" id="rdoVoiceAuto"><input type="radio" name="vGender" value="auto">自動・標準</label>
     </div>
   </div>
@@ -426,7 +423,7 @@ const COLORS=[
  {n:75,k:['ちぎりおきし','させもがつゆを','いのちにて'],s:['あはれことしの','あきもいぬめり']},
  {n:76,k:['わたのはら','こぎいでてみれば','ひさかたの'],s:['くもゐにまがふ','おきつしらなみ']},
  {n:82,k:['おもひわび','さてもいのちは','あるものを'],s:['うきにたへぬは','なみだなりけり']},
- {n:91,k:['きりぎりす','なくやしもよの','さmerksamに'],s:['ころもかたしき','ひとりかもねむ']},
+ {n:91,k:['きりぎりす','なくやしもよの','さむしろに'],s:['ころもかたしき','ひとりかもねむ']},
  {n:100,k:['ももしきや','ふるきのきばの','しのぶにも'],s:['なほあまりある','むかしなりけり']}
 ]},
 {id:'momo',name:'桃',base:'#d4587e',dark:'#8c2750',ink:'#fff0f5',poems:[
@@ -555,6 +552,10 @@ const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()
 /* ===== 朗詠音声の管理 ===== */
 let speakTimers=[];
 let currentSpeakId=0;
+let currentAudio=null; // 音声ファイル再生用
+
+// ★ 男性の声（録音MP3ファイル）のディレクトリ設定
+const AUDIO_DIR = "./audio/";
 
 function getVoiceByGender(gender){
   if(!('speechSynthesis' in window)) return null;
@@ -594,6 +595,13 @@ function stopSpeak(){
   currentSpeakId++;
   speakTimers.forEach(t => clearTimeout(t));
   speakTimers = [];
+  
+  if(currentAudio){
+    currentAudio.pause();
+    currentAudio.currentTime = 0;
+    currentAudio = null;
+  }
+  
   if('speechSynthesis' in window){
     try{speechSynthesis.cancel();}catch(e){}
   }
@@ -603,12 +611,51 @@ function speakPoem(poem, onEndCallback){
   stopSpeak();
   const speakId = currentSpeakId;
 
-  if(!S.opts.voice || !('speechSynthesis' in window)){
+  if(!S.opts.voice){
     S.speechEnded = true;
     if(onEndCallback) onEndCallback();
     return;
   }
 
+  // ★「男性の声」が選択されている場合、指定フォルダのMP3ファイルを実行再生
+  if(S.opts.voiceGender === 'male'){
+    S.speechEnded = false;
+    
+    // 歌番号（例: 3 -> "003.mp3" / "3.mp3" 両対応できるよう整形）
+    // ファイル名が 001.mp3〜100.mp3 の場合の例
+    const numStr = String(poem.n).padStart(3, '0');
+    const audioPath = AUDIO_DIR + numStr + ".mp3";
+    
+    currentAudio = new Audio(audioPath);
+    if(S.opts.slow) {
+      currentAudio.playbackRate = 0.85; // ゆっくり詠む時の再生速度
+    }
+
+    currentAudio.onended = () => {
+      if(currentSpeakId !== speakId) return;
+      subText.textContent = '下の句 ' + poem.s[0] + ' ' + poem.s[1];
+      subText.style.opacity = '1';
+      S.speechEnded = true;
+      if(onEndCallback && currentSpeakId === speakId) onEndCallback();
+    };
+
+    currentAudio.onerror = (e) => {
+      console.warn("音声ファイルが見つからないか再生できません:", audioPath);
+      // MP3が見つからない場合は自動でスキップ進行させて進行を止めない
+      S.speechEnded = true;
+      if(onEndCallback && currentSpeakId === speakId) onEndCallback();
+    };
+
+    currentAudio.play().catch(err => {
+      console.warn("再生がブロックされました:", err);
+      S.speechEnded = true;
+      if(onEndCallback && currentSpeakId === speakId) onEndCallback();
+    });
+
+    return;
+  }
+
+  // ★「女性の声」または「自動」の場合はブラウザ合成音声を使用
   try {
     const dummyUttr = new SpeechSynthesisUtterance('');
     speechSynthesis.speak(dummyUttr);
@@ -780,10 +827,14 @@ chk('chkSlow','slow','cbSlow');
 
 voiceTest.addEventListener('click',()=>{
   warmup();
-  const sample = {k:['あしびきの','やまどりのをの','しだりをの'],s:['ながながしよを','ひとりかもねむ']};
+  const sample = {n:3, k:['あしびきの','やまどりのをの','しだりをの'],s:['ながながしよを','ひとりかもねむ']};
   speakPoem(sample, null);
-  const v = getVoiceByGender(S.opts.voiceGender);
-  voiceTest.textContent = v ? ('🔊 音声テスト（' + v.name + '）') : '🔊 音声テスト（日本語音声未検出）';
+  if(S.opts.voiceGender === 'male'){
+    voiceTest.textContent = '🔊 音声テスト（男性: ローカルMP3再生）';
+  } else {
+    const v = getVoiceByGender(S.opts.voiceGender);
+    voiceTest.textContent = v ? ('🔊 音声テスト（' + v.name + '）') : '🔊 音声テスト（日本語音声未検出）';
+  }
 });
 
 /* ===== フィールド描画 ===== */
@@ -815,7 +866,6 @@ function render(){
   potText.textContent = S.pot > 0 ? ('（場のペナルティ札: ' + S.pot + '枚）') : '';
   myCountEl.classList.toggle('hot', S.phase === 'read');
 
-  // 1回休みの赤文字表示の切替
   myRestTag.style.display = S.myRest ? 'inline-block' : 'none';
   cpuRestTag.style.display = S.cpuRest ? 'inline-block' : 'none';
 }
@@ -911,7 +961,7 @@ function nextPoem(){
   reader.classList.remove('done');
   replayBtn.disabled=false;
 
-  render(); // 1回休みタグなどの最新状態を反映
+  render();
 
   if(S.myRest && S.cpuRest) toast('【双方 1回休み】', 1400);
   else if(S.myRest) toast('【自分 1回休み】', 1400);
@@ -919,7 +969,6 @@ function nextPoem(){
 
   speakPoem(S.cur, ()=>{ checkAutoAdvance(); });
 
-  // CPUが1回休みでない場合のみ動作を開始
   if(!S.cpuRest){
     const d=S.diff;
     const ms=Math.max(400, d.react+(Math.random()*2-1)*d.jitter);
@@ -927,7 +976,6 @@ function nextPoem(){
     S.cpuTimer=setTimeout(cpuAct,ms);
     startBar(ms);
   }else{
-    // CPUが1回休みの場合、CPUは何も行わずプレイヤーが取るか時間切れまで待機
     startBar(18000);
   }
 
@@ -966,7 +1014,6 @@ function cpuAct(){
 function penaltyFrom(tapper){
   const isMe = (tapper === 'me');
 
-  // お手つきした本人は1回休みフラグを立てる（次の札は取れない）
   if(isMe) S.myRest = true; 
   else S.cpuRest = true;
 
@@ -982,10 +1029,7 @@ function penaltyFrom(tapper){
     : '相手がお手つき！次の1首は相手が【1回休み】です。';
 
   toast(msg, 2400);
-  render(); // 1回休み（赤文字）表示を更新
-
-  // お手つきされてもその札は消さずに場に残すため、ゲームは継続（S.resolvedは変更しない）
-  // 自分がお手つきした場合は、この後正解札を押しても反応させないため休み状態を保持
+  render();
 }
 
 /* ===== 札取り実行 ===== */
@@ -994,7 +1038,6 @@ function takeCard(n, owner, taker){
   
   const isMe = (taker === 'me');
 
-  // 1回休みのプレイヤーは取れない（ガード）
   if(isMe && S.myRest){
     toast('【1回休み中】この首は札を取れません', 1200);
     return;
@@ -1011,7 +1054,6 @@ function takeCard(n, owner, taker){
   const el = document.querySelector(`.card[data-num="${n}"]`);
   if(el) el.classList.add('hit');
 
-  // 成功して取ったので休み状態は解除
   if(isMe) S.myRest = false; else S.cpuRest = false;
 
   let gained = 1;
@@ -1079,7 +1121,6 @@ function checkAutoAdvance(){
 }
 
 function advanceNext(){
-  // 1回の読み上げが終わったので、次の首に進むタイミングで休みを解除
   S.myRest = false;
   S.cpuRest = false;
 
@@ -1113,7 +1154,6 @@ function onTap(e){
   const el=e.target.closest?e.target.closest('.card'):null;
   if(!el||S.phase!=='read'||S.resolved||!S.cur)return;
 
-  // 自分が1回休み中の場合、タップに一切反応させない
   if(S.myRest){
     toast('【1回休み中】この首は札を取れません', 1200);
     return;
@@ -1122,13 +1162,11 @@ function onTap(e){
   const n=parseInt(el.dataset.num,10);
   const owner=el.dataset.own;
 
-  // 正解の札の場合
   if(n===S.cur.n){
     takeCard(n,owner,'me');
     return;
   }
 
-  // お手つきの場合
   el.classList.add('bad');
   setTimeout(()=>el.classList.remove('bad'),450);
   penaltyFrom('me');
