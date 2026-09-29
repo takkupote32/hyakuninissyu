@@ -530,7 +530,9 @@ const S={
   mySlots:[], cpuSlots:[],
   order:[], idx:0, cur:null, resolved:true, phase:'idle',
   pot:0, myTakeCount:0, cpuTakeCount:0,
-  myRest:false, cpuRest:false, isSuddenDeath:false, speechEnded:false,
+  myRest:false, cpuRest:false,
+  myPendingRest:false, cpuPendingRest:false, // ★お手つき次回休みの予約フラグ
+  isSuddenDeath:false, speechEnded:false,
   cpuTimer:null, rafId:null, forceTimer:null, memoTimer:null, waitTimer:null,
   opts:{num:false,kami:true,voice:true,slow:false,voiceGender:'female'}
 };
@@ -552,9 +554,8 @@ const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()
 /* ===== 朗詠音声の管理 ===== */
 let speakTimers=[];
 let currentSpeakId=0;
-let currentAudio=null; // 音声ファイル再生用
+let currentAudio=null;
 
-// ★ 男性の声（録音MP3ファイル）のディレクトリ設定
 const AUDIO_DIR = "./audio/";
 
 function getVoiceByGender(gender){
@@ -569,7 +570,8 @@ function getVoiceByGender(gender){
   if(gender === 'female'){
     return ja.find(v => femaleKeys.some(k => (v.name||'').includes(k))) || ja[0];
   }else if(gender === 'male'){
-    return ja.find(v => femaleKeys.some(k => (v.name||'').includes(k))) || ja.find(v => !(femaleKeys.some(k => (v.name||'').includes(k)))) || ja[0];
+    // ★ 修正: 男性声の優先検索
+    return ja.find(v => maleKeys.some(k => (v.name||'').includes(k))) || ja.find(v => !(femaleKeys.some(k => (v.name||'').includes(k)))) || ja[0];
   }
   return ja.find(v => femaleKeys.concat(maleKeys).some(k => (v.name||'').includes(k))) || ja[0];
 }
@@ -617,18 +619,15 @@ function speakPoem(poem, onEndCallback){
     return;
   }
 
-  // ★「男性の声」が選択されている場合、指定フォルダのMP3ファイルを実行再生
+  // 「男性の声」選択時のMP3再生
   if(S.opts.voiceGender === 'male'){
     S.speechEnded = false;
-    
-    // 歌番号（例: 3 -> "003.mp3" / "3.mp3" 両対応できるよう整形）
-    // ファイル名が 001.mp3〜100.mp3 の場合の例
     const numStr = String(poem.n).padStart(3, '0');
     const audioPath = AUDIO_DIR + numStr + ".mp3";
     
     currentAudio = new Audio(audioPath);
     if(S.opts.slow) {
-      currentAudio.playbackRate = 0.85; // ゆっくり詠む時の再生速度
+      currentAudio.playbackRate = 0.85;
     }
 
     currentAudio.onended = () => {
@@ -640,22 +639,24 @@ function speakPoem(poem, onEndCallback){
     };
 
     currentAudio.onerror = (e) => {
-      console.warn("音声ファイルが見つからないか再生できません:", audioPath);
-      // MP3が見つからない場合は自動でスキップ進行させて進行を止めない
-      S.speechEnded = true;
-      if(onEndCallback && currentSpeakId === speakId) onEndCallback();
+      console.warn("音声ファイルが見つからないためブラウザ合成音声へ切替えます:", audioPath);
+      // ★MP3が無い場合は合成音声へ安全にフォールバック
+      speakPoemSynth(poem, onEndCallback, speakId);
     };
 
     currentAudio.play().catch(err => {
       console.warn("再生がブロックされました:", err);
-      S.speechEnded = true;
-      if(onEndCallback && currentSpeakId === speakId) onEndCallback();
+      speakPoemSynth(poem, onEndCallback, speakId);
     });
 
     return;
   }
 
-  // ★「女性の声」または「自動」の場合はブラウザ合成音声を使用
+  speakPoemSynth(poem, onEndCallback, speakId);
+}
+
+// ブラウザ合成音声での朗詠処理
+function speakPoemSynth(poem, onEndCallback, speakId){
   try {
     const dummyUttr = new SpeechSynthesisUtterance('');
     speechSynthesis.speak(dummyUttr);
@@ -900,7 +901,9 @@ function start(){
   S.order=shuffle(pool.slice());
   S.idx=0;S.resolved=true;S.phase='ready';
   S.pot=0; S.myTakeCount=0; S.cpuTakeCount=0;
-  S.myRest=false; S.cpuRest=false; S.isSuddenDeath=false;
+  S.myRest=false; S.cpuRest=false;
+  S.myPendingRest=false; S.cpuPendingRest=false;
+  S.isSuddenDeath=false;
   
   clearTimeout(S.cpuTimer);clearTimeout(S.forceTimer);clearTimeout(S.waitTimer);clearInterval(S.memoTimer);
   stopBar();stopSpeak();
@@ -993,12 +996,7 @@ replayBtn.addEventListener('click',()=>{
 function cpuAct(){
   if(S.resolved||S.phase!=='read'||S.cpuRest)return;
   
-  if(Math.random()<S.diff.err){
-    penaltyFrom('cpu');
-    return;
-  }
-
-  let targetSlot = S.mySlots.find(s => !s.taken && s.poem.n === S.cur.n);
+  if(Math.random()<S.diff.err){ let penaltyFrom('cpu'); return; targetSlot="S.mySlots.find(s" }> !s.taken && s.poem.n === S.cur.n);
   let own = 'me';
   if(!targetSlot){
     targetSlot = S.cpuSlots.find(s => !s.taken && s.poem.n === S.cur.n);
@@ -1014,8 +1012,9 @@ function cpuAct(){
 function penaltyFrom(tapper){
   const isMe = (tapper === 'me');
 
-  if(isMe) S.myRest = true; 
-  else S.cpuRest = true;
+  // ★ 修正: 次の1首を休みに予約
+  if(isMe) S.myPendingRest = true; 
+  else S.cpuPendingRest = true;
 
   const takeCnt = isMe ? S.myTakeCount : S.cpuTakeCount;
   if(takeCnt > 0){
@@ -1054,8 +1053,6 @@ function takeCard(n, owner, taker){
   const el = document.querySelector(`.card[data-num="${n}"]`);
   if(el) el.classList.add('hit');
 
-  if(isMe) S.myRest = false; else S.cpuRest = false;
-
   let gained = 1;
   let bonusTxt = '';
   if(S.pot > 0){
@@ -1086,6 +1083,7 @@ function takeCard(n, owner, taker){
 function forceResolve(){
   if(S.resolved||!S.cur)return;
   S.resolved=true;S.phase='read';
+  stopSpeak(); // ★ 時間切れ時に朗詠を停止
   clearTimeout(S.cpuTimer);stopBar();replayBtn.disabled=true;
   
   const n=S.cur.n;
@@ -1121,8 +1119,11 @@ function checkAutoAdvance(){
 }
 
 function advanceNext(){
-  S.myRest = false;
-  S.cpuRest = false;
+  // ★ 修正: 予約されていた「1回休み」状態を反映し、予約をクリア
+  S.myRest = S.myPendingRest;
+  S.cpuRest = S.cpuPendingRest;
+  S.myPendingRest = false;
+  S.cpuPendingRest = false;
 
   if(!S.isSuddenDeath && S.idx >= 16){
     if(S.myTakeCount !== S.cpuTakeCount) return finish();
