@@ -1,1248 +1,1658 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#0d1420">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<title>五色百人一首 かるた対戦</title>
-<style>
-:root{
-  --bg:#0d1420; --line:rgba(255,255,255,.10);
-  --gold:#d9b46a; --ink:#f3efe6; --dim:#96a2b8;
-  --c-base:#2f6fb3; --c-dark:#16416f; --c-ink:#fff;
-  --fs:clamp(12px, 2.8vw, 20px); --radius:8px;
-}
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
-html,body{margin:0;padding:0;height:100%;width:100%;overflow:hidden;}
-body{
-  background:radial-gradient(125% 85% at 50% -10%, #1d2a44 0%, var(--bg) 58%, #06090f 100%);
-  color:var(--ink);
-  font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic UI","Yu Gothic",Meiryo,system-ui,-apple-system,sans-serif;
-  overscroll-behavior:none;-webkit-user-select:none;user-select:none;
-  font-feature-settings:"palt" 0;
-}
-.screen{display:none;height:100svh;height:100dvh;width:100%;flex-direction:column;}
-.screen.on{display:flex;}
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>五色百人一首 かるた対戦</title>
+  <style>
+    :root {
+      --c-base: #2f6fb3;
+      --c-dark: #12395e;
+      --c-ink: #eaf4ff;
+      --c-gold: #d4af37;
+      --c-red: #d9534f;
+      --c-green: #5cb85c;
+      --bg-main: #f4f6f9;
+      --card-bg: #fffbf0;
+      --card-border: #8b5a2b;
+      --shadow: 0 4px 12px rgba(0,0,0,0.15);
+      --font-main: "Hiragino Kaku Gothic ProN", "Yu Gothic", "Meiryo", sans-serif;
+      --font-serif: "Yu Mincho", "Shippori Mincho", "Hiragino Mincho ProN", serif;
+    }
 
-/* ===== 設定画面 ===== */
-#setup{
-  padding:calc(14px + env(safe-area-inset-top)) 16px calc(24px + env(safe-area-inset-bottom));
-  gap:12px;overflow-y:auto;width:100%;height:100%;
-}
-.brand{text-align:center;padding:4px 0 2px;}
-.brand h1{margin:0;font-size:clamp(30px, 4.8vw, 42px);letter-spacing:.20em;font-weight:700;
-  background:linear-gradient(180deg,#f8ecc9 0%,#d9b46a 55%,#a8823f 100%);
-  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;}
-.brand p{margin:4px 0 0;font-size:clamp(14px, 2.2vw, 18px);color:var(--dim);letter-spacing:.14em;}
-.sec{margin-top:6px;}
-.sec>h2{font-size:clamp(15px, 2.2vw, 20px);color:var(--gold);letter-spacing:.16em;margin:12px 0 8px;font-weight:600;}
-.sec>h2 small{color:var(--dim);letter-spacing:0;font-weight:400;margin-left:8px;font-size:clamp(12px, 1.8vw, 16px);}
-.colors{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;}
-.cbtn{
-  border:0;border-radius:var(--radius);padding:14px 0 12px;cursor:pointer;
-  color:#fff;font-family:inherit;font-size:clamp(16px, 2.4vw, 21px);font-weight:700;letter-spacing:.1em;
-  box-shadow:0 3px 0 rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.32);
-  position:relative;transition:transform .12s, outline-color .12s;
-  outline:3px solid transparent;outline-offset:2px;
-}
-.cbtn:active{transform:translateY(2px);}
-.cbtn .cnt{display:block;font-size:clamp(10.5px, 1.5vw, 14px);opacity:.85;letter-spacing:0;margin-top:3px;font-weight:500;}
-.cbtn.sel{outline-color:var(--gold);}
-.diffs{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;}
-.dbtn{
-  border:1px solid var(--line);background:rgba(255,255,255,.045);color:var(--ink);
-  border-radius:var(--radius);padding:12px 2px;font-family:inherit;font-size:clamp(13.5px, 1.9vw, 18px);font-weight:600;
-  cursor:pointer;letter-spacing:.02em;transition:all .15s;
-}
-.dbtn span{display:block;font-size:clamp(10px, 1.4vw, 14px);color:var(--dim);font-weight:400;margin-top:3px;}
-.dbtn.sel{background:linear-gradient(180deg,rgba(217,180,106,.30),rgba(217,180,106,.13));
-  border-color:var(--gold);color:#f8ecc9;}
-.dbtn.sel span{color:#d9c39a;}
-.note{
-  font-size:clamp(13px, 1.8vw, 16px);color:#c8bfa8;background:rgba(217,180,106,.09);
-  border-left:2px solid var(--gold);border-radius:0 6px 6px 0;padding:10px 14px;margin-top:8px;line-height:1.5;
-}
-.opts{display:flex;gap:10px;margin-top:10px;flex-wrap:wrap;}
-.chk,.rdo{
-  display:flex;align-items:center;gap:6px;font-size:clamp(13px, 1.8vw, 16px);color:#cfd6e2;
-  background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:20px;padding:9px 16px;cursor:pointer;
-}
-.chk.on,.rdo.on{background:rgba(217,180,106,.18);border-color:rgba(217,180,106,.5);color:#f4e6c6;}
-.chk input,.rdo input{display:none;}
-#startBtn{
-  margin-top:18px;width:100%;border:0;border-radius:12px;padding:18px;font-family:inherit;
-  font-size:clamp(18px, 2.6vw, 24px);font-weight:700;letter-spacing:.2em;color:#251c07;cursor:pointer;
-  background:linear-gradient(180deg,#f2dda6,#d9b46a 60%,#bb9247);
-  box-shadow:0 5px 16px rgba(217,180,106,.28), inset 0 1px 0 rgba(255,255,255,.7);
-}
-#startBtn:active{transform:translateY(2px);}
-.ghost{
-  margin-top:10px;width:100%;border:1px solid var(--line);background:transparent;color:var(--dim);
-  border-radius:10px;padding:14px;font-family:inherit;font-size:clamp(13px, 1.8vw, 16px);cursor:pointer;
-}
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
 
-/* 履歴セクション */
-.history-sec{margin-top:16px;background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:10px;padding:14px;}
-.history-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
-.history-hdr h3{margin:0;font-size:clamp(14px, 1.9vw, 17px);color:var(--gold);font-weight:600;}
-.clear-btn{border:1px solid rgba(255,107,107,.4);background:rgba(255,107,107,.1);color:#ff9f6b;border-radius:12px;padding:4px 12px;font-size:clamp(11.5px, 1.5vw, 14px);cursor:pointer;}
-.hist-list{display:flex;flex-direction:column;gap:8px;max-height:200px;overflow-y:auto;}
-.hist-item{display:grid;grid-template-columns:1fr auto auto auto;align-items:center;gap:10px;font-size:clamp(12px, 1.6vw, 15px);padding:8px 12px;background:rgba(255,255,255,.04);border-radius:6px;border:1px solid rgba(255,255,255,.05);}
-.hist-item .win{color:#7de08a;font-weight:700;}
-.hist-item .lose{color:#ff6b6b;font-weight:700;}
-.hist-item .draw{color:var(--dim);font-weight:700;}
-.hist-del{border:0;background:transparent;color:var(--dim);cursor:pointer;font-size:14px;padding:0 4px;}
+    body {
+      font-family: var(--font-main);
+      background-color: #111;
+      color: #333;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      min-height: 100svh;
+      overflow: hidden;
+    }
 
-/* ===== 対戦画面 ===== */
-#game{
-  padding:calc(6px + env(safe-area-inset-top)) 10px calc(8px + env(safe-area-inset-bottom));
-  gap:6px;height:100svh;height:100dvh;width:100%;overflow:hidden;
-  display:flex;flex-direction:column;justify-content:space-between;
-}
-.hud{
-  display:grid;grid-template-columns:auto 1fr auto 1fr;align-items:center;gap:10px;
-  font-size:clamp(11px, 1.6vw, 15px);padding:2px 6px;flex:0 0 auto;
-}
-.hud .quit-btn{
-  border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.06);color:var(--dim);
-  border-radius:16px;padding:5px 12px;font-size:clamp(10px, 1.4vw, 13px);cursor:pointer;font-family:inherit;
-  white-space:nowrap;transition:background .15s;
-}
-.hud .quit-btn:active{background:rgba(255,255,255,.18);color:#fff;}
-.hud .side{display:flex;align-items:center;gap:6px;color:var(--dim);}
-.hud .side.r{justify-content:flex-end;}
-.hud b{font-size:clamp(15px, 2.2vw, 22px);color:var(--ink);font-variant-numeric:tabular-nums;}
-.hud b.hot{color:#ff9f6b;}
-.hud .diff-tag{
-  font-size:clamp(9.5px, 1.3vw, 13px);color:var(--gold);background:rgba(217,180,106,.15);
-  border:1px solid rgba(217,180,106,.35);border-radius:4px;padding:2px 7px;
-  font-weight:600;white-space:nowrap;line-height:1.2;
-}
+    .screen {
+      width: 100%;
+      max-width: 500px;
+      height: 100vh;
+      height: 100svh;
+      background-color: var(--bg-main);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      box-shadow: 0 0 20px rgba(0,0,0,0.5);
+      overflow: hidden;
+    }
 
-.rest-tag{
-  font-size:clamp(10px, 1.4vw, 14px);color:#ff4d4d;background:rgba(255,77,77,.18);
-  border:1px solid rgba(255,77,77,.6);border-radius:4px;padding:2px 8px;
-  font-weight:700;white-space:nowrap;line-height:1.2;animation:pulseRest 1.2s infinite alternate;
-}
-@keyframes pulseRest{
-  0%{transform:scale(1);box-shadow:0 0 2px rgba(255,77,77,.4);}
-  100%{transform:scale(1.05);box-shadow:0 0 8px rgba(255,77,77,.8);}
-}
+    /* --- 設定画面 --- */
+    #setup {
+      padding: clamp(12px, 3vh, 20px);
+      overflow-y: auto;
+      gap: clamp(12px, 2.5vh, 20px);
+    }
 
-.hud .mid{
-  font-size:clamp(10.5px, 1.5vw, 14px);color:var(--gold);letter-spacing:.06em;text-align:center;
-  border:1px solid rgba(217,180,106,.35);border-radius:20px;padding:4px 12px;white-space:nowrap;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
-}
-.hud .pot-info{font-size:clamp(9px, 1.3vw, 12px);color:#ff9f6b;margin-top:1px;font-weight:700;}
+    .title-area {
+      text-align: center;
+      padding: 8px 0;
+    }
+    .title-area h1 {
+      font-size: clamp(1.4rem, 5vw, 1.8rem);
+      color: var(--c-dark);
+      font-family: var(--font-serif);
+      letter-spacing: 2px;
+    }
+    .title-area p {
+      font-size: 0.85rem;
+      color: #666;
+      margin-top: 4px;
+    }
 
-.field{
-  display:grid;grid-template-columns:repeat(5,1fr);grid-template-rows:repeat(2,1fr);
-  gap:8px;flex:1 1 0;min-height:0;width:100%;align-items:stretch;justify-items:stretch;
-}
-.field.cpu{transform:rotate(180deg);}
+    .panel {
+      background: #fff;
+      border-radius: 12px;
+      padding: 14px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .panel-title {
+      font-size: 0.95rem;
+      font-weight: bold;
+      color: #444;
+      border-bottom: 2px solid var(--c-base);
+      padding-bottom: 4px;
+      margin-bottom: 2px;
+    }
 
-.slot{
-  width:100%;height:100%;min-height:0;position:relative;
-}
-.card{
-  position:absolute;inset:0;border:0;padding:2px 3px;border-radius:8px;overflow:hidden;cursor:pointer;
-  background:linear-gradient(160deg,var(--c-base),var(--c-dark));
-  box-shadow:0 3px 8px rgba(0,0,0,.45), inset 0 0 0 1px rgba(255,255,255,.22);
-  display:flex;align-items:center;justify-content:center;
-  width:100%;height:100%;
-  font-family:inherit;transition:transform .1s, box-shadow .15s, opacity .25s;
-}
-.card::after{content:"";position:absolute;inset:3px;border-radius:6px;
-  border:1px solid rgba(255,255,255,.18);pointer-events:none;}
-.card .num{
-  position:absolute;left:4px;top:3px;font-size:clamp(8px, 1.0vw, 11px);color:var(--c-ink);opacity:.6;
-  line-height:1;letter-spacing:0;
-}
+    .grid-5 {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 6px;
+    }
 
-.card .shimo{
-  writing-mode:vertical-rl;
-  -webkit-writing-mode:vertical-rl;
-  color:var(--c-ink);
-  display:flex;
-  flex-direction:column;
-  justify-content:center;
-  align-items:center;
-  text-align:center;
-  height:100%;
-  width:100%;
-  box-sizing:border-box;
-}
+    .btn-col {
+      border: 2px solid transparent;
+      border-radius: 8px;
+      padding: 8px 2px;
+      font-weight: bold;
+      color: #fff;
+      cursor: pointer;
+      text-align: center;
+      font-size: 0.9rem;
+      transition: transform 0.1s, filter 0.1s;
+      opacity: 0.6;
+    }
+    .btn-col.active {
+      opacity: 1;
+      transform: scale(1.05);
+      border-color: #333;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+    }
 
-.card .shimo .line{
-  display:inline-block;
-  white-space:nowrap;
-  font-size:clamp(9.5px, 1.8vh, 17px);
-  line-height:1.15;
-  letter-spacing:0.02em;
-  font-weight:700;
-  text-align:center;
-}
+    .btn-diff {
+      background: #eef2f5;
+      border: 2px solid #ccc;
+      border-radius: 8px;
+      padding: 8px 2px;
+      font-size: 0.85rem;
+      font-weight: bold;
+      color: #555;
+      cursor: pointer;
+      text-align: center;
+    }
+    .btn-diff.active {
+      background: var(--c-base);
+      color: #fff;
+      border-color: var(--c-dark);
+    }
 
-.slot.taken .card{display:none;}
-.slot.taken::before{
-  content:"";position:absolute;inset:0;border-radius:8px;
-  border:1.5px dashed rgba(255,255,255,.12);background:rgba(0,0,0,.15);
-}
+    .diff-note {
+      font-size: 0.8rem;
+      color: #666;
+      text-align: center;
+      min-height: 2.4em;
+      line-height: 1.2;
+    }
 
-.card:active:not(.empty){transform:scale(.95);}
-.card.hit{animation:hit .45s ease-out;box-shadow:0 0 0 4px #7de08a, 0 0 25px rgba(125,224,138,.8);}
-.card.bad{animation:bad .45s ease-out;box-shadow:0 0 0 4px #ff6b6b, 0 0 25px rgba(255,107,107,.8);}
-.card.dim{opacity:.25;}
-@keyframes hit{0%{transform:scale(1.08)}100%{transform:scale(1)}}
-@keyframes bad{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
-.card.nonum .num{display:none;}
+    .opt-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .opt-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.9rem;
+      color: #333;
+    }
+    .opt-row label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      width: 100%;
+    }
+    .opt-row input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--c-base);
+    }
 
-.reader{
-  flex:0 0 auto;border-radius:12px;padding:8px 14px;text-align:center;
-  background:linear-gradient(180deg,rgba(255,255,255,.075),rgba(255,255,255,.028));
-  border:1px solid var(--line);min-height:80px;
-  display:flex;flex-direction:column;justify-content:center;gap:3px;position:relative;overflow:hidden;
-}
-.reader .lbl{font-size:clamp(8.5px, 1.2vw, 12px);color:var(--dim);letter-spacing:.32em;}
-.reader .kami{font-size:clamp(14.5px, 2.2vw, 22px);font-weight:600;letter-spacing:.06em;line-height:1.45;word-break:break-all;}
-.reader .sub{font-size:clamp(10px, 1.5vw, 14px);color:#8fa8c4;letter-spacing:.05em;min-height:16px;line-height:1.3;transition:opacity .3s;}
-.reader.hide .kami{filter:blur(7px);opacity:.55;}
-.reader.done .kami{color:var(--gold);}
-.reader .rep{position:absolute;right:10px;top:8px;border:1px solid var(--line);background:rgba(255,255,255,.07);
-  color:#cbd4e2;border-radius:16px;font-family:inherit;font-size:clamp(9px, 1.3vw, 12px);padding:4px 10px;cursor:pointer;letter-spacing:.02em;}
-.reader .rep:active{transform:scale(.94);}
-.reader .rep[disabled]{opacity:.3;}
-.bar{position:absolute;left:0;bottom:0;height:4px;width:100%;background:rgba(255,255,255,.09);}
-.bar i{display:block;height:100%;width:100%;background:linear-gradient(90deg,#7de08a,#d9b46a,#ff6b6b);
-  transform-origin:left center;transform:scaleX(1);}
+    .radio-group {
+      display: flex;
+      gap: 12px;
+      margin-top: 4px;
+    }
+    .radio-label {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 0.85rem;
+      cursor: pointer;
+    }
+    .radio-label input[type="radio"] {
+      accent-color: var(--c-base);
+    }
 
-.memo-bar{
-  position:absolute;inset:0;margin:auto;
-  width:clamp(240px, 70%, 400px);height:calc(100% - 10px);
-  background:rgba(13,20,32,0.96);border:1.5px solid var(--gold);
-  border-radius:12px;padding:6px 16px;display:none;align-items:center;justify-content:space-between;
-  z-index:10;backdrop-filter:blur(6px);box-shadow:0 4px 20px rgba(0,0,0,0.6);
-}
-.memo-bar.on{display:flex;}
-.memo-bar .time{font-size:clamp(22px, 3.5vw, 32px);font-weight:700;color:#f8ecc9;font-variant-numeric:tabular-nums;line-height:1;}
-.memo-bar .txt{font-size:clamp(10.5px, 1.6vw, 15px);color:var(--dim);line-height:1.2;text-align:left;}
-.memo-bar .btn{
-  border:0;border-radius:8px;padding:6px 14px;font-family:inherit;font-size:clamp(10.5px, 1.6vw, 15px);font-weight:700;
-  color:#251c07;background:linear-gradient(180deg,#f2dda6,#d9b46a);cursor:pointer;white-space:nowrap;
-}
+    .history-sec {
+      font-size: 0.8rem;
+    }
+    .hist-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+    .hist-list {
+      max-height: 90px;
+      overflow-y: auto;
+      border: 1px solid #eee;
+      border-radius: 6px;
+      padding: 4px;
+      background: #fafafa;
+    }
+    .hist-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 3px 6px;
+      border-bottom: 1px dashed #ddd;
+    }
+    .hist-item:last-child { border-bottom: none; }
+    .hist-win { color: var(--c-red); font-weight: bold; }
+    .hist-lose { color: var(--c-base); }
+    .hist-draw { color: #777; }
 
-.toast{
-  position:fixed;left:50%;top:40%;transform:translate(-50%,-50%) scale(.85);
-  background:rgba(8,12,20,.95);border:1px solid var(--gold);color:#fff;padding:14px 26px;border-radius:14px;
-  font-size:clamp(13px, 2vw, 18px);font-weight:700;letter-spacing:.08em;opacity:0;pointer-events:none;transition:all .2s;z-index:95;
-  white-space:nowrap;backdrop-filter:blur(6px);text-align:center;line-height:1.45;box-shadow:0 8px 24px rgba(0,0,0,.6);
-}
-.toast.show{opacity:1;transform:translate(-50%,-50%) scale(1);}
+    .btn-primary {
+      background: linear-gradient(135deg, var(--c-base), var(--c-dark));
+      color: #fff;
+      border: none;
+      border-radius: 25px;
+      padding: 14px;
+      font-size: 1.1rem;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+      text-align: center;
+      letter-spacing: 1px;
+      margin-top: auto;
+    }
+    .btn-primary:active {
+      transform: scale(0.98);
+    }
+    .btn-test {
+      background: #f0f0f0;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      padding: 6px 12px;
+      font-size: 0.8rem;
+      cursor: pointer;
+    }
 
-/* ===== 対戦結果ポップアップ ===== */
-.modal-ov{
-  position:fixed;inset:0;background:rgba(4,7,12,0.85);backdrop-filter:blur(8px);
-  display:none;align-items:center;justify-content:center;z-index:100;padding:20px;
-}
-.modal-ov.on{display:flex;}
-.modal-box{
-  background:linear-gradient(180deg,#18253d,#0d1420);border:1.5px solid var(--gold);
-  border-radius:24px;padding:28px 24px;width:100%;max-width:420px;text-align:center;
-  box-shadow:0 12px 32px rgba(0,0,0,.8);animation:modalUp .3s cubic-bezier(0.18, 0.89, 0.32, 1.28);
-}
-@keyframes modalUp{from{transform:scale(.8);opacity:0}to{transform:scale(1);opacity:1}}
-.modal-box .verdict{
-  font-size:clamp(36px, 5vw, 48px);font-weight:800;letter-spacing:.15em;margin-bottom:6px;
-  background:linear-gradient(180deg,#f8ecc9,#d9b46a);-webkit-background-clip:text;-webkit-text-fill-color:transparent;
-}
-.modal-box .why{font-size:clamp(11.5px, 1.7vw, 16px);color:var(--dim);margin-bottom:18px;line-height:1.5;}
-.scorebox{
-  display:grid;grid-template-columns:1fr auto 1fr;gap:12px;align-items:center;
-  background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:18px;
-}
-.scorebox .n{font-size:clamp(30px, 4.5vw, 40px);font-weight:700;font-variant-numeric:tabular-nums;}
-.scorebox .t{font-size:clamp(10px, 1.5vw, 14px);color:var(--dim);margin-top:2px;}
-.scorebox .vs{font-size:clamp(10px, 1.6vw, 15px);color:var(--gold);font-weight:700;}
-.modal-btns{display:flex;flex-direction:column;gap:10px;}
-.modal-btn-main{
-  border:0;border-radius:12px;padding:14px;font-family:inherit;font-size:clamp(14px, 2vw, 18px);font-weight:700;
-  color:#251c07;background:linear-gradient(180deg,#f2dda6,#d9b46a);cursor:pointer;letter-spacing:.1em;
-}
-.modal-btn-sub{
-  border:1px solid var(--line);background:rgba(255,255,255,.06);color:var(--ink);
-  border-radius:12px;padding:12px;font-family:inherit;font-size:clamp(12px, 1.7vw, 15px);cursor:pointer;
-}
+    /* --- 対戦画面 --- */
+    #game {
+      display: none;
+      flex-direction: column;
+      justify-content: space-between;
+      background-color: #2a3827; /* 畳の緑 */
+      background-image: radial-gradient(#344731 15%, transparent 16%);
+      background-size: 16px 16px;
+    }
 
-.ov{position:fixed;inset:0;background:rgba(5,8,13,.93);display:none;
-  flex-direction:column;align-items:center;justify-content:center;gap:16px;z-index:80;padding:24px;text-align:center;}
-.ov.on{display:flex;}
-.spin{width:48px;height:48px;border-radius:50%;border:4px solid rgba(217,180,106,.22);
-  border-top-color:var(--gold);animation:sp 1s linear infinite;}
-@keyframes sp{to{transform:rotate(360deg)}}
-</style>
+    /* HUD (上部ステータスバー) */
+    .hud {
+      background: rgba(0,0,0,0.75);
+      color: #fff;
+      padding: 6px 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.85rem;
+      z-index: 10;
+    }
+    .hud-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .hud-score {
+      font-size: 1.1rem;
+      font-weight: bold;
+      color: var(--c-gold);
+    }
+    .btn-quit {
+      background: rgba(255,255,255,0.2);
+      border: none;
+      color: #fff;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      cursor: pointer;
+    }
+    .tag-rest {
+      background: var(--c-red);
+      color: #fff;
+      padding: 2px 6px;
+      border-radius: 10px;
+      font-size: 0.7rem;
+      font-weight: bold;
+      animation: pulseRest 1s infinite alternate;
+    }
+    @keyframes pulseRest {
+      from { transform: scale(1); }
+      to { transform: scale(1.1); }
+    }
+
+    /* フィールド（CPU・自分） */
+    .field {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      grid-template-rows: repeat(2, 1fr);
+      gap: clamp(4px, 1.5vw, 8px);
+      padding: clamp(8px, 2vw, 12px);
+      height: 33%;
+    }
+    #cpuField {
+      transform: rotate(180deg);
+    }
+
+    /* カード (札) */
+    .card {
+      background-color: var(--card-bg);
+      border: 2px solid var(--card-border);
+      border-radius: 6px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      position: relative;
+      cursor: pointer;
+      transition: transform 0.1s, box-shadow 0.1s, opacity 0.3s;
+      overflow: hidden;
+      padding: 2px;
+    }
+    .card:active {
+      transform: scale(0.95);
+    }
+    .card.empty {
+      background: transparent;
+      border: 1px dashed rgba(255,255,255,0.2);
+      box-shadow: none;
+      cursor: default;
+    }
+    .card .shimo {
+      writing-mode: vertical-rl;
+      text-orientation: upright;
+      font-family: var(--font-serif);
+      font-size: clamp(0.65rem, 2.5vw, 0.85rem);
+      letter-spacing: 1px;
+      color: #111;
+      height: 90%;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-around;
+      line-height: 1.1;
+    }
+    .card .num {
+      position: absolute;
+      bottom: 2px;
+      left: 2px;
+      font-size: 0.6rem;
+      color: #888;
+      font-family: var(--font-main);
+    }
+
+    /* カードヒット・お手つきアニメーション */
+    .card.hit {
+      animation: hitAnim 0.4s ease-out;
+    }
+    @keyframes hitAnim {
+      0% { transform: scale(1); box-shadow: 0 0 0px var(--c-gold); }
+      50% { transform: scale(1.2); box-shadow: 0 0 20px var(--c-gold); z-index: 20; }
+      100% { transform: scale(1); }
+    }
+    .card.bad {
+      animation: badAnim 0.3s ease-in-out;
+    }
+    @keyframes badAnim {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-6px); }
+      40%, 80% { transform: translateX(6px); }
+    }
+
+    /* 読手エリア (中央) */
+    #reader {
+      height: 28%;
+      background: rgba(0,0,0,0.4);
+      margin: 0 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.15);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 10px;
+      position: relative;
+      color: #fff;
+    }
+
+    .kami-text {
+      font-family: var(--font-serif);
+      font-size: clamp(0.95rem, 3.8vw, 1.2rem);
+      text-align: center;
+      line-height: 1.4;
+      color: #fff;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+      min-height: 2.8em;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .sub-text {
+      font-size: 0.75rem;
+      color: #ddd;
+      text-align: center;
+      min-height: 1.2em;
+    }
+
+    .reader-controls {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .replay-btn {
+      background: rgba(255,255,255,0.2);
+      border: 1px solid rgba(255,255,255,0.4);
+      color: #fff;
+      border-radius: 15px;
+      padding: 4px 12px;
+      font-size: 0.75rem;
+      cursor: pointer;
+    }
+    .replay-btn:disabled {
+      opacity: 0.3;
+      cursor: default;
+    }
+
+    .bar-outer {
+      flex-grow: 1;
+      height: 6px;
+      background: rgba(255,255,255,0.2);
+      border-radius: 3px;
+      margin-left: 10px;
+      overflow: hidden;
+    }
+    .bar-fill {
+      height: 100%;
+      width: 0%;
+      background: var(--c-gold);
+      transition: width 0.1s linear;
+    }
+
+    /* 暗記タイム用オーバーレイ */
+    #memoBar {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.85);
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+      z-index: 5;
+    }
+    #memoBar p {
+      font-size: 1rem;
+      color: #fff;
+    }
+    #memoCount {
+      font-size: 2rem;
+      font-weight: bold;
+      color: var(--c-gold);
+    }
+    .btn-skip {
+      background: var(--c-base);
+      color: #fff;
+      border: none;
+      padding: 6px 16px;
+      border-radius: 15px;
+      font-size: 0.85rem;
+      cursor: pointer;
+    }
+
+    /* モーダル (対戦結果) */
+    .modal {
+      display: none;
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.8);
+      z-index: 100;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+    .modal-content {
+      background: #fff;
+      border-radius: 16px;
+      padding: 20px;
+      width: 100%;
+      max-width: 360px;
+      text-align: center;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .res-title {
+      font-size: 1.8rem;
+      font-weight: bold;
+      font-family: var(--font-serif);
+    }
+    .res-title.win { color: var(--c-red); }
+    .res-title.lose { color: var(--c-base); }
+    .res-title.draw { color: #555; }
+
+    .score-board {
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      background: #f8f9fa;
+      padding: 12px;
+      border-radius: 8px;
+    }
+    .score-node {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .score-node .label { font-size: 0.8rem; color: #666; }
+    .score-node .val { font-size: 1.8rem; font-weight: bold; color: #222; }
+
+    .modal-btns {
+      display: flex;
+      gap: 10px;
+    }
+    .modal-btns button {
+      flex: 1;
+      padding: 10px;
+      border-radius: 8px;
+      border: none;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .btn-again { background: var(--c-base); color: #fff; }
+    .btn-back { background: #e0e0e0; color: #333; }
+
+    /* スピナー・準備オーバレイ */
+    #readyOv {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.7);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+      color: #fff;
+      z-index: 50;
+      font-size: 1.2rem;
+      gap: 12px;
+    }
+
+    /* トースト通知 */
+    #toast {
+      position: absolute;
+      top: 45%;
+      left: 50%;
+      transform: translate(-50%, -50%) scale(0.8);
+      background: rgba(0,0,0,0.85);
+      color: #fff;
+      padding: 10px 20px;
+      border-radius: 20px;
+      font-size: 1.1rem;
+      font-weight: bold;
+      pointer-events: none;
+      opacity: 0;
+      transition: transform 0.2s, opacity 0.2s;
+      z-index: 80;
+      text-align: center;
+      border: 1px solid var(--c-gold);
+      white-space: nowrap;
+    }
+    #toast.show {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1);
+    }
+  </style>
 </head>
 <body>
 
-<!-- ========== 設定 ========== -->
-<section id="setup" class="screen on">
-  <div class="brand">
-    <h1>五色百人一首</h1>
-    <p>かるた対戦</p>
+  <div class="screen">
+    <!-- 設定画面 -->
+    <section id="setup" class="screen" style="display: flex;">
+      <div class="title-area">
+        <h1>五色百人一首</h1>
+        <p>かるた対戦トレーニング</p>
+      </div>
+
+      <!-- 色選択 -->
+      <div class="panel">
+        <div class="panel-title">1. 色を選択 (20首)</div>
+        <div class="grid-5" id="colorpick"></div>
+      </div>
+
+      <!-- 難易度選択 -->
+      <div class="panel">
+        <div class="panel-title">2. 対戦相手の強さ</div>
+        <div class="grid-5" id="diffpick"></div>
+        <div class="diff-note" id="diffNote"></div>
+      </div>
+
+      <!-- オプション -->
+      <div class="panel">
+        <div class="panel-title">3. 対戦・表示設定</div>
+        <div class="opt-group">
+          <div class="opt-row">
+            <span>読み手の声</span>
+            <div class="radio-group">
+              <label class="radio-label"><input type="radio" name="vGender" value="female"> 女性</label>
+              <label class="radio-label"><input type="radio" name="vGender" value="male"> 男性(録音)</label>
+              <label class="radio-label"><input type="radio" name="vGender" value="auto" checked> 自動</label>
+            </div>
+          </div>
+          <div class="opt-row">
+            <label><input type="checkbox" id="optNum"> 札に番号を表示する</label>
+          </div>
+          <div class="opt-row">
+            <label><input type="checkbox" id="optKami" checked> 画面に上の句を表示する</label>
+          </div>
+          <div class="opt-row">
+            <label><input type="checkbox" id="optVoice" checked> 音声を読み上げる</label>
+            <button class="btn-test" id="voiceTest">音声テスト</button>
+          </div>
+          <div class="opt-row">
+            <label><input type="checkbox" id="optSlow"> ゆっくり詠む</label>
+          </div>
+        </div>
+      </div>
+
+      <!-- 履歴 -->
+      <div class="panel history-sec">
+        <div class="hist-header">
+          <span style="font-weight:bold; color:#555;">直近の対戦履歴</span>
+          <button id="clearHistBtn" style="border:none; background:none; color:#888; text-decoration:underline; cursor:pointer;">全消去</button>
+        </div>
+        <div class="hist-list" id="histList"></div>
+      </div>
+
+      <button class="btn-primary" id="startBtn">対戦スタート</button>
+    </section>
+
+    <!-- 対戦画面 -->
+    <section id="game">
+      <!-- HUD -->
+      <div class="hud">
+        <button class="btn-quit" id="quitBtn">中断</button>
+        <div class="hud-item">
+          <span>相手:</span>
+          <span class="hud-score" id="cpuCount">10</span>枚
+          <span id="cpuDiffTag" style="font-size:0.7rem; background:#444; padding:1px 4px; border-radius:3px;">中位</span>
+          <span id="cpuRestTag" class="tag-rest" style="display:none;">1回休み</span>
+        </div>
+        <div class="hud-item" style="flex-direction:column; align-items:flex-end;">
+          <div><span id="progText">第1首</span> / <span id="maxProgText">17首</span></div>
+          <div id="potText" style="font-size:0.7rem; color:var(--c-gold); font-weight:bold;"></div>
+        </div>
+        <div class="hud-item">
+          <span id="myRestTag" class="tag-rest" style="display:none;">1回休み</span>
+          <span>自分:</span>
+          <span class="hud-score" id="myCount">10</span>枚
+        </div>
+      </div>
+
+      <!-- CPUフィールド -->
+      <div class="field" id="cpuField"></div>
+
+      <!-- 読手エリア -->
+      <div id="reader">
+        <div class="kami-text" id="kamiText"></div>
+        <div class="sub-text" id="subText"></div>
+        <div class="reader-controls">
+          <button class="replay-btn" id="replayBtn">もう一度聞く</button>
+          <div class="bar-outer">
+            <div class="bar-fill" id="barFill"></div>
+          </div>
+        </div>
+
+        <!-- 暗記タイム表示 -->
+        <div id="memoBar" style="display:none;">
+          <p>暗記タイム（配置を覚えよう）</p>
+          <div id="memoCount">60</div>
+          <button class="btn-skip" id="skipMemoBtn">覚えた！(スタート)</button>
+        </div>
+      </div>
+
+      <!-- 自分フィールド -->
+      <div class="field" id="myField"></div>
+    </section>
+
+    <!-- 準備オーバーレイ -->
+    <div id="readyOv">
+      <div>札を並べています...</div>
+    </div>
+
+    <!-- 結果モーダル -->
+    <div class="modal" id="resultModal">
+      <div class="modal-content">
+        <div class="res-title" id="resTitle">勝利！</div>
+        <div class="score-board">
+          <div class="score-node">
+            <span class="label">自分</span>
+            <span class="val" id="resMyScore">0</span>
+          </div>
+          <div style="font-size:1.5rem; font-weight:bold; color:#ccc;">VS</div>
+          <div class="score-node">
+            <span class="label">相手</span>
+            <span class="val" id="resCpuScore">0</span>
+          </div>
+        </div>
+        <div id="resDetail" style="font-size:0.85rem; color:#666;"></div>
+        <div class="modal-btns">
+          <button class="btn-again" id="resAgainBtn">もう一度</button>
+          <button class="btn-back" id="resBackBtn">設定へ戻る</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- トースト表示 -->
+    <div id="toast">お手つき！</div>
   </div>
 
-  <div class="sec">
-    <h2>色を選ぶ <small>20枚 ずつ</small></h2>
-    <div class="colors" id="colorpick"></div>
-  </div>
+  <script>
+    /* =========================================================
+       1. データ定義 (百人一首 5色各20首 & 難易度)
+       ========================================================= */
+    const COLORS = [
+      {
+        id: 'ao', name: '青', base: '#2f6fb3', dark: '#12395e', ink: '#eaf4ff',
+        poems: [
+          { n: 3, k: ['あしびきの', 'やまどりのをの', 'しだりをの'], s: ['ながながしよを', 'ひとりかもねむ'] },
+          { n: 5, k: ['おくやまに', 'もみぢふみわけ', 'なくしかの'], s: ['こゑきくときぞ', 'あきはかなしき'] },
+          { n: 6, k: ['かささぎの', 'わたせるはしに', 'おくのおの'], s: ['しろきをみれば', 'よぞふけにける'] },
+          { n: 12, k: ['あまつかぜ', 'くものかよひぢ', 'ふきとぢよ'], s: ['をとめのすがた', 'しばしとどめむ'] },
+          { n: 14, k: ['みちのくの', 'しのぶもぢずり', 'たれゆゑに'], s: ['みだれそめにし', 'われならなくに'] },
+          { n: 24, k: ['このたびは', 'ぬさもとりあへず', 'たむけるやま'], s: ['もみぢのにしき', 'かみのまにまに'] },
+          { n: 30, k: ['ありあけの', 'つれなくみえし', 'わかれより'], s: ['あかつきばかり', 'うきものはなし'] },
+          { n: 31, k: ['あさぼらけ', 'ありあけのつきと', 'みるまでに'], s: ['よしののさとに', 'ふれるしらゆき'] },
+          { n: 35, k: ['ひとはいさ', 'こころもしらず', 'ふるさとは'], s: ['はなぞむかしの', 'かににひのける'] },
+          { n: 42, k: ['ちぎりきな', 'かたみにそでを', 'しぼりつつ'], s: ['すゑのまつやま', 'なみこさじとは'] },
+          { n: 57, k: ['めぐりあひて', 'みしやそれとも', 'わかねうちに'], s: ['くもがくれにし', 'よはのつきかな'] },
+          { n: 61, k: ['いにしへの', 'ならのみやこの', 'へえのざくら'], s: ['けふここのへに', 'におひぬるかな'] },
+          { n: 67, k: ['はるのよの', 'ゆめばかりなる', 'たまくらに'], s: ['かひなくたたむ', 'なこそ惜しけれ'] },
+          { n: 73, k: ['たかさごの', 'をのへのさくら', 'さきにけり'], s: ['とやまのかすみ', 'たたずもあらなむ'] },
+          { n: 74, k: ['うかりける', 'ひとをはつせの', 'やまおろしよ'], s: ['はげしかれとは', 'いのらぬものを'] },
+          { n: 80, k: ['ながむれど', 'なほくらしのの', 'あけぼのに'], s: ['むらさきにおふ', 'ふじのたなばた'] },
+          { n: 84, k: ['ながからむ', 'こころもしらず', 'くろかみの'], s: ['みだれてけさは', 'ものをこそもへ'] },
+          { n: 86, k: ['なげけとて', 'つきやはものを', '思はする'], s: ['かこちがほなる', 'わがなみだかな'] },
+          { n: 96, k: ['はなさそふ', 'あらしの庭の', 'ゆきならで'], s: ['ふりゆくものは', 'わが身なりけり'] },
+          { n: 99, k: ['ひともよし', 'ひとをもうらみ', 'あじきなく'], s: ['よをおもうゆえに', '物思う身は'] }
+        ]
+      },
+      {
+        id: 'momo', name: '桃', base: '#e05286', dark: '#801d41', ink: '#fff0f5',
+        poems: [
+          { n: 1, k: ['あきのたの', 'かりほのいほの', 'とみをあらみ'], s: ['わがころもては', 'つゆにぬれつつ'] },
+          { n: 9, k: ['はなのいろは', 'うつりにけりな', 'いたづらに'], s: ['わが身よにふる', 'ながめせしまに'] },
+          { n: 13, k: ['つくばねの', 'みねよりおつる', 'みなの川'], s: ['こひぞつもりて', 'ふちとなりぬる'] },
+          { n: 18, k: ['すみのえの', 'きしによするなみ', 'よるさえや'], s: ['ゆめのかよひぢ', '人めよくらむ'] },
+          { n: 20, k: ['わびぬれば', 'いままたはたじ', 'みのおはりの'], s: ['みをつくしても', 'あはむとぞおもう'] },
+          { n: 27, k: ['みかの原', 'わきてながれる', 'いづみ川'], s: ['いつみきてとて', 'こひしかるらむ'] },
+          { n: 28, k: ['やまざとは', 'ふゆぞさびしさ', 'まさりける'], s: ['人めもくさも', 'かれぬとおもへば'] },
+          { n: 38, k: ['わすらるる', '身をばおもはず', 'ちぎりてし'], s: ['人のいのちの', '惜しくもあるかな'] },
+          { n: 40, k: ['しのぶれど', '色に出でにけり', 'わがこひは'], s: ['物や思ふと', '人の問ふまで'] },
+          { n: 41, k: ['こひすふと', 'わがなはまだき', 'たちにけり'], s: ['人知れずこそ', '思ひそめしか'] },
+          { n: 53, k: ['なげきつつ', 'ひとりぬるよの', 'あくるまは'], s: ['いかに久しい', 'ものとかはしる'] },
+          { n: 62, k: ['よをこめて', 'とりのそらねは', 'はかるとも'], s: ['よにあふさかの', 'せきはゆるさじ'] },
+          { n: 65, k: ['うらみわび', 'ほさぬそでだに', 'あるものを'], s: ['恋にこちたき', 'ななこそ惜しけれ'] },
+          { n: 69, k: ['あらしふく', 'みむろのやまの', 'もみぢばは'], s: ['たつたの川の', 'にしきなりけり'] },
+          { n: 77, k: ['せをはやみ', 'いわにせかるる', 'たきかわの'], s: ['われてもすゑに', 'あはむとぞおもう'] },
+          { n: 85, k: ['よもすがら', 'ものおもうころは', 'あけやらで'], s: ['ねやのひまあく', 'いとまさえなし'] },
+          { n: 88, k: ['なにわえの', 'あしのかりねの', 'ひとよゆゑ'], s: ['みをつくしてや', 'こひわたるべき'] },
+          { n: 89, k: ['たまのおよ', 'たえなばたえね', 'ながらへば'], s: ['しのぶることの', 'よわりもぞする'] },
+          { n: 92, k: ['わがそでは', 'しほひにみえぬ', 'おきのいしの'], s: ['人こそ知らね', 'かわくまもなし'] },
+          { n: 97, k: ['こぬ人を', 'まつほのうらの', '夕なぎに'], s: ['焼くやもしほの', '身もこがれつつ'] }
+        ]
+      },
+      {
+        id: 'kiiro', name: '黄', base: '#d99b00', dark: '#735200', ink: '#fffdf0',
+        poems: [
+          { n: 2, k: ['はるすぎて', 'なつきにけらし', 'しろたへの'], s: ['ころもほすちょう', 'あめのかぐやま'] },
+          { n: 7, k: ['あまの原', 'ふりさけみれば', 'かすがのやま'], s: ['みかさのやまに', 'いでしいつきかも'] },
+          { n: 11, k: ['わたのはら', 'やそしまかけて', 'こぎいでぬと'], s: ['人にはつげよ', 'あまのつりぶね'] },
+          { n: 22, k: ['ふくからに', 'あきのくさきの', 'しをむれば'], s: ['むべやまかぜを', 'あらしというらむ'] },
+          { n: 33, k: ['ひさかたの', 'ひかりのどけき', 'はるの日に'], s: ['しづ心なく', '花のちるらむ'] },
+          { n: 36, k: ['なつのよは', 'まだよいながら', 'あけぬるを'], s: ['くものいづこに', '月やどるらむ'] },
+          { n: 37, k: ['しらゆきに', 'はねうちかわし', 'きぎすの'], s: ['ほろほろと鳴く', 'こゑきくときぞ'] },
+          { n: 47, k: ['八重むぐら', 'しげれるやどの', 'さびしきに'], s: ['人こそみえね', 'あきはきにけり'] },
+          { n: 50, k: ['君がため', '惜しからざりし', 'いのちさえ'], s: ['ながくもがなと', 'おもいけるかな'] },
+          { n: 52, k: ['あけぬれば', 'くるるものとは', '知りながら'], s: ['なほうらめしき', 'あさぼらけかな'] },
+          { n: 55, k: ['たきのおとは', 'たえてひさしく', 'なりぬれど'], s: ['なこそながれて', 'なおきこえけれ'] },
+          { n: 56, k: ['あらざらむ', 'この世のほかの', '思い出に'], s: ['いまひとたびの', 'あうこともがな'] },
+          { n: 58, k: ['有明の', 'つれなくみえし', '月はでて'], s: ['あかつきばかり', 'うきものはなし'] },
+          { n: 60, k: ['大江山', 'いくのの道の', 'とおければ'], s: ['まだふみもみず', 'あまのはしだて'] },
+          { n: 71, k: ['夕されば', 'おどのさそいも', 'とどこおり'], s: ['さびしきものは', '秋の夕ぐれ'] },
+          { n: 81, k: ['ほとのぎす', 'なきつるかたを', 'ながむれば'], s: ['ただ有明の', '月ぞのこれる'] },
+          { n: 83, k: ['世の中よ', 'みちこそなけれ', 'おもいいる'], s: ['山のおくにも', 'しかぞなくなる'] },
+          { n: 90, k: ['見せばやな', '雄島のあまの', 'そでだにも'], s: ['濡れにぞ濡れし', '色はかわらず'] },
+          { n: 98, k: ['風そよぐ', 'ならの小川の', '夕ぐれは'], s: ['みそぎぞ夏の', 'しるしなりける'] },
+          { n: 100, k: ['ももしきや', '古きのきばの', 'しのぶにも'], s: ['なおあまりある', '昔なりけり'] }
+        ]
+      },
+      {
+        id: 'midori', name: '緑', base: '#388e3c', dark: '#1b5e20', ink: '#f1f8f1',
+        poems: [
+          { n: 4, k: ['田子の浦に', 'うちいでてみれば', '白たえの'], s: ['富士の高ねに', 'ゆきは降りつつ'] },
+          { n: 10, k: ['これやこの', 'ゆくもかえるも', 'わかれては'], s: ['知るも知らぬも', 'あふさかの関'] },
+          { n: 15, k: ['君がため', '春の野にいでて', '若なつむ'], s: ['わが衣手に', 'ゆきは降りつつ'] },
+          { n: 16, k: ['立ち別れ', 'いなばの山の', 'みねに生ふる'], s: ['まつとし聞かば', '今帰り来む'] },
+          { n: 19, k: ['難波潟', 'みじかき芦の', 'ふしのまも'], s: ['あはでこの世を', 'すぐしてよとや'] },
+          { n: 21, k: ['今来むと', 'いひしばかりに', '長月のおの'], s: ['有明の月を', '待ちいでつるかな'] },
+          { n: 23, k: ['月みれば', '千々にものこそ', '悲しけれ'], s: ['わが身ひとつの', '秋にはあらねど'] },
+          { n: 26, k: ['小倉山', 'みねのもみぢ葉', '心あらば'], s: ['今ひとたびの', 'みゆき待たなむ'] },
+          { n: 29, k: ['心あてに', '折らばや折らむ', '初霜の'], s: ['おきまどはせる', '白菊の花'] },
+          { n: 34, k: ['たれをかも', '知る人にせむ', '高砂の'], s: ['松も昔の', '友ならなくに'] },
+          { n: 43, k: ['逢ひみての', 'のちの心に', 'くらぶれば'], s: ['昔はものを', '思はざりけり'] },
+          { n: 45, k: ['あはれとも', 'いうべき人は', '思ほえで'], s: ['身のいたづらに', 'なりぬべきかな'] },
+          { n: 48, k: ['風をいたみ', '岩うつ波の', 'おのれのみ'], s: ['くだけてものを', '思ふころかな'] },
+          { n: 51, k: ['かくとだに', 'えやは伊吹の', 'さしも草'], s: ['さしも知らじな', '燃ゆる思いを'] },
+          { n: 59, k: ['やすらひで', '寝なましものを', 'さ夜ふけて'], s: ['かたぶくまでの', '月を見つるかな'] },
+          { n: 64, k: ['朝ぼらけ', '宇治の川霧', 'たえだえに'], s: ['あらはれわたる', '瀬々のあじろ木'] },
+          { n: 70, k: ['さびしさに', '宿をたちいでて', 'ながむれば'], s: ['いづこも同じ', '秋の夕ぐれ'] },
+          { n: 78, k: ['淡路島', 'かよう千鳥の', 'なくこえに'], s: ['いく夜ねざめぬ', '須磨の関もり'] },
+          { n: 82, k: ['思いわび', 'さても命は', 'あるものを'], s: ['憂きにたへぬは', 'なみだなりけり'] },
+          { n: 91, k: ['きりぎりす', 'なくや霜夜の', 'さむしろに'], s: ['衣かたくし', 'ひとりかも寝む'] }
+        ]
+      },
+      {
+        id: 'daidai', name: '橙', base: '#e67e22', dark: '#a04000', ink: '#fef5e7',
+        poems: [
+          { n: 8, k: ['わが庵は', 'みやこのたつみ', 'しかぞ住む'], s: ['世をうじ山と', '人はいうなり'] },
+          { n: 17, k: ['ちはやぶる', '神代もきかず', '竜田川'], s: ['からくれないに', '水くくるとは'] },
+          { n: 25, k: ['名にし負はば', '逢坂山の', 'さねかづら'], s: ['人に知られで', 'くるよしもがな'] },
+          { n: 32, k: ['山川に', '風のかけたる', 'しがらみは'], s: ['ながれもあへぬ', 'もみぢなりけり'] },
+          { n: 39, k: ['浅緑', '糸よりかけて', '白露の'], s: ['玉にもぬける', '春のやなぎか'] },
+          { n: 44, k: ['逢ふことの', '絶えてしなくは', 'なかなかに'], s: ['人をも身をも', '恨みざらまし'] },
+          { n: 46, k: ['由良の戸を', 'わたる舟びと', 'かじをたえ'], s: ['ゆくへも知らぬ', '恋の道かな'] },
+          { n: 49, k: ['御垣守', '衛士のたく火の', '夜は燃え'], s: ['昼はきえつつ', 'ものをこそ思へ'] },
+          { n: 54, k: ['忘れじの', '行末までは', 'かたければ'], s: ['今日をかぎりの', '命ともがな'] },
+          { n: 63, k: ['今はただ', '思い絶えなむ', 'とばかりに'], s: ['人づてならで', '言ふよしもがな'] },
+          { n: 66, k: ['諸ともに', 'あはれと思へ', '山ざくら'], s: ['花よりほかに', '知る人もなし'] },
+          { n: 68, k: ['心にも', 'あらでうき世に', 'ながらへば'], s: ['恋しかるべき', '夜半の月かな'] },
+          { n: 72, k: ['音にきく', '高師の浜の', 'あだ波は'], s: ['かけじや袖の', '濡れもこそすれ'] },
+          { n: 75, k: ['契りおきし', 'させもが露を', '命にて'], s: ['あはれ今年の', '秋もいぬめり'] },
+          { n: 76, k: ['わたの原', 'こぎいでてみれば', '久かたの'], s: ['雲ゐにまがう', '沖つ白波'] },
+          { n: 79, k: ['秋風に', 'たなびく雲の', '絶え間より'], s: ['もれいづる月の', 'かげのさやけさ'] },
+          { n: 87, k: ['村雨の', '露もまだひぬ', 'まきの葉に'], s: ['霧とのぼる', '秋の夕ぐれ'] },
+          { n: 93, k: ['世の中は', '常にもがもな', '渚こぐ'], s: ['海人の小舟の', '綱手かなしも'] },
+          { n: 94, k: ['みよしのの', '山の秋風', 'さ夜ふけて'], s: ['ふるさと寒く', '衣うつなり'] },
+          { n: 95, k: ['おおかとの', 'ごもりあかして', '見るまでに'], s: ['あかぬ色のふ', '山ざくらかな'] }
+        ]
+      }
+    ];
 
-  <div class="sec">
-    <h2>相手の強さ</h2>
-    <div class="diffs" id="diffpick"></div>
-    <div class="note" id="diffNote"></div>
-  </div>
+    const DIFFS = [
+      { id: 'low', name: '下位', react: 4800, rand: 1000, err: 0.35, desc: '初心者向け。お手つきが多く反応もゆったりです。' },
+      { id: 'mid', name: '中位', react: 3500, rand: 800,  err: 0.20, desc: '標準的な強さ。百人一首に慣れてきた方向け。' },
+      { id: 'high', name: '上位', react: 2500, rand: 600,  err: 0.10, desc: '手強い相手。決まり字を意識して狙ってきます。' },
+      { id: 'pro', name: '極意', react: 1700, rand: 450,  err: 0.04, desc: '非常に素早い反応。ミスは滅多にありません。' },
+      { id: 'god', name: '極意+', react: 1100, rand: 300, err: 0.01, desc: '最高難易度。読まれた瞬間に取ってきます。' }
+    ];
 
-  <div class="sec">
-    <h2>読み手の声</h2>
-    <div class="opts">
-      <label class="rdo on" id="rdoVoiceFem"><input type="radio" name="vGender" value="female" checked>女性の声</label>
-      <label class="rdo" id="rdoVoiceMale"><input type="radio" name="vGender" value="male">男性の声（録音ファイル）</label>
-      <label class="rdo" id="rdoVoiceAuto"><input type="radio" name="vGender" value="auto">自動・標準</label>
-    </div>
-  </div>
+    const HIST_KEY = 'karuta_hist';
 
-  <div class="sec">
-    <h2>表示・設定</h2>
-    <div class="opts">
-      <label class="chk" id="chkNum"><input type="checkbox" id="cbNum">札に番号を表示</label>
-      <label class="chk on" id="chkKami"><input type="checkbox" id="cbKami" checked>上の句を表示</label>
-      <label class="chk on" id="chkVoice"><input type="checkbox" id="cbVoice" checked>音声で読み上げ</label>
-      <label class="chk" id="chkSlow"><input type="checkbox" id="cbSlow">ゆっくり詠む</label>
-    </div>
-  </div>
-
-  <!-- 対戦履歴 -->
-  <div class="history-sec">
-    <div class="history-hdr">
-      <h3>対戦履歴（最新10件）</h3>
-      <button class="clear-btn" id="clearHistBtn">全リセット</button>
-    </div>
-    <div class="hist-list" id="histList">
-      <div style="font-size:12px;color:var(--dim);text-align:center;padding:10px;">履歴はありません</div>
-    </div>
-  </div>
-
-  <button id="startBtn">対 戦 ス タ ー ト</button>
-  <button id="voiceTest" class="ghost">🔊 読み上げの音声テスト</button>
-</section>
-
-<!-- ========== 対戦 ========== -->
-<section id="game" class="screen">
-  <div class="hud">
-    <button class="quit-btn" id="quitBtn">✕ 中断</button>
-    <div class="side">
-      <span>相手</span> <b id="cpuCount">0</b><span>枚</span>
-      <span class="diff-tag" id="hudDiff">中位</span>
-      <span class="rest-tag" id="cpuRestTag" style="display:none;">1回休み</span>
-    </div>
-    <div class="mid">
-      <span id="phaseText">準備</span>
-      <span id="potText" class="pot-info"></span>
-    </div>
-    <div class="side r">
-      <span class="rest-tag" id="myRestTag" style="display:none;">1回休み</span>
-      <span>自分</span> <b id="myCount" class="hot">0</b><span>枚</span>
-    </div>
-  </div>
-
-  <div class="field cpu" id="cpuField"></div>
-
-  <div class="reader" id="reader">
-    <div class="lbl">上 の 句</div>
-    <div class="kami" id="kamiText">―</div>
-    <div class="sub" id="subText"></div>
-    <button class="rep" id="replayBtn" aria-label="もう一度聞く">↻ もう一度</button>
-    <div class="bar"><i id="barFill"></i></div>
-
-    <div class="memo-bar" id="memoBar">
-      <div class="time" id="memoNum">60</div>
-      <div class="txt">札の場所を<br>覚えよう！</div>
-      <button class="btn" id="memoSkip">覚えた！</button>
-    </div>
-  </div>
-
-  <div class="field me" id="myField"></div>
-</section>
-
-<!-- 対戦結果ポップアップ -->
-<div class="modal-ov" id="resultModal">
-  <div class="modal-box">
-    <div class="verdict" id="mVerdict">勝利！</div>
-    <div class="why" id="mWhy">17首終了時、獲得枚数が多いため勝利しました！</div>
-    <div class="scorebox">
-      <div><div class="n" id="mMy">0</div><div class="t">自分</div></div>
-      <div class="vs">VS</div>
-      <div><div class="n" id="mCpu">0</div><div class="t">相手</div></div>
-    </div>
-    <div class="modal-btns">
-      <button class="modal-btn-main" id="mAgainBtn">もう一度対戦</button>
-      <button class="modal-btn-sub" id="mBackBtn">設定画面に戻る</button>
-    </div>
-  </div>
-</div>
-
-<div class="ov" id="readyOv">
-  <div class="spin"></div>
-  <div style="font-size:12px;color:var(--dim);margin-top:10px;">札を並べています…</div>
-</div>
-
-<div class="toast" id="toast"></div>
-
-<script>
-"use strict";
-
-/* ====== 百人一首ローカルデータ（全100首定義済み） ====== */
-const COLORS=[
-{id:'ao',name:'青',base:'#2f6fb3',dark:'#12395e',ink:'#eaf4ff',poems:[
- {n:3,k:['あしびきの','やまどりのをの','しだりをの'],s:['ながながしよを','ひとりかもねむ']},
- {n:5,k:['おくやまに','もみぢふみ分け','なくしかの'],s:['こゑきくときぞ','あきはかなしき']},
- {n:6,k:['かささぎの','わたせるはしに','おくしもの'],s:['しろきをみれば','よぞふけにける']},
- {n:12,k:['あまつかぜ','くものかよひぢ','ふきとぢよ'],s:['をとめのすがた','しばしとどめむ']},
- {n:14,k:['みちのくの','しのぶもぢずり','たれゆゑに'],s:['みだれそめにし','われならなくに']},
- {n:24,k:['このたびは','ぬさもとりあへず','たむけやま'],s:['もみぢのにしき','かみのまにまに']},
- {n:30,k:['ありあけの','つれなくみえし','わかれより'],s:['あかつきばかり','うきものはなし']},
- {n:31,k:['あさぼらけ','ありあけのつきと','みるまでに'],s:['よしののさとに','ふれるしらゆき']},
- {n:50,k:['きみがため','をしからざりし','いのちさへ'],s:['ながくもがなと','おもひけるかな']},
- {n:57,k:['めぐりあひて','みしやそれとも','わかぬまに'],s:['くもがくれにし','よはのつきかな']},
- {n:61,k:['いにしへの','ならのみやこの','やへざくら'],s:['けふここのへに','にほひぬるかな']},
- {n:62,k:['よをこめて','とりのそらねは','はかるとも'],s:['よにあふさかの','せきはゆるさじ']},
- {n:69,k:['あらしふく','みむろのやまの','もみぢばは'],s:['たつたのかはの','にしきなりけり']},
- {n:70,k:['さびしさに','やどをたちいでて','ながむれば'],s:['いづこもおなじ','あきのゆふぐれ']},
- {n:74,k:['うかりける','ひとをはつせの','やまおろしよ'],s:['はげしかれとは','いのらぬものを']},
- {n:75,k:['ちぎりおきし','させもがつゆを','いのちにて'],s:['あはれことしの','あきもいぬめり']},
- {n:76,k:['わたのはら','こぎいでてみれば','ひさかたの'],s:['くもゐにまがふ','おきつしらなみ']},
- {n:82,k:['おもひわび','さてもいのちは','あるものを'],s:['うきにたへぬは','なみだなりけり']},
- {n:91,k:['きりぎりす','なくやしもよの','さむしろに'],s:['ころもかたしき','ひとりかもねむ']},
- {n:100,k:['ももしきや','ふるきのきばの','しのぶにも'],s:['なほあまりある','むかしなりけり']}
-]},
-{id:'momo',name:'桃',base:'#d4587e',dark:'#8c2750',ink:'#fff0f5',poems:[
- {n:86,k:['なげけとて','つきやはものを','おもはする'],s:['かこちがほなる','わがなみだかな']},
- {n:97,k:['こぬひとを','まつほのうらの','ゆふなぎに'],s:['やくやもしほの','みもこがれつつ']},
- {n:66,k:['もろともに','あはれとおもへ','やまざくら'],s:['はなよりほかに','しるひともなし']},
- {n:72,k:['おとにきく','たかしのはまの','あだなみは'],s:['かけじやそでの','ぬれもこそすれ']},
- {n:73,k:['たかさごの','をのへのさくら','さきにけり'],s:['とやまのかすみ','たたずもあらなむ']},
- {n:80,k:['ながからむ','こころもしらず','くろかみの'],s:['みだれてけさは','ものをこそおもへ']},
- {n:51,k:['かくとだに','えやはいぶきの','さしもぐさ'],s:['さしもしらじな','もゆるおもひを']},
- {n:58,k:['ありまやま','ゐなのささはら','かぜふけば'],s:['いでそよひとを','わすれやはする']},
- {n:65,k:['うらみわび','ほさぬそでだに','あるものを'],s:['こひにくちなむ','なこそをしけれ']},
- {n:34,k:['たれをかも','しるひとにせむ','たかさごの'],s:['まつもむかしの','ともならなくに']},
- {n:40,k:['しのぶれど','いろにいでにけり','わがこひは'],s:['ものやおもふと','ひとのとふまで']},
- {n:48,k:['かぜをいたみ','いはうつなみの','おのれのみ'],s:['くだけてものを','おもふころかな']},
- {n:16,k:['たちわかれ','いなばのやまの','みねにおふる'],s:['まつとしきかば','いまかへりこむ']},
- {n:22,k:['ふくからに','あきのくさきの','しをるれば'],s:['むべやまかぜを','あらしといふらむ']},
- {n:28,k:['やまざとは','ふゆぞさびしさ','まさりける'],s:['ひとめもくさも','かれぬとおもへば']},
- {n:1,k:['あきのたの','かりほのいほの','とまをあらみ'],s:['わがころもでは','つゆにぬれつつ']},
- {n:4,k:['たごのうらに','うちいでてみれば','しろたへの'],s:['ふじのたかねに','ゆきはふりつつ']},
- {n:13,k:['つくばねの','みねよりおつる','みなのがは'],s:['こひぞつもりて','ふちとなりぬる']},
- {n:83,k:['よのなかよ','みちこそなけれ','おもひいる'],s:['やまのおくにも','しかぞなくなる']},
- {n:84,k:['ながらへば','またこのごろや','しのばれむ'],s:['うしとみしよぞ','いまはこひしき']}
-]},
-{id:'ki',name:'黄',base:'#c9a125',dark:'#8a6c10',ink:'#fffbe8',poems:[
- {n:2,k:['はるすぎて','なつきにけらし','しろたへの'],s:['ころもほすてふ','あまのかぐやま']},
- {n:7,k:['あまのはら','ふりさけみれば','かすがなる'],s:['みかさのやまに','いでしつきかも']},
- {n:10,k:['これやこの','ゆくもかへるも','わかれては'],s:['しるもしらぬも','あふさかのせき']},
- {n:18,k:['すみのえの','きしによるなみ','よるさへや'],s:['ゆめのかよひぢ','ひとめよくらむ']},
- {n:32,k:['やまがはに','かぜのかけたる','しがらみは'],s:['ながれもあへぬ','もみぢなりけり']},
- {n:33,k:['ひさかたの','ひかりのどけき','はるのひに'],s:['しづごころなく','はなのちるらむ']},
- {n:37,k:['しらつゆに','かぜのふきしく','あきののは'],s:['つらぬきとめぬ','たまぞちりける']},
- {n:39,k:['あさぢふの','をののしのはら','しのぶれど'],s:['あまりてなどか','ひとのこひしき']},
- {n:46,k:['ゆらのとを','わたるふなびと','かぢをたえ'],s:['ゆくへもしらぬ','こひのみちかな']},
- {n:47,k:['やへむぐら','しげれるやどの','さびしきに'],s:['ひとこそみえね','あきはきにけり']},
- {n:55,k:['たきのおとは','たえてひさしく','なりぬれど'],s:['なこそながれて','なほきこえけれ']},
- {n:60,k:['おほえやま','いくののみちの','とほければ'],s:['まだふみもみず','あまのはしだて']},
- {n:78,k:['あはぢしま','かよふちどりの','なくこゑに'],s:['いくよねざめぬ','すまのせきもり']},
- {n:79,k:['あきかぜに','たなびくくもの','たえまより'],s:['もれいづるつきの','かげのさやけさ']},
- {n:81,k:['ほととぎす','なきつるかたを','ながむれば'],s:['ただありあけの','つきぞのこれる']},
- {n:87,k:['むらさめの','つゆもまだひぬ','まきのはに'],s:['きりたちのぼる','あきのゆふぐれ']},
- {n:89,k:['たまのをよ','たえなばたえね','ながらへば'],s:['しのぶることの','よわりもぞする']},
- {n:94,k:['みよしのの','やまのあきかぜ','さよふけて'],s:['ふるさとさむく','ころもうつなり']},
- {n:96,k:['はなさそふ','あらしのにはの','ゆきならで'],s:['ふりゆくものは','わがみなりけり']},
- {n:85,k:['よもすがら','ものおもふころは','あけやらで'],s:['ねやのひまさへ','つれなかりけり']}
-]},
-{id:'midori',name:'緑',base:'#3f9a6a',dark:'#1b5638',ink:'#eafff2',poems:[
- {n:8,k:['わがいほは','みやこのたつみ','しかぞすむ'],s:['よをうぢやまと','ひとはいふなり']},
- {n:9,k:['はなのいろは','うつりにけりな','いたづらに'],s:['わがみよにふる','ながめせしまに']},
- {n:11,k:['わたのはら','やそしまかけて','こぎいでぬと'],s:['ひとにはつげよ','あまのつりぶね']},
- {n:15,k:['きみがため','はるののにいでて','わかなつむ'],s:['わがころもでに','ゆきはふりつつ']},
- {n:17,k:['ちはやぶる','かみよもきかず','たつたがは'],s:['からくれなゐに','みづくくるとは']},
- {n:20,k:['わびぬれば','いまはたおなじ','なにはなる'],s:['みをつくしても','あはむとぞおもふ']},
- {n:23,k:['つきみれば','ちぢにものこそ','かなしけれ'],s:['わがみひとつの','あきにはあらねど']},
- {n:26,k:['をぐらやま','みねのもみぢば','こころあらば'],s:['いまひとたびの','みゆきまたなむ']},
- {n:29,k:['こころあてに','をらばやをらむ','はつしもの'],s:['おきまどはせる','しらぎくのはな']},
- {n:35,k:['ひとはいさ','こころもしらず','ふるさとは'],s:['はなぞむかしの','かににほひける']},
- {n:36,k:['なつのよは','まだよひながら','あけぬるを'],s:['くものいづこに','つきやどるらむ']},
- {n:38,k:['わすらるる','みをばおもはず','ちかひてし'],s:['ひとのいのちの','をしくもあるかな']},
- {n:41,k:['こひすてふ','わがなはまだき','たちにけり'],s:['ひとしれずこそ','おもひそめしか']},
- {n:42,k:['ちぎりきな','かたみにそでを','しぼりつつ'],s:['すゑのまつやま','なみこさじとは']},
- {n:54,k:['わすれじの','ゆくすゑまでは','かたければ'],s:['けふをかぎりの','いのちともがな']},
- {n:59,k:['やすらはで','ねなましものを','さよふけて'],s:['かたぶくまでの','つきをみしかな']},
- {n:68,k:['こころにも','あらでうきよに','ながらへば'],s:['こひしかるべき','よはのつきかな']},
- {n:71,k:['ゆふされば','かどたのいなば','おとづれて'],s:['あしのまろやに','あきかぜぞふく']},
- {n:92,k:['わがそでは','しほひにみえぬ','おきのいしの'],s:['ひとこそしらね','かわくまもなし']},
- {n:93,k:['よのなかは','つねにもがもな','なぎさこぐ'],s:['あまのをぶねの','つなでかなしも']}
-]},
-{id:'daidai',name:'橙',base:'#e07b32',dark:'#8f4415',ink:'#fff3e6',poems:[
- {n:19,k:['なにはがた','みじかきあしの','ふしのまも'],s:['あはでこのよを','すぐしてよとや']},
- {n:21,k:['いまこむと','いひしばかりに','ながつきの'],s:['ありあけのつきを','まちいでつるかな']},
- {n:25,k:['なにしおはば','あふさかやまの','さねかづら'],s:['ひとにしられで','くるよしもがな']},
- {n:27,k:['みかのはら','わきてながるる','いづみがは'],s:['いつみきとてか','こひしかるらむ']},
- {n:43,k:['あひみての','のちのこころに','くらぶれば'],s:['むかしはものを','おもはざりけり']},
- {n:44,k:['あふことの','たえてしなくは','なかなかに'],s:['ひとをもみをも','うらみざらまし']},
- {n:45,k:['あはれとも','いふべきひとは','おもほえで'],s:['みのいたづらに','なりぬべきかな']},
- {n:49,k:['みかきもり','ゑじのたくひの','よるはもえ'],s:['ひるはきえつつ','ものをこそおもへ']},
- {n:52,k:['あけぬれば','くるるものとは','しりながら'],s:['なほうらめしき','あさぼらけかな']},
- {n:53,k:['なげきつつ','ひとりぬるよの','あくるまは'],s:['いかにひさしき','ものとかはしる']},
- {n:56,k:['あらざらむ','このよのほかの','おもひでに'],s:['いまひとたびの','あふこともがな']},
- {n:63,k:['いまはただ','おもひたえなむ','とばかりを'],s:['ひとづてならで','いふよしもがな']},
- {n:64,k:['あさぼらけ','うぢのかはぎり','たえだえに'],s:['あらはれわたる','せぜのあじろぎ']},
- {n:67,k:['はるのよの','ゆめばかりなる','たまくらに'],s:['かひなくたたむ','なこそをしけれ']},
- {n:77,k:['せをはやみ','いはにせかるる','たきがはの'],s:['われてもすゑに','あはむとぞおもふ']},
- {n:88,k:['なにはえの','あしのかりねの','ひとよゆゑ'],s:['みをつくしてや','こひわたるべき']},
- {n:90,k:['みせばやな','をじまのあまの','そでだにも'],s:['ぬれにぞぬれし','いろはかはらず']},
- {n:95,k:['おほけなく','うきよのたみに','おほふかな'],s:['わがたつそまに','すみぞめのそで']},
- {n:98,k:['かぜそよぐ','ならのをがはの','ゆふぐれは'],s:['みそぎぞなつの','しるしなりける']},
- {n:99,k:['ひともをし','ひともうらめし','あぢきなく'],s:['よをおもふゆゑに','ものおもふみは']}
-]}
-];
-
-const DIFFS=[
- {id:'low',  name:'下位', sub:'入門',   react:4800, jitter:1000, err:0.35, note:'非常にゆっくり。誤りも多め。'},
- {id:'mid',  name:'中位', sub:'ふつう', react:3500, jitter:800,  err:0.20, note:'程よい速さ。じっくり勝負したい方に。'},
- {id:'high', name:'上位', sub:'速い',   react:2500, jitter:600,  err:0.10, note:'手ごたえのある速さ。素早い判断が必要。'},
- {id:'goku', name:'極意', sub:'達人',   react:1700, jitter:450,  err:0.04, note:'かなり速い。上の句の決まり字で勝負。'},
- {id:'gokuP',name:'極意+',sub:'最上',   react:1100, jitter:300,  err:0.01, note:'最速クラス。熟練者向け。'}
-];
-
-/* ===== ゲーム状態 ===== */
-const S={
-  color:COLORS[0], diff:DIFFS[1],
-  mySlots:[], cpuSlots:[],
-  order:[], idx:0, cur:null, resolved:true, phase:'idle',
-  pot:0, myTakeCount:0, cpuTakeCount:0,
-  myRest:false, cpuRest:false,
-  myPendingRest:false, cpuPendingRest:false, // ★お手つき次回休みの予約フラグ
-  isSuddenDeath:false, speechEnded:false,
-  cpuTimer:null, rafId:null, forceTimer:null, memoTimer:null, waitTimer:null,
-  opts:{num:false,kami:true,voice:true,slow:false,voiceGender:'female'}
-};
-
-/* ===== 要素 ===== */
-const $=id=>document.getElementById(id);
-const setupScr=$('setup'),gameScr=$('game'),resultModal=$('resultModal');
-const colorPick=$('colorpick'),diffPick=$('diffpick'),diffNote=$('diffNote');
-const myField=$('myField'),cpuField=$('cpuField');
-const myCountEl=$('myCount'),cpuCountEl=$('cpuCount'),hudDiffEl=$('hudDiff'),phaseText=$('phaseText'),potText=$('potText');
-const myRestTag=$('myRestTag'),cpuRestTag=$('cpuRestTag');
-const reader=$('reader'),kamiText=$('kamiText'),subText=$('subText'),barFill=$('barFill'),replayBtn=$('replayBtn');
-const memoBar=$('memoBar'),memoNum=$('memoNum'),memoSkip=$('memoSkip');
-const readyOv=$('readyOv'),toastEl=$('toast'),voiceTest=$('voiceTest'),quitBtn=$('quitBtn');
-const histList=$('histList'),clearHistBtn=$('clearHistBtn');
-
-const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));const t=a[i];a[i]=a[j];a[j]=t;}return a;};
-
-/* ===== 朗詠音声の管理 ===== */
-let speakTimers=[];
-let currentSpeakId=0;
-let currentAudio=null;
-
-const AUDIO_DIR = "./audio/";
-
-function getVoiceByGender(gender){
-  if(!('speechSynthesis' in window)) return null;
-  const vs = speechSynthesis.getVoices() || [];
-  const ja = vs.filter(v => /^ja/i.test(v.lang || ''));
-  if(!ja.length) return null;
-
-  const femaleKeys = ['Kyoko', 'Google 日本語', 'Nanami', 'Ayumi', 'Haruka', 'O-ren', 'Aoi', 'Mayu', 'Sakura'];
-  const maleKeys   = ['Otoya', 'Hattori', 'Ichiro', 'Keita', 'Naoki', 'Takumi'];
-
-  if(gender === 'female'){
-    return ja.find(v => femaleKeys.some(k => (v.name||'').includes(k))) || ja[0];
-  }else if(gender === 'male'){
-    // ★ 修正: 男性声の優先検索
-    return ja.find(v => maleKeys.some(k => (v.name||'').includes(k))) || ja.find(v => !(femaleKeys.some(k => (v.name||'').includes(k)))) || ja[0];
-  }
-  return ja.find(v => femaleKeys.concat(maleKeys).some(k => (v.name||'').includes(k))) || ja[0];
-}
-
-if('speechSynthesis' in window){
-  speechSynthesis.onvoiceschanged = () => {
-    getVoiceByGender(S.opts.voiceGender);
-  };
-}
-
-function warmup(){
-  if(!('speechSynthesis' in window)) return;
-  try {
-    speechSynthesis.resume();
-    const u = new SpeechSynthesisUtterance('');
-    u.volume = 0;
-    u.lang = 'ja-JP';
-    speechSynthesis.speak(u);
-  } catch(e) {}
-}
-
-function stopSpeak(){
-  currentSpeakId++;
-  speakTimers.forEach(t => clearTimeout(t));
-  speakTimers = [];
-  
-  if(currentAudio){
-    currentAudio.pause();
-    currentAudio.currentTime = 0;
-    currentAudio = null;
-  }
-  
-  if('speechSynthesis' in window){
-    try{speechSynthesis.cancel();}catch(e){}
-  }
-}
-
-function speakPoem(poem, onEndCallback){
-  stopSpeak();
-  const speakId = currentSpeakId;
-
-  if(!S.opts.voice){
-    S.speechEnded = true;
-    if(onEndCallback) onEndCallback();
-    return;
-  }
-
-  // 「男性の声」選択時のMP3再生
-  if(S.opts.voiceGender === 'male'){
-    S.speechEnded = false;
-    const numStr = String(poem.n).padStart(3, '0');
-    const audioPath = AUDIO_DIR + numStr + ".mp3";
-    
-    currentAudio = new Audio(audioPath);
-    if(S.opts.slow) {
-      currentAudio.playbackRate = 0.85;
-    }
-
-    currentAudio.onended = () => {
-      if(currentSpeakId !== speakId) return;
-      subText.textContent = '下の句 ' + poem.s[0] + ' ' + poem.s[1];
-      subText.style.opacity = '1';
-      S.speechEnded = true;
-      if(onEndCallback && currentSpeakId === speakId) onEndCallback();
-    };
-
-    currentAudio.onerror = (e) => {
-      console.warn("音声ファイルが見つからないためブラウザ合成音声へ切替えます:", audioPath);
-      // ★MP3が無い場合は合成音声へ安全にフォールバック
-      speakPoemSynth(poem, onEndCallback, speakId);
-    };
-
-    currentAudio.play().catch(err => {
-      console.warn("再生がブロックされました:", err);
-      speakPoemSynth(poem, onEndCallback, speakId);
-    });
-
-    return;
-  }
-
-  speakPoemSynth(poem, onEndCallback, speakId);
-}
-
-// ブラウザ合成音声での朗詠処理
-function speakPoemSynth(poem, onEndCallback, speakId){
-  try {
-    const dummyUttr = new SpeechSynthesisUtterance('');
-    speechSynthesis.speak(dummyUttr);
-  } catch(e) {}
-
-  S.speechEnded = false;
-  const baseRate = S.opts.slow ? 0.62 : 0.72;
-  const targetVoice = getVoiceByGender(S.opts.voiceGender);
-
-  let isMaleFallback = (S.opts.voiceGender === 'male' && targetVoice && !(['Otoya','Ichiro','Keita','Hattori','Takumi'].some(k=>(targetVoice.name||'').includes(k))));
-  const pitchBase = isMaleFallback ? 0.75 : 1.0;
-
-  const speakKamiPart = (index) => {
-    if(currentSpeakId !== speakId) return;
-
-    if(index >= 3){
-      subText.textContent = '下の句 ' + poem.s[0] + ' ' + poem.s[1];
-      subText.style.opacity = '1';
-      const t = setTimeout(()=>{
-        if(currentSpeakId === speakId) speakShimoPart(0);
-      }, 700);
-      speakTimers.push(t);
-      return;
-    }
-
-    const phraseText = poem.k[index] + '、';
-    const u = new SpeechSynthesisUtterance(phraseText);
-    u.lang = 'ja-JP';
-    u.rate = baseRate;
-    u.pitch = pitchBase + (0.05 * (1 - index * 0.5));
-    u.volume = 1;
-    if(targetVoice) u.voice = targetVoice;
-
-    u.onend = ()=>{
-      if(currentSpeakId !== speakId) return;
-      const t = setTimeout(()=>{
-        if(currentSpeakId === speakId) speakKamiPart(index + 1);
-      }, 450);
-      speakTimers.push(t);
-    };
-    try { speechSynthesis.speak(u); } catch(e){}
-  };
-
-  const speakShimoPart = (index) => {
-    if(currentSpeakId !== speakId) return;
-
-    if(index >= 2){
-      S.speechEnded = true;
-      if(onEndCallback && currentSpeakId === speakId) onEndCallback();
-      return;
-    }
-
-    const phraseText = poem.s[index] + (index === 1 ? '。' : '、');
-    const u = new SpeechSynthesisUtterance(phraseText);
-    u.lang = 'ja-JP';
-    u.rate = baseRate * 0.90;
-    u.pitch = pitchBase - (index * 0.04);
-    u.volume = 1;
-    if(targetVoice) u.voice = targetVoice;
-
-    u.onend = ()=>{
-      if(currentSpeakId !== speakId) return;
-      if(index === 0){
-        const t = setTimeout(()=>{
-          if(currentSpeakId === speakId) speakShimoPart(1);
-        }, 500);
-        speakTimers.push(t);
-      }else{
-        S.speechEnded = true;
-        if(onEndCallback && currentSpeakId === speakId) onEndCallback();
+    /* =========================================================
+       2. ゲーム状態管理 (State)
+       ========================================================= */
+    const S = {
+      color: COLORS[0],
+      diff: DIFFS[1],
+      mySlots: [],
+      cpuSlots: [],
+      order: [],
+      idx: 0,
+      cur: null,
+      resolved: true,
+      phase: 'idle', // 'idle' | 'ready' | 'memo' | 'read' | 'over'
+      pot: 0,
+      myTakeCount: 0,
+      cpuTakeCount: 0,
+      myRest: false,
+      cpuRest: false,
+      isSuddenDeath: false,
+      speechEnded: false,
+      cpuTimer: null,
+      rafId: null,
+      forceTimer: null,
+      memoTimer: null,
+      waitTimer: null,
+      opts: {
+        num: false,
+        kami: true,
+        voice: true,
+        slow: false,
+        voiceGender: 'female'
       }
     };
-    try { speechSynthesis.speak(u); } catch(e){}
-  };
 
-  speakKamiPart(0);
-}
+    /* =========================================================
+       3. DOM参照 & 音声変数
+       ========================================================= */
+    const $ = id => document.getElementById(id);
+    const $$ = sel => document.querySelectorAll(sel);
 
-/* ===== 対戦履歴 ===== */
-function getHistory(){
-  try{ return JSON.parse(localStorage.getItem('karuta_hist')||'[]'); }catch(e){ return []; }
-}
-function saveHistoryItem(item){
-  const list = getHistory();
-  list.unshift(item);
-  if(list.length > 10) list.pop();
-  try{ localStorage.setItem('karuta_hist', JSON.stringify(list)); }catch(e){}
-  renderHistory();
-}
-function deleteHistoryItem(idx){
-  const list = getHistory();
-  list.splice(idx,1);
-  try{ localStorage.setItem('karuta_hist', JSON.stringify(list)); }catch(e){}
-  renderHistory();
-}
-function clearHistory(){
-  try{ localStorage.removeItem('karuta_hist'); }catch(e){}
-  renderHistory();
-}
-function renderHistory(){
-  const list = getHistory();
-  if(!list.length){
-    histList.innerHTML = '<div style="font-size:12px;color:var(--dim);text-align:center;padding:10px;">履歴はありません</div>';
-    return;
-  }
-  histList.innerHTML = list.map((item, i)=>{
-    const resClass = item.res === 'WIN' ? 'win' : (item.res === 'LOSE' ? 'lose' : 'draw');
-    const resText = item.res === 'WIN' ? '勝利' : (item.res === 'LOSE' ? '敗北' : '引分');
-    return `<div class="hist-item">
-      <div><b>${item.color}</b> <small style="color:var(--dim)">(${item.diff})</small> <br><span style="font-size:10px;color:var(--dim);">${item.date}</span></div>
-      <div class="${resClass}">${resText}</div>
-      <div style="font-weight:700;">${item.my} - ${item.cpu}</div>
-      <button class="hist-del" onclick="deleteHistoryItem(${i})">✕</button>
-    </div>`;
-  }).join('');
-}
-clearHistBtn.addEventListener('click', ()=>{
-  if(confirm('対戦履歴を全リセットしますか？')) clearHistory();
-});
+    let speechSynthesisUtterance = null;
+    let currentAudio = null;
+    let sharedAudio = null; // iOS Safari対策: 単一Audioインスタンスを使い回す
+    let isAudioUnlocked = false;
+    let speechSafetyTimer = null;
 
-/* ===== 設定画面の初期化 ===== */
-function selectColor(c){
-  S.color=c;
-  [...colorPick.children].forEach(b=>b.classList.toggle('sel',b.dataset.id===c.id));
-  document.documentElement.style.setProperty('--c-base',c.base);
-  document.documentElement.style.setProperty('--c-dark',c.dark);
-  document.documentElement.style.setProperty('--c-ink',c.ink);
-}
-function selectDiff(d){
-  S.diff=d;
-  [...diffPick.children].forEach(b=>b.classList.toggle('sel',b.dataset.id===d.id));
-  diffNote.textContent=d.note;
-}
-COLORS.forEach(c=>{
-  const b=document.createElement('button');
-  b.className='cbtn';b.dataset.id=c.id;
-  b.style.background='linear-gradient(170deg,'+c.base+','+c.dark+')';
-  b.innerHTML=c.name+'<span class="cnt">20首</span>';
-  b.addEventListener('click',()=>selectColor(c));
-  colorPick.appendChild(b);
-});
-DIFFS.forEach(d=>{
-  const b=document.createElement('button');
-  b.className='dbtn';b.dataset.id=d.id;
-  b.innerHTML=d.name+'<span>'+d.sub+'</span>';
-  b.addEventListener('click',()=>{selectDiff(d);warmup();});
-  diffPick.appendChild(b);
-});
-selectColor(COLORS[0]);selectDiff(DIFFS[1]);renderHistory();
-
-document.querySelectorAll('input[name="vGender"]').forEach(r => {
-  r.addEventListener('change', (e) => {
-    S.opts.voiceGender = e.target.value;
-    document.querySelectorAll('.rdo').forEach(l => l.classList.remove('on'));
-    e.target.parentElement.classList.add('on');
-  });
-});
-
-const chk=(id,key,elId)=>{
-  const box=$(elId),wrap=$(id);
-  box.checked=S.opts[key];
-  wrap.classList.toggle('on',box.checked);
-  box.addEventListener('change',()=>{S.opts[key]=box.checked;wrap.classList.toggle('on',box.checked);});
-};
-chk('chkNum','num','cbNum');
-chk('chkKami','kami','cbKami');
-chk('chkVoice','voice','cbVoice');
-chk('chkSlow','slow','cbSlow');
-
-voiceTest.addEventListener('click',()=>{
-  warmup();
-  const sample = {n:3, k:['あしびきの','やまどりのをの','しだりをの'],s:['ながながしよを','ひとりかもねむ']};
-  speakPoem(sample, null);
-  if(S.opts.voiceGender === 'male'){
-    voiceTest.textContent = '🔊 音声テスト（男性: ローカルMP3再生）';
-  } else {
-    const v = getVoiceByGender(S.opts.voiceGender);
-    voiceTest.textContent = v ? ('🔊 音声テスト（' + v.name + '）') : '🔊 音声テスト（日本語音声未検出）';
-  }
-});
-
-/* ===== フィールド描画 ===== */
-function slotHTML(slotData, own, index){
-  if(!slotData || slotData.taken){
-    return `<div class="slot taken" data-idx="${index}" data-own="${own}"></div>`;
-  }
-  const p = slotData.poem;
-  const c = S.color;
-  const cls = 'card' + (S.opts.num ? '' : ' nonum');
-  return `<div class="slot" data-idx="${index}" data-own="${own}">
-    <button class="${cls}" data-num="${p.n}" data-own="${own}" data-idx="${index}"
-      style="--c-base:${c.base};--c-dark:${c.dark};--c-ink:${c.ink}">
-      <span class="num">${p.n}</span>
-      <div class="shimo">
-        <div class="line">${p.s[0]}</div>
-        <div class="line">${p.s[1]}</div>
-      </div>
-    </button>
-  </div>`;
-}
-
-function render(){
-  myField.innerHTML = S.mySlots.map((item, i)=> slotHTML(item, 'me', i)).join('');
-  cpuField.innerHTML = S.cpuSlots.map((item, i)=> slotHTML(item, 'cpu', i)).join('');
-  myCountEl.textContent = S.myTakeCount;
-  cpuCountEl.textContent = S.cpuTakeCount;
-  hudDiffEl.textContent = S.diff.name;
-  potText.textContent = S.pot > 0 ? ('（場のペナルティ札: ' + S.pot + '枚）') : '';
-  myCountEl.classList.toggle('hot', S.phase === 'read');
-
-  myRestTag.style.display = S.myRest ? 'inline-block' : 'none';
-  cpuRestTag.style.display = S.cpuRest ? 'inline-block' : 'none';
-}
-
-function toast(msg,ms){
-  toastEl.innerHTML=msg;toastEl.classList.add('show');
-  clearTimeout(toast._t);
-  toast._t=setTimeout(()=>toastEl.classList.remove('show'),ms||2000);
-}
-
-/* ===== 進行バー ===== */
-function startBar(ms){
-  const t0=performance.now();
-  cancelAnimationFrame(S.rafId);
-  const tick=()=>{
-    const left=1-(performance.now()-t0)/ms;
-    barFill.style.transform='scaleX('+Math.max(0,left)+')';
-    if(left>0&&!S.resolved)S.rafId=requestAnimationFrame(tick);
-  };
-  S.rafId=requestAnimationFrame(tick);
-}
-function stopBar(){cancelAnimationFrame(S.rafId);}
-
-/* ===== ゲーム開始 ===== */
-function start(){
-  warmup();
-  const pool=shuffle(S.color.poems.slice());
-  
-  S.mySlots = pool.slice(0,10).map(p => ({ poem: p, taken: false }));
-  S.cpuSlots = pool.slice(10,20).map(p => ({ poem: p, taken: false }));
-  
-  S.order=shuffle(pool.slice());
-  S.idx=0;S.resolved=true;S.phase='ready';
-  S.pot=0; S.myTakeCount=0; S.cpuTakeCount=0;
-  S.myRest=false; S.cpuRest=false;
-  S.myPendingRest=false; S.cpuPendingRest=false;
-  S.isSuddenDeath=false;
-  
-  clearTimeout(S.cpuTimer);clearTimeout(S.forceTimer);clearTimeout(S.waitTimer);clearInterval(S.memoTimer);
-  stopBar();stopSpeak();
-
-  setupScr.classList.remove('on');resultModal.classList.remove('on');gameScr.classList.add('on');
-  render();
-
-  phaseText.textContent='暗記時間';
-  subText.textContent='';kamiText.textContent='暗記中';
-  reader.classList.remove('done');
-  
-  readyOv.classList.add('on');
-  setTimeout(()=>{
-    readyOv.classList.remove('on');
-    startMemo();
-  },500);
-}
-
-/* ===== 暗記時間 ===== */
-function startMemo(){
-  S.phase='memo';
-  let t=60;memoNum.textContent=t;
-  memoBar.classList.add('on');
-
-  clearInterval(S.memoTimer);
-  S.memoTimer=setInterval(()=>{
-    t--;memoNum.textContent=t;
-    if(t<=0){
-      clearInterval(S.memoTimer);
-      begin();
+    /* =========================================================
+       4. 音声管理 & iOS Safari自動再生対策 (Audio Unlock)
+       ========================================================= */
+    function initVoices() {
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.getVoices();
+      }
     }
-  },1000);
-}
-memoSkip.addEventListener('click',()=>{
-  clearInterval(S.memoTimer);
-  begin();
-});
-
-function begin(){
-  memoBar.classList.remove('on');
-  S.phase='read';
-  render();
-  nextPoem();
-}
-
-/* ===== 1首進行 ===== */
-function nextPoem(){
-  S.cur=S.order[S.idx];
-  S.resolved=false;S.phase='read';
-  
-  phaseText.textContent = S.isSuddenDeath ? 'サドンデス' : ('第'+(S.idx+1)+'首／17首');
-
-  const k=S.cur.k.join('');
-  kamiText.textContent=k;
-  subText.textContent='';
-  subText.style.opacity='0';
-  reader.classList.toggle('hide',!S.opts.kami);
-  reader.classList.remove('done');
-  replayBtn.disabled=false;
-
-  render();
-
-  if(S.myRest && S.cpuRest) toast('【双方 1回休み】', 1400);
-  else if(S.myRest) toast('【自分 1回休み】', 1400);
-  else if(S.cpuRest) toast('【相手 1回休み】', 1400);
-
-  speakPoem(S.cur, ()=>{ checkAutoAdvance(); });
-
-  if(!S.cpuRest){
-    const d=S.diff;
-    const ms=Math.max(400, d.react+(Math.random()*2-1)*d.jitter);
-    clearTimeout(S.cpuTimer);
-    S.cpuTimer=setTimeout(cpuAct,ms);
-    startBar(ms);
-  }else{
-    startBar(18000);
-  }
-
-  clearTimeout(S.forceTimer);
-  S.forceTimer=setTimeout(forceResolve, 18000);
-}
-
-replayBtn.addEventListener('click',()=>{
-  if(S.cur&&S.phase==='read'&&!S.resolved){
-    speakPoem(S.cur, ()=>{ checkAutoAdvance(); });
-  }
-});
-
-/* ===== CPUの動作 ===== */
-function cpuAct(){
-  if(S.resolved||S.phase!=='read'||S.cpuRest)return;
-  
-  if(Math.random()<S.diff.err){ let penaltyFrom('cpu'); return; targetSlot="S.mySlots.find(s" }> !s.taken && s.poem.n === S.cur.n);
-  let own = 'me';
-  if(!targetSlot){
-    targetSlot = S.cpuSlots.find(s => !s.taken && s.poem.n === S.cur.n);
-    own = 'cpu';
-  }
-
-  if(targetSlot){
-    takeCard(S.cur.n, own, 'cpu');
-  }
-}
-
-/* ===== お手つき処理 ===== */
-function penaltyFrom(tapper){
-  const isMe = (tapper === 'me');
-
-  // ★ 修正: 次の1首を休みに予約
-  if(isMe) S.myPendingRest = true; 
-  else S.cpuPendingRest = true;
-
-  const takeCnt = isMe ? S.myTakeCount : S.cpuTakeCount;
-  if(takeCnt > 0){
-    if(isMe) S.myTakeCount--; 
-    else S.cpuTakeCount--;
-    S.pot++;
-  }
-
-  let msg = isMe 
-    ? 'お手つき！次の1首は【1回休み】です。' 
-    : '相手がお手つき！次の1首は相手が【1回休み】です。';
-
-  toast(msg, 2400);
-  render();
-}
-
-/* ===== 札取り実行 ===== */
-function takeCard(n, owner, taker){
-  if(S.resolved) return;
-  
-  const isMe = (taker === 'me');
-
-  if(isMe && S.myRest){
-    toast('【1回休み中】この首は札を取れません', 1200);
-    return;
-  }
-
-  S.resolved=true;S.phase='read';
-  clearTimeout(S.cpuTimer);clearTimeout(S.forceTimer);stopBar();replayBtn.disabled=true;
-
-  const slots = owner==='me'? S.mySlots : S.cpuSlots;
-  const slotObj = slots.find(s => !s.taken && s.poem.n === n);
-  if(!slotObj) return;
-
-  const card = slotObj.poem;
-  const el = document.querySelector(`.card[data-num="${n}"]`);
-  if(el) el.classList.add('hit');
-
-  let gained = 1;
-  let bonusTxt = '';
-  if(S.pot > 0){
-    gained += S.pot;
-    bonusTxt = `<br><small>（ペナルティの場札 ${S.pot} 枚もまとめて獲得！）</small>`;
-    S.pot = 0;
-  }
-
-  if(isMe) S.myTakeCount += gained;
-  else S.cpuTakeCount += gained;
-
-  subText.textContent='下の句 '+card.s[0]+' '+card.s[1];
-  subText.style.opacity = '1';
-  reader.classList.add('done');
-  reader.classList.remove('hide');
-
-  toast((isMe ? '自分が取りました！' : '相手が取りました！') + bonusTxt, 1800);
-
-  setTimeout(()=>{
-    slotObj.taken = true;
-    render();
-  },500);
-
-  checkAutoAdvance();
-}
-
-/* ===== 誰も取れなかった場合（時間切れ） ===== */
-function forceResolve(){
-  if(S.resolved||!S.cur)return;
-  S.resolved=true;S.phase='read';
-  stopSpeak(); // ★ 時間切れ時に朗詠を停止
-  clearTimeout(S.cpuTimer);stopBar();replayBtn.disabled=true;
-  
-  const n=S.cur.n;
-  let slotObj = S.mySlots.find(s => !s.taken && s.poem.n === n);
-  if(!slotObj) slotObj = S.cpuSlots.find(s => !s.taken && s.poem.n === n);
-
-  if(slotObj){
-    const el = document.querySelector(`.card[data-num="${n}"]`);
-    if(el) el.classList.add('dim');
-
-    subText.textContent='下の句 '+slotObj.poem.s[0]+' '+slotObj.poem.s[1];
-    subText.style.opacity = '1';
-    reader.classList.add('done');
-    toast('時間切れ… この札は誰も取れませんでした',1600);
-
-    setTimeout(()=>{
-      slotObj.taken = true;
-      render();
-    },600);
-  }
-
-  checkAutoAdvance();
-}
-
-/* ===== 自動進行 ===== */
-function checkAutoAdvance(){
-  if(!S.resolved || !S.speechEnded) return;
-
-  clearTimeout(S.waitTimer);
-  S.waitTimer = setTimeout(()=>{
-    advanceNext();
-  }, 2000);
-}
-
-function advanceNext(){
-  // ★ 修正: 予約されていた「1回休み」状態を反映し、予約をクリア
-  S.myRest = S.myPendingRest;
-  S.cpuRest = S.cpuPendingRest;
-  S.myPendingRest = false;
-  S.cpuPendingRest = false;
-
-  if(!S.isSuddenDeath && S.idx >= 16){
-    if(S.myTakeCount !== S.cpuTakeCount) return finish();
-    else {
-      S.isSuddenDeath = true;
-      S.idx++;
-      if(S.idx >= S.order.length) return finish();
-      toast('同点のため、サドンデス（1首勝負）に入ります！', 2200);
-      setTimeout(nextPoem, 1200);
-      return;
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.onvoiceschanged = initVoices;
     }
-  }else if(S.isSuddenDeath){
-    if(S.myTakeCount !== S.cpuTakeCount) return finish();
-    else {
-      S.idx++;
-      if(S.idx >= S.order.length) return finish();
+
+    // iOS Safari対策: ユーザー操作時にコンテキストをアンロック
+    function unlockAudio() {
+      if (!sharedAudio) {
+        sharedAudio = new Audio();
+      }
+      if (!isAudioUnlocked) {
+        sharedAudio.src = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=";
+        const p = sharedAudio.play();
+        if (p !== undefined) {
+          p.then(() => {
+            sharedAudio.pause();
+            isAudioUnlocked = true;
+          }).catch(() => {});
+        }
+        if ('speechSynthesis' in window) {
+          try {
+            window.speechSynthesis.cancel();
+            const u = new SpeechSynthesisUtterance('');
+            u.volume = 0;
+            window.speechSynthesis.speak(u);
+          } catch(e) {}
+        }
+      }
+    }
+
+    function getVoiceByGender(gender) {
+      if (!('speechSynthesis' in window)) return null;
+      const voices = window.speechSynthesis.getVoices().filter(v => v.lang.startsWith('ja'));
+      if (voices.length === 0) return null;
+
+      if (gender === 'female') {
+        return voices.find(v => /kyoko|nanami|otoya|female|google 日本語/i.test(v.name)) || voices[0];
+      } else if (gender === 'male') {
+        return voices.find(v => /ichiro|hatsuki|male/i.test(v.name)) || voices[0];
+      }
+      return voices[0];
+    }
+
+    function stopVoice() {
+      if (currentAudio) {
+        try { currentAudio.pause(); currentAudio.currentTime = 0; } catch(e) {}
+        currentAudio.onended = null;
+        currentAudio.onerror = null;
+        currentAudio = null;
+      }
+      if (sharedAudio) {
+        try { sharedAudio.pause(); sharedAudio.currentTime = 0; } catch(e) {}
+        sharedAudio.onended = null;
+        sharedAudio.onerror = null;
+      }
+      if (speechSynthesisUtterance) {
+        speechSynthesisUtterance.onend = null;
+        speechSynthesisUtterance.onerror = null;
+        speechSynthesisUtterance = null;
+      }
+      if ('speechSynthesis' in window) {
+        try { window.speechSynthesis.cancel(); } catch(e) {}
+      }
+      if (speechSafetyTimer) {
+        clearTimeout(speechSafetyTimer);
+        speechSafetyTimer = null;
+      }
+    }
+
+    function speakPoem(num, isSecondPass = false) {
+      if (!S.opts.voice) {
+        S.speechEnded = true;
+        checkAutoAdvance();
+        return;
+      }
+
+      S.speechEnded = false;
+      stopVoice();
+
+      const gender = S.opts.voiceGender || 'female';
+
+      // --- 男性（MP3録音）モード ---
+      if (gender === 'male') {
+        const padNum = String(num).padStart(3, '0');
+        const audioPath = `./audio/${padNum}.mp3`;
+
+        if (!sharedAudio) {
+          sharedAudio = new Audio();
+        }
+
+        sharedAudio.src = audioPath;
+        sharedAudio.playbackRate = S.opts.slow ? 0.85 : 1.0;
+        currentAudio = sharedAudio;
+
+        const onAudioEnd = () => {
+          if (sharedAudio) {
+            sharedAudio.onended = null;
+            sharedAudio.onerror = null;
+          }
+          currentAudio = null;
+          S.speechEnded = true;
+          checkAutoAdvance();
+        };
+
+        const onAudioError = (e) => {
+          console.warn(`MP3再生エラー (${audioPath}): Web Speech API にフォールバックします。`, e);
+          if (sharedAudio) {
+            sharedAudio.onended = null;
+            sharedAudio.onerror = null;
+          }
+          currentAudio = null;
+          speakWithWebSpeech(num, isSecondPass);
+        };
+
+        sharedAudio.onended = onAudioEnd;
+        sharedAudio.onerror = onAudioError;
+
+        // iOS安全用タイムアウトタイマー (最長30秒)
+        speechSafetyTimer = setTimeout(() => {
+          if (!S.speechEnded && S.phase === 'read') {
+            console.warn("MP3再生タイムアウト保護が発火しました");
+            onAudioEnd();
+          }
+        }, 30000);
+
+        const playPromise = sharedAudio.play();
+        if (playPromise !== undefined) {
+          playPromise.catch(err => {
+            console.warn("Audio play blocked/failed:", err);
+            onAudioError(err);
+          });
+        }
+        return;
+      }
+
+      // --- 女性・自動（Web Speech API）モード ---
+      speakWithWebSpeech(num, isSecondPass);
+    }
+
+    function speakWithWebSpeech(num, isSecondPass = false) {
+      if (!('speechSynthesis' in window)) {
+        S.speechEnded = true;
+        checkAutoAdvance();
+        return;
+      }
+
+      window.speechSynthesis.cancel();
+
+      // iOS Safariの音声詰まり防止のため100msディレイを挟む
+      setTimeout(() => {
+        const poem = S.color.poems.find(p => p.n === num);
+        if (!poem) {
+          S.speechEnded = true;
+          checkAutoAdvance();
+          return;
+        }
+
+        const textToRead = isSecondPass
+          ? [...poem.k, ...poem.s].join(' ')
+          : poem.k.join(' ');
+
+        const u = new SpeechSynthesisUtterance(textToRead);
+        u.lang = 'ja-JP';
+        u.rate = S.opts.slow ? 0.75 : 0.9;
+        u.pitch = 1.0;
+
+        const voice = getVoiceByGender(S.opts.voiceGender);
+        if (voice) u.voice = voice;
+
+        speechSynthesisUtterance = u;
+
+        const finishSpeech = () => {
+          if (speechSafetyTimer) {
+            clearTimeout(speechSafetyTimer);
+            speechSafetyTimer = null;
+          }
+          speechSynthesisUtterance = null;
+          S.speechEnded = true;
+          checkAutoAdvance();
+        };
+
+        u.onend = finishSpeech;
+        u.onerror = (e) => {
+          console.warn("Web Speech API エラー:", e);
+          finishSpeech();
+        };
+
+        // iOS用セーフティタイマー
+        const estimatedDuration = Math.max(5000, textToRead.length * 600);
+        speechSafetyTimer = setTimeout(() => {
+          if (!S.speechEnded && S.phase === 'read') {
+            console.warn("Web Speech タイムアウト保護が発火しました");
+            finishSpeech();
+          }
+        }, estimatedDuration);
+
+        window.speechSynthesis.speak(u);
+      }, 100);
+    }
+
+    /* =========================================================
+       5. アプリ初期化 & UIハンドリング
+       ========================================================= */
+    function initApp() {
+      initVoices();
+      loadOpts();
+      renderColorPick();
+      renderDiffPick();
+      renderHist();
+      bindEvents();
+    }
+
+    function bindEvents() {
+      // 全ユーザー操作イベントの冒頭で unlockAudio() を呼び出し
+      document.body.addEventListener('touchstart', unlockAudio, { once: false, passive: true });
+      document.body.addEventListener('click', unlockAudio, { once: false, passive: true });
+
+      $('startBtn').addEventListener('click', () => { unlockAudio(); start(); });$('quitBtn').addEventListener('click', quitGame);
+      $('skipMemoBtn').addEventListener('click', () => { unlockAudio(); endMemo(); });$('replayBtn').addEventListener('click', () => { unlockAudio(); replay(); });
+
+      $('optNum').addEventListener('change', e => { S.opts.num = e.target.checked; saveOpts(); });
+      $('optKami').addEventListener('change', e => { S.opts.kami = e.target.checked; saveOpts(); });$('optVoice').addEventListener('change', e => { S.opts.voice = e.target.checked; saveOpts(); });
+      $('optSlow').addEventListener('change', e => { S.opts.slow = e.target.checked; saveOpts(); });        $$('input[name="vGender"]').forEach(r => {
+        r.addEventListener('change', e => {
+          S.opts.voiceGender = e.target.value;
+          saveOpts();
+        });
+      });
+
+      $('voiceTest').addEventListener('click', () => {
+        unlockAudio();
+        speakPoem(S.color.poems[0].n, false);
+      });
+
+      $('clearHistBtn').addEventListener('click', clearHist);$('resAgainBtn').addEventListener('click', () => {
+        unlockAudio();
+        $('resultModal').style.display = 'none';
+        start();
+      });
+      $('resBackBtn').addEventListener('click', () => {$('resultModal').style.display = 'none';
+        $('game').style.display = 'none';$('setup').style.display = 'flex';
+      });
+    }
+
+    function loadOpts() {
+      try {
+        const saved = JSON.parse(localStorage.getItem('karuta_opts'));
+        if (saved) S.opts = { ...S.opts, ...saved };
+      } catch(e) {}
+      applyOptsUI();
+    }
+
+    function saveOpts() {
+      localStorage.setItem('karuta_opts', JSON.stringify(S.opts));
+    }
+
+    function applyOptsUI() {
+      $('optNum').checked = S.opts.num;
+      $('optKami').checked = S.opts.kami;
+      $('optVoice').checked = S.opts.voice;
+      $('optSlow').checked = S.opts.slow;
+      const r = document.querySelector(`input[name="vGender"][value="${S.opts.voiceGender}"]`);
+      if (r) r.checked = true;
+    }
+
+    function renderColorPick() {
+      const container = $('colorpick');
+      container.innerHTML = '';
+      COLORS.forEach(c => {
+        const btn = document.createElement('div');
+        btn.className = `btn-col ${c.id === S.color.id ? 'active' : ''}`;
+        btn.style.backgroundColor = c.base;
+        btn.innerText = c.name;
+        btn.addEventListener('click', () => {
+          S.color = c;
+          $$('.btn-col').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          setCssTheme(c);
+        });
+        container.appendChild(btn);
+      });
+      setCssTheme(S.color);
+    }
+
+    function setCssTheme(c) {
+      document.documentElement.style.setProperty('--c-base', c.base);
+      document.documentElement.style.setProperty('--c-dark', c.dark);
+      document.documentElement.style.setProperty('--c-ink', c.ink);
+    }
+
+    function renderDiffPick() {
+      const container = $('diffpick');
+      container.innerHTML = '';
+      DIFFS.forEach(d => {
+        const btn = document.createElement('div');
+        btn.className = `btn-diff ${d.id === S.diff.id ? 'active' : ''}`;
+        btn.innerText = d.name;
+        btn.addEventListener('click', () => {
+          S.diff = d;
+          $$('.btn-diff').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          $('diffNote').innerText = d.desc;
+        });
+        container.appendChild(btn);
+      });
+      $('diffNote').innerText = S.diff.desc;
+    }
+
+    function renderHist() {
+      const container = $('histList');
+      container.innerHTML = '';
+      let list = [];
+      try {
+        list = JSON.parse(localStorage.getItem(HIST_KEY)) || [];
+      } catch(e) {}
+
+      if (list.length === 0) {
+        container.innerHTML = '<div style="text-align:center; color:#999; padding:8px;">履歴はありません</div>';
+        return;
+      }
+
+      list.forEach(h => {
+        const item = document.createElement('div');
+        item.className = 'hist-item';
+        const cls = h.res === 'WIN' ? 'hist-win' : (h.res === 'LOSE' ? 'hist-lose' : 'hist-draw');
+        item.innerHTML = `
+          <span>${h.date} [${h.color}]</span>
+          <span>${h.diff}</span>
+          <span class="${cls}">${h.res} (${h.my}-${h.cpu})</span>
+        `;
+        container.appendChild(item);
+      });
+    }
+
+    function addHist(res, my, cpu) {
+      let list = [];
+      try { list = JSON.parse(localStorage.getItem(HIST_KEY)) || []; } catch(e) {}
+      const now = new Date();
+      const dateStr = `${now.getMonth()+1}/${now.getDate()} ${now.getHours()}:${String(now.getMinutes()).padStart(2,'0')}`;
+      list.unshift({
+        date: dateStr,
+        color: S.color.name,
+        diff: S.diff.name,
+        res: res,
+        my: my,
+        cpu: cpu
+      });
+      if (list.length > 10) list.pop();
+      localStorage.setItem(HIST_KEY, JSON.stringify(list));
+      renderHist();
+    }
+
+    function clearHist() {
+      if (confirm('対戦履歴をクリアしますか？')) {
+        localStorage.removeItem(HIST_KEY);
+        renderHist();
+      }
+    }
+
+    /* =========================================================
+       6. ゲーム進行ロジック
+       ========================================================= */
+    function start() {
+      $('setup').style.display = 'none';$('readyOv').style.display = 'flex';
+
+      setTimeout(() => {
+        $('readyOv').style.display = 'none';$('game').style.display = 'flex';
+        initGameData();
+      }, 600);
+    }
+
+    function initGameData() {
+      const allPoems = [...S.color.poems];
+      // シャッフル
+      for (let i = allPoems.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [allPoems[i], allPoems[j]] = [allPoems[j], allPoems[i]];
+      }
+
+      S.mySlots = allPoems.slice(0, 10);
+      S.cpuSlots = allPoems.slice(10, 20);
+
+      // 読札順をシャッフル
+      S.order = [...allPoems];
+      for (let i = S.order.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [S.order[i], S.order[j]] = [S.order[j], S.order[i]];
+      }
+
+      S.idx = 0;
+      S.pot = 0;
+      S.myTakeCount = 0;
+      S.cpuTakeCount = 0;
+      S.myRest = false;
+      S.cpuRest = false;
+      S.isSuddenDeath = false;
+
+      renderBoard();
+      updateHUD();
+      startMemo();
+    }
+
+    function startMemo() {
+      S.phase = 'memo';
+      $('memoBar').style.display = 'flex';
+      let sec = 60;
+      $('memoCount').innerText = sec;
+
+      if (S.memoTimer) clearInterval(S.memoTimer);
+      S.memoTimer = setInterval(() => {
+        sec--;
+        $('memoCount').innerText = sec;
+        if (sec <= 0) {
+          endMemo();
+        }
+      }, 1000);
+    }
+
+    function endMemo() {
+      if (S.memoTimer) clearInterval(S.memoTimer);
+      S.memoTimer = null;
+      $('memoBar').style.display = 'none';
       nextPoem();
-      return;
     }
-  }
 
-  S.idx++;
-  if(S.idx >= S.order.length) finish();
-  else nextPoem();
-}
+    function renderBoard() {
+      const myF = $('myField');
+      const cpuF = $('cpuField');
+      myF.innerHTML = '';
+      cpuF.innerHTML = '';
 
-/* ===== タップ処理 ===== */
-function onTap(e){
-  const el=e.target.closest?e.target.closest('.card'):null;
-  if(!el||S.phase!=='read'||S.resolved||!S.cur)return;
+      S.mySlots.forEach((p, idx) => {
+        myF.appendChild(cardEl(p, 'my', idx));
+      });
+      S.cpuSlots.forEach((p, idx) => {
+        cpuF.appendChild(cardEl(p, 'cpu', idx));
+      });
+    }
 
-  if(S.myRest){
-    toast('【1回休み中】この首は札を取れません', 1200);
-    return;
-  }
+    function cardEl(poem, side, index) {
+      const div = document.createElement('div');
+      if (!poem) {
+        div.className = 'card empty';
+        return div;
+      }
 
-  const n=parseInt(el.dataset.num,10);
-  const owner=el.dataset.own;
+      div.className = 'card';
+      div.dataset.side = side;
+      div.dataset.index = index;
+      div.dataset.num = poem.n;
 
-  if(n===S.cur.n){
-    takeCard(n,owner,'me');
-    return;
-  }
+      const shimo = document.createElement('div');
+      shimo.className = 'shimo';
+      shimo.innerText = poem.s.join(' ');
 
-  el.classList.add('bad');
-  setTimeout(()=>el.classList.remove('bad'),450);
-  penaltyFrom('me');
-}
-myField.addEventListener('click',onTap);
-cpuField.addEventListener('click',onTap);
+      div.appendChild(shimo);
 
-/* ===== 勝敗結果表示＆履歴保存 ===== */
-function finish(){
-  S.phase='over';S.resolved=true;
-  clearTimeout(S.cpuTimer);clearTimeout(S.forceTimer);clearTimeout(S.waitTimer);clearInterval(S.memoTimer);
-  stopBar();stopSpeak();
-  memoBar.classList.remove('on');
+      if (S.opts.num) {
+        const num = document.createElement('div');
+        num.className = 'num';
+        num.innerText = poem.n;
+        div.appendChild(num);
+      }
 
-  const m=S.myTakeCount, c=S.cpuTakeCount;
-  let v, why, resFlag;
+      const handleTap = (e) => {
+        e.preventDefault();
+        unlockAudio();
+        onTap(side, index, poem);
+      };
 
-  if(m > c){
-    v = '勝利！';
-    why = S.isSuddenDeath ? 'サドンデスで勝利！' : '17首終了時、獲得枚数が多いため勝利！';
-    resFlag = 'WIN';
-  }else if(m < c){
-    v = '敗北…';
-    why = S.isSuddenDeath ? 'サドンデスで敗北。' : '17首終了時、相手の獲得枚数が多いため敗北。';
-    resFlag = 'LOSE';
-  }else{
-    v = '引き分け';
-    why = '全ての札を読み終え、完全同点でした。';
-    resFlag = 'DRAW';
-  }
+      div.addEventListener('touchstart', handleTap, { passive: false });
+      div.addEventListener('click', handleTap);
 
-  $('mVerdict').textContent = v;
-  $('mWhy').textContent = why;
-  $('mMy').textContent = m;
-  $('mCpu').textContent = c;
+      return div;
+    }
 
-  const now = new Date();
-  const dateStr = `${now.getMonth()+1}/${now.getDate()} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
-  saveHistoryItem({
-    date: dateStr, color: S.color.name, diff: S.diff.name,
-    my: m, cpu: c, res: resFlag
-  });
+    function updateHUD() {
+      $('myCount').innerText = S.myTakeCount;
+      $('cpuCount').innerText = S.cpuTakeCount;
+      $('cpuDiffTag').innerText = S.diff.name;
 
-  resultModal.classList.add('on');
-}
+      $('myRestTag').style.display = S.myRest ? 'inline-block' : 'none';
+      $('cpuRestTag').style.display = S.cpuRest ? 'inline-block' : 'none';
 
-/* 中断処理 */
-quitBtn.addEventListener('click',()=>{
-  if(confirm('対戦を中断して設定画面に戻りますか？')){
-    S.phase='idle';S.resolved=true;
-    clearTimeout(S.cpuTimer);clearTimeout(S.forceTimer);clearTimeout(S.waitTimer);clearInterval(S.memoTimer);
-    stopBar();stopSpeak();
-    memoBar.classList.remove('on');
-    gameScr.classList.remove('on');
-    setupScr.classList.add('on');
-  }
-});
+      if (S.isSuddenDeath) {
+        $('progText').innerText = 'サドンデス';
+        $('maxProgText').innerText = '-';
+      } else {
+        $('progText').innerText = `第${S.idx + 1}首`;
+        $('maxProgText').innerText = '17首';
+      }
 
-/* ===== モーダルボタンイベント ===== */
-$('mAgainBtn').addEventListener('click', ()=>{
-  resultModal.classList.remove('on');
-  start();
-});
-$('mBackBtn').addEventListener('click', ()=>{
-  stopSpeak();
-  resultModal.classList.remove('on');
-  gameScr.classList.remove('on');
-  setupScr.classList.add('on');
-});
+      $('potText').innerText = S.pot > 0 ? `場札: +${S.pot}` : '';
+    }
 
-$('startBtn').addEventListener('click',()=>{
-  warmup();
-  start();
-});
-document.addEventListener('gesturestart',e=>e.preventDefault());
-</script>
+    function nextPoem() {
+      if (S.idx >= S.order.length) {
+        finish();
+        return;
+      }
+
+      // 17首終了時の勝敗チェック (同点ならサドンデスへ)
+      if (S.idx === 17 && !S.isSuddenDeath) {
+        if (S.myTakeCount !== S.cpuTakeCount) {
+          finish();
+          return;
+        } else {
+          S.isSuddenDeath = true;
+          toast('同点！サドンデス突入！');
+        }
+      } else if (S.isSuddenDeath && S.myTakeCount !== S.cpuTakeCount) {
+        finish();
+        return;
+      }
+
+      S.phase = 'read';
+      S.resolved = false;
+      S.cur = S.order[S.idx];
+
+      // 休み解除
+      S.myRest = false;
+      S.cpuRest = false;
+      updateHUD();
+
+      $('kamiText').innerText = S.opts.kami ? S.cur.k.join(' ') : '（詠み上げ中...）';
+      $('subText').innerText = '';$('replayBtn').disabled = false;
+
+      stopVoice();
+      speakPoem(S.cur.n, false);
+      startBar(18000);
+      cpuAct();
+    }
+
+    function onTap(side, index, poem) {
+      if (S.phase !== 'read' || S.resolved) return;
+
+      // 自分の休みチェック
+      if (S.myRest) {
+        toast('1回休み中です！');
+        return;
+      }
+
+      // 正解判定
+      if (poem.n === S.cur.n) {
+        // 正解！
+        S.resolved = true;
+        clearTimeout(S.cpuTimer);
+        stopBar();
+
+        const targetEl = document.querySelector(`.card[data-side="${side}"][data-index="${index}"]`);
+        if (targetEl) targetEl.classList.add('hit');
+
+        takeCard('my', side, index);
+      } else {
+        // お手つき！
+        const targetEl = document.querySelector(`.card[data-side="${side}"][data-index="${index}"]`);
+        if (targetEl) {
+          targetEl.classList.add('bad');
+          setTimeout(() => targetEl.classList.remove('bad'), 400);
+        }
+        penaltyFrom('my');
+      }
+    }
+
+    function penaltyFrom(who) {
+      toast(who === 'my' ? 'お手つき！ 1回休み' : '相手がお手つき！');
+
+      if (who === 'my') {
+        S.myRest = true;
+        if (S.myTakeCount > 0) {
+          S.myTakeCount--;
+          S.pot++;
+        }
+      } else {
+        S.cpuRest = true;
+        if (S.cpuTakeCount > 0) {
+          S.cpuTakeCount--;
+          S.pot++;
+        }
+      }
+      updateHUD();
+    }
+
+    function takeCard(winner, side, index) {
+      if (winner === 'my') {
+        S.myTakeCount += 1 + S.pot;
+        S.pot = 0;
+        toast('取った！');
+      } else {
+        S.cpuTakeCount += 1 + S.pot;
+        S.pot = 0;
+        toast('相手に取られた！');
+      }
+
+      // 札を取り除く
+      if (side === 'my') S.mySlots[index] = null;
+      else S.cpuSlots[index] = null;
+
+      renderBoard();
+      updateHUD();
+      checkAutoAdvance();
+    }
+
+    function cpuAct() {
+      if (S.cpuTimer) clearTimeout(S.cpuTimer);
+      if (S.cpuRest) return;
+
+      // 反応時間の計算
+      const delay = S.diff.react + (Math.random() * S.diff.rand * 2 - S.diff.rand);
+
+      S.cpuTimer = setTimeout(() => {
+        if (S.phase !== 'read' || S.resolved) return;
+
+        // お手つき判定
+        if (Math.random() < S.diff.err) {
+          penaltyFrom('cpu');
+          return;
+        }
+
+        // 正解の札を探す
+        let targetSide = null;
+        let targetIndex = -1;
+
+        S.mySlots.forEach((p, i) => { if (p && p.n === S.cur.n) { targetSide = 'my'; targetIndex = i; } });
+        S.cpuSlots.forEach((p, i) => { if (p && p.n === S.cur.n) { targetSide = 'cpu'; targetIndex = i; } });
+
+        if (targetSide !== null) {
+          S.resolved = true;
+          stopBar();
+          const el = document.querySelector(`.card[data-side="${targetSide}"][data-index="${targetIndex}"]`);
+          if (el) el.classList.add('hit');
+
+          takeCard('cpu', targetSide, targetIndex);
+        }
+      }, Math.max(400, delay));
+    }
+
+    function startBar(duration) {
+      stopBar();
+      const fill = $('barFill');
+      fill.style.width = '0%';
+      const startTime = performance.now();
+
+      function update(now) {
+        const elapsed = now - startTime;
+        const pct = Math.min(100, (elapsed / duration) * 100);
+        fill.style.width = pct + '%';
+
+        if (pct < 100) {
+          S.rafId = requestAnimationFrame(update);
+        } else {
+          // タイムアウト (スルー)
+          if (!S.resolved) {
+            S.resolved = true;
+            toast('時間切れ！');
+            checkAutoAdvance();
+          }
+        }
+      }
+      S.rafId = requestAnimationFrame(update);
+    }
+
+    function stopBar() {
+      if (S.rafId) cancelAnimationFrame(S.rafId);
+      S.rafId = null;
+    }
+
+    function checkAutoAdvance() {
+      if (S.resolved && S.speechEnded) {
+        if (S.waitTimer) clearTimeout(S.waitTimer);
+        S.waitTimer = setTimeout(() => {
+          S.idx++;
+          nextPoem();
+        }, 1500);
+      }
+    }
+
+    function replay() {
+      if (!S.cur) return;
+      $('replayBtn').disabled = true;
+      speakPoem(S.cur.n, true);
+      setTimeout(() => { $('replayBtn').disabled = false; }, 3000);
+    }
+
+    function finish() {
+      S.phase = 'over';
+      stopVoice();
+      stopBar();
+      if (S.cpuTimer) clearTimeout(S.cpuTimer);
+
+      const title = $('resTitle');
+      let resStr = 'DRAW';
+
+      if (S.myTakeCount > S.cpuTakeCount) {
+        title.innerText = '勝ち！';
+        title.className = 'res-title win';
+        resStr = 'WIN';
+      } else if (S.myTakeCount < S.cpuTakeCount) {
+        title.innerText = '負け...';
+        title.className = 'res-title lose';
+        resStr = 'LOSE';
+      } else {
+        title.innerText = '引き分け';
+        title.className = 'res-title draw';
+        resStr = 'DRAW';
+      }
+
+      $('resMyScore').innerText = S.myTakeCount;
+      $('resCpuScore').innerText = S.cpuTakeCount;
+      $('resDetail').innerText = `${S.color.name}色 / 難易度: ${S.diff.name}`;
+
+      addHist(resStr, S.myTakeCount, S.cpuTakeCount);
+      $('resultModal').style.display = 'flex';
+    }
+
+    function quitGame() {
+      if (confirm('対戦を中断して設定画面に戻りますか？')) {
+        stopVoice();
+        stopBar();
+        if (S.cpuTimer) clearTimeout(S.cpuTimer);
+        if (S.memoTimer) clearInterval(S.memoTimer);
+        $('game').style.display = 'none';$('setup').style.display = 'flex';
+      }
+    }
+
+    function toast(msg) {
+      const el = $('toast');
+      el.innerText = msg;
+      el.classList.add('show');
+      setTimeout(() => {
+        el.classList.remove('show');
+      }, 1200);
+    }
+
+    /* =========================================================
+       7. 起動
+       ========================================================= */
+    window.addEventListener('DOMContentLoaded', initApp);
+  </script>
 </body>
 </html>
