@@ -11,7 +11,7 @@
   --bg:#0d1420; --line:rgba(255,255,255,.10);
   --gold:#d9b46a; --ink:#f3efe6; --dim:#96a2b8;
   --c-base:#2f6fb3; --c-dark:#16416f; --c-ink:#fff;
-  --fs:clamp(10px, 2.5vw, 18px); --radius:8px;
+  --fs:clamp(12px, 2.8vw, 20px); --radius:8px;
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
 html,body{margin:0;padding:0;height:100%;width:100%;overflow:hidden;}
@@ -27,72 +27,72 @@ body{
 
 /* ===== 設定画面 ===== */
 #setup{
-  padding:calc(12px + env(safe-area-inset-top)) 16px calc(20px + env(safe-area-inset-bottom));
-  gap:10px;overflow-y:auto;width:100%;height:100%;
+  padding:calc(14px + env(safe-area-inset-top)) 16px calc(24px + env(safe-area-inset-bottom));
+  gap:12px;overflow-y:auto;width:100%;height:100%;
 }
 .brand{text-align:center;padding:4px 0 2px;}
-.brand h1{margin:0;font-size:clamp(26px, 4vw, 36px);letter-spacing:.20em;font-weight:700;
+.brand h1{margin:0;font-size:clamp(30px, 4.8vw, 42px);letter-spacing:.20em;font-weight:700;
   background:linear-gradient(180deg,#f8ecc9 0%,#d9b46a 55%,#a8823f 100%);
   -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;}
-.brand p{margin:4px 0 0;font-size:clamp(12px, 1.8vw, 16px);color:var(--dim);letter-spacing:.14em;}
-.sec{margin-top:4px;}
-.sec>h2{font-size:clamp(12px, 1.8vw, 16px);color:var(--gold);letter-spacing:.16em;margin:10px 0 6px;font-weight:600;}
-.sec>h2 small{color:var(--dim);letter-spacing:0;font-weight:400;margin-left:6px;font-size:clamp(10.5px, 1.5vw, 14px);}
+.brand p{margin:4px 0 0;font-size:clamp(14px, 2.2vw, 18px);color:var(--dim);letter-spacing:.14em;}
+.sec{margin-top:6px;}
+.sec>h2{font-size:clamp(15px, 2.2vw, 20px);color:var(--gold);letter-spacing:.16em;margin:12px 0 8px;font-weight:600;}
+.sec>h2 small{color:var(--dim);letter-spacing:0;font-weight:400;margin-left:8px;font-size:clamp(12px, 1.8vw, 16px);}
 .colors{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;}
 .cbtn{
-  border:0;border-radius:var(--radius);padding:12px 0 10px;cursor:pointer;
-  color:#fff;font-family:inherit;font-size:clamp(14px, 2vw, 18px);font-weight:700;letter-spacing:.1em;
+  border:0;border-radius:var(--radius);padding:14px 0 12px;cursor:pointer;
+  color:#fff;font-family:inherit;font-size:clamp(16px, 2.4vw, 21px);font-weight:700;letter-spacing:.1em;
   box-shadow:0 3px 0 rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.32);
   position:relative;transition:transform .12s, outline-color .12s;
   outline:3px solid transparent;outline-offset:2px;
 }
 .cbtn:active{transform:translateY(2px);}
-.cbtn .cnt{display:block;font-size:clamp(9px, 1.3vw, 12px);opacity:.85;letter-spacing:0;margin-top:2px;font-weight:500;}
+.cbtn .cnt{display:block;font-size:clamp(10.5px, 1.5vw, 14px);opacity:.85;letter-spacing:0;margin-top:3px;font-weight:500;}
 .cbtn.sel{outline-color:var(--gold);}
 .diffs{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;}
 .dbtn{
   border:1px solid var(--line);background:rgba(255,255,255,.045);color:var(--ink);
-  border-radius:var(--radius);padding:10px 2px;font-family:inherit;font-size:clamp(11.5px, 1.6vw, 15px);font-weight:600;
+  border-radius:var(--radius);padding:12px 2px;font-family:inherit;font-size:clamp(13.5px, 1.9vw, 18px);font-weight:600;
   cursor:pointer;letter-spacing:.02em;transition:all .15s;
 }
-.dbtn span{display:block;font-size:clamp(8.5px, 1.2vw, 12px);color:var(--dim);font-weight:400;margin-top:2px;}
+.dbtn span{display:block;font-size:clamp(10px, 1.4vw, 14px);color:var(--dim);font-weight:400;margin-top:3px;}
 .dbtn.sel{background:linear-gradient(180deg,rgba(217,180,106,.30),rgba(217,180,106,.13));
   border-color:var(--gold);color:#f8ecc9;}
 .dbtn.sel span{color:#d9c39a;}
 .note{
-  font-size:clamp(11px, 1.5vw, 14px);color:#c8bfa8;background:rgba(217,180,106,.09);
-  border-left:2px solid var(--gold);border-radius:0 6px 6px 0;padding:8px 12px;margin-top:6px;line-height:1.5;
+  font-size:clamp(13px, 1.8vw, 16px);color:#c8bfa8;background:rgba(217,180,106,.09);
+  border-left:2px solid var(--gold);border-radius:0 6px 6px 0;padding:10px 14px;margin-top:8px;line-height:1.5;
 }
-.opts{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;}
+.opts{display:flex;gap:10px;margin-top:10px;flex-wrap:wrap;}
 .chk,.rdo{
-  display:flex;align-items:center;gap:6px;font-size:clamp(11px, 1.5vw, 14px);color:#cfd6e2;
-  background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:20px;padding:8px 14px;cursor:pointer;
+  display:flex;align-items:center;gap:6px;font-size:clamp(13px, 1.8vw, 16px);color:#cfd6e2;
+  background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:20px;padding:9px 16px;cursor:pointer;
 }
 .chk.on,.rdo.on{background:rgba(217,180,106,.18);border-color:rgba(217,180,106,.5);color:#f4e6c6;}
 .chk input,.rdo input{display:none;}
 #startBtn{
-  margin-top:14px;width:100%;border:0;border-radius:12px;padding:16px;font-family:inherit;
-  font-size:clamp(16px, 2.2vw, 20px);font-weight:700;letter-spacing:.2em;color:#251c07;cursor:pointer;
+  margin-top:18px;width:100%;border:0;border-radius:12px;padding:18px;font-family:inherit;
+  font-size:clamp(18px, 2.6vw, 24px);font-weight:700;letter-spacing:.2em;color:#251c07;cursor:pointer;
   background:linear-gradient(180deg,#f2dda6,#d9b46a 60%,#bb9247);
   box-shadow:0 5px 16px rgba(217,180,106,.28), inset 0 1px 0 rgba(255,255,255,.7);
 }
 #startBtn:active{transform:translateY(2px);}
 .ghost{
-  margin-top:8px;width:100%;border:1px solid var(--line);background:transparent;color:var(--dim);
-  border-radius:10px;padding:12px;font-family:inherit;font-size:clamp(11px, 1.5vw, 14px);cursor:pointer;
+  margin-top:10px;width:100%;border:1px solid var(--line);background:transparent;color:var(--dim);
+  border-radius:10px;padding:14px;font-family:inherit;font-size:clamp(13px, 1.8vw, 16px);cursor:pointer;
 }
 
 /* 履歴セクション */
-.history-sec{margin-top:14px;background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:10px;padding:12px;}
-.history-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
-.history-hdr h3{margin:0;font-size:clamp(12px, 1.6vw, 15px);color:var(--gold);font-weight:600;}
-.clear-btn{border:1px solid rgba(255,107,107,.4);background:rgba(255,107,107,.1);color:#ff9f6b;border-radius:12px;padding:3px 10px;font-size:clamp(10px, 1.3vw, 12px);cursor:pointer;}
-.hist-list{display:flex;flex-direction:column;gap:6px;max-height:180px;overflow-y:auto;}
-.hist-item{display:grid;grid-template-columns:1fr auto auto auto;align-items:center;gap:8px;font-size:clamp(10.5px, 1.4vw, 13px);padding:6px 10px;background:rgba(255,255,255,.04);border-radius:6px;border:1px solid rgba(255,255,255,.05);}
+.history-sec{margin-top:16px;background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:10px;padding:14px;}
+.history-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+.history-hdr h3{margin:0;font-size:clamp(14px, 1.9vw, 17px);color:var(--gold);font-weight:600;}
+.clear-btn{border:1px solid rgba(255,107,107,.4);background:rgba(255,107,107,.1);color:#ff9f6b;border-radius:12px;padding:4px 12px;font-size:clamp(11.5px, 1.5vw, 14px);cursor:pointer;}
+.hist-list{display:flex;flex-direction:column;gap:8px;max-height:200px;overflow-y:auto;}
+.hist-item{display:grid;grid-template-columns:1fr auto auto auto;align-items:center;gap:10px;font-size:clamp(12px, 1.6vw, 15px);padding:8px 12px;background:rgba(255,255,255,.04);border-radius:6px;border:1px solid rgba(255,255,255,.05);}
 .hist-item .win{color:#7de08a;font-weight:700;}
 .hist-item .lose{color:#ff6b6b;font-weight:700;}
 .hist-item .draw{color:var(--dim);font-weight:700;}
-.hist-del{border:0;background:transparent;color:var(--dim);cursor:pointer;font-size:12px;padding:0 4px;}
+.hist-del{border:0;background:transparent;color:var(--dim);cursor:pointer;font-size:14px;padding:0 4px;}
 
 /* ===== 対戦画面 ===== */
 #game{
@@ -137,7 +137,7 @@ body{
   width:100%;height:100%;min-height:0;position:relative;
 }
 .card{
-  position:absolute;inset:0;border:0;padding:4px;border-radius:8px;overflow:hidden;cursor:pointer;
+  position:absolute;inset:0;border:0;padding:2px 3px;border-radius:8px;overflow:hidden;cursor:pointer;
   background:linear-gradient(160deg,var(--c-base),var(--c-dark));
   box-shadow:0 3px 8px rgba(0,0,0,.45), inset 0 0 0 1px rgba(255,255,255,.22);
   display:flex;align-items:center;justify-content:center;
@@ -147,7 +147,7 @@ body{
 .card::after{content:"";position:absolute;inset:3px;border-radius:6px;
   border:1px solid rgba(255,255,255,.18);pointer-events:none;}
 .card .num{
-  position:absolute;left:5px;top:4px;font-size:clamp(9px, 1.2vw, 13px);color:var(--c-ink);opacity:.6;
+  position:absolute;left:4px;top:3px;font-size:clamp(8px, 1.0vw, 11px);color:var(--c-ink);opacity:.6;
   line-height:1;letter-spacing:0;
 }
 
@@ -157,13 +157,17 @@ body{
   margin:auto;
   color:var(--c-ink);
   text-align:start;
+  height:92%;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
 }
 .card .shimo .line{
   display:block;
   white-space:nowrap;
-  font-size:clamp(11px, 2.5vh, 22px);
-  line-height:1.2;
-  letter-spacing:0.04em;
+  font-size:clamp(9.5px, 1.8vh, 17px);
+  line-height:1.15;
+  letter-spacing:0.02em;
   font-weight:700;
 }
 
@@ -312,7 +316,7 @@ body{
       <button class="clear-btn" id="clearHistBtn">全リセット</button>
     </div>
     <div class="hist-list" id="histList">
-      <div style="font-size:10px;color:var(--dim);text-align:center;padding:10px;">履歴はありません</div>
+      <div style="font-size:12px;color:var(--dim);text-align:center;padding:10px;">履歴はありません</div>
     </div>
   </div>
 
@@ -385,7 +389,7 @@ body{
 const COLORS=[
 {id:'ao',name:'青',base:'#2f6fb3',dark:'#12395e',ink:'#eaf4ff',poems:[
  {n:3,k:['あしびきの','やまどりのをの','しだりをの'],s:['ながながしよを','ひとりかもねむ']},
- {n:5,k:['おくやまに','もみぢふみわけ','なくしかの'],s:['こゑきくときぞ','あきはかなしき']},
+ {n:5,k:['おくやまに','もみぢふみ分け','なくしかの'],s:['こゑきくときぞ','あきはかなしき']},
  {n:6,k:['かささぎの','わたせるはしに','おくしもの'],s:['しろきをみれば','よぞふけにける']},
  {n:12,k:['あまつかぜ','くものかよひぢ','ふきとぢよ'],s:['をとめのすがた','しばしとどめむ']},
  {n:14,k:['みちのくの','しのぶもぢずり','たれゆゑに'],s:['みだれそめにし','われならなくに']},
@@ -686,14 +690,14 @@ function clearHistory(){
 function renderHistory(){
   const list = getHistory();
   if(!list.length){
-    histList.innerHTML = '<div style="font-size:10px;color:var(--dim);text-align:center;padding:10px;">履歴はありません</div>';
+    histList.innerHTML = '<div style="font-size:12px;color:var(--dim);text-align:center;padding:10px;">履歴はありません</div>';
     return;
   }
   histList.innerHTML = list.map((item, i)=>{
     const resClass = item.res === 'WIN' ? 'win' : (item.res === 'LOSE' ? 'lose' : 'draw');
     const resText = item.res === 'WIN' ? '勝利' : (item.res === 'LOSE' ? '敗北' : '引分');
     return `<div class="hist-item">
-      <div><b>${item.color}</b> <small style="color:var(--dim)">(${item.diff})</small> <br><span style="font-size:8.5px;color:var(--dim);">${item.date}</span></div>
+      <div><b>${item.color}</b> <small style="color:var(--dim)">(${item.diff})</small> <br><span style="font-size:10px;color:var(--dim);">${item.date}</span></div>
       <div class="${resClass}">${resText}</div>
       <div style="font-weight:700;">${item.my} - ${item.cpu}</div>
       <button class="hist-del" onclick="deleteHistoryItem(${i})">✕</button>
@@ -929,7 +933,7 @@ function cpuAct(){
   }
 }
 
-/* ===== お手つき処理（ルール新適用） ===== */
+/* ===== お手つき処理 ===== */
 function penaltyFrom(tapper){
   if(S.resolved) return;
   S.resolved=true; S.phase='read';
@@ -954,7 +958,6 @@ function penaltyFrom(tapper){
                : '相手がお手つき！獲得札がないため次の1首は1回休み。<br><small>（この札は無効となり、誰も取れません）</small>';
   }
 
-  // お手つきされた正解札は取られないまま（場に残す）でスロットを詰める
   const slotObj = S.mySlots.find(s => !s.taken && s.poem.n === S.cur.n) || S.cpuSlots.find(s => !s.taken && s.poem.n === S.cur.n);
   if(slotObj){
     slotObj.taken = true;
