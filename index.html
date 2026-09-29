@@ -119,6 +119,18 @@ body{
   border:1px solid rgba(217,180,106,.35);border-radius:4px;padding:2px 7px;
   font-weight:600;white-space:nowrap;line-height:1.2;
 }
+
+/* 1回休みバッジのスタイル（赤文字表示） */
+.rest-tag{
+  font-size:clamp(10px, 1.4vw, 14px);color:#ff4d4d;background:rgba(255,77,77,.18);
+  border:1px solid rgba(255,77,77,.6);border-radius:4px;padding:2px 8px;
+  font-weight:700;white-space:nowrap;line-height:1.2;animation:pulseRest 1.2s infinite alternate;
+}
+@keyframes pulseRest{
+  0%{transform:scale(1);box-shadow:0 0 2px rgba(255,77,77,.4);}
+  100%{transform:scale(1.05);box-shadow:0 0 8px rgba(255,77,77,.8);}
+}
+
 .hud .mid{
   font-size:clamp(10.5px, 1.5vw, 14px);color:var(--gold);letter-spacing:.06em;text-align:center;
   border:1px solid rgba(217,180,106,.35);border-radius:20px;padding:4px 12px;white-space:nowrap;
@@ -155,27 +167,24 @@ body{
   writing-mode:vertical-rl;
   -webkit-writing-mode:vertical-rl;
   color:var(--c-ink);
-
-  /* ★ 上下左右中央に配置する設定 */
   display:flex;
   flex-direction:column;
-  justify-content:center; /* 左右（行）の中央揃え */
-  align-items:center;     /* 上下（文字の流れ方向）の中央揃え */
-  text-align:center;      /* 文字単位の縦方向中央揃え */
-
+  justify-content:center;
+  align-items:center;
+  text-align:center;
   height:100%;
   width:100%;
   box-sizing:border-box;
 }
 
 .card .shimo .line{
-  display:inline-block;    /* 縦書きの行として自然に配置 */
+  display:inline-block;
   white-space:nowrap;
   font-size:clamp(9.5px, 1.8vh, 17px);
   line-height:1.15;
   letter-spacing:0.02em;
   font-weight:700;
-  text-align:center;       /* 各行内の文字を中央揃え */
+  text-align:center;
 }
 
 .slot.taken .card{display:none;}
@@ -338,12 +347,16 @@ body{
     <div class="side">
       <span>相手</span> <b id="cpuCount">0</b><span>枚</span>
       <span class="diff-tag" id="hudDiff">中位</span>
+      <span class="rest-tag" id="cpuRestTag" style="display:none;">1回休み</span>
     </div>
     <div class="mid">
       <span id="phaseText">準備</span>
       <span id="potText" class="pot-info"></span>
     </div>
-    <div class="side r"><span>自分</span> <b id="myCount" class="hot">0</b><span>枚</span></div>
+    <div class="side r">
+      <span class="rest-tag" id="myRestTag" style="display:none;">1回休み</span>
+      <span>自分</span> <b id="myCount" class="hot">0</b><span>枚</span>
+    </div>
   </div>
 
   <div class="field cpu" id="cpuField"></div>
@@ -413,7 +426,7 @@ const COLORS=[
  {n:75,k:['ちぎりおきし','させもがつゆを','いのちにて'],s:['あはれことしの','あきもいぬめり']},
  {n:76,k:['わたのはら','こぎいでてみれば','ひさかたの'],s:['くもゐにまがふ','おきつしらなみ']},
  {n:82,k:['おもひわび','さてもいのちは','あるものを'],s:['うきにたへぬは','なみだなりけり']},
- {n:91,k:['きりぎりす','なくやしもよの','さむしろに'],s:['ころもかたしき','ひとりかもねむ']},
+ {n:91,k:['きりぎりす','なくやしもよの','さmerksamに'],s:['ころもかたしき','ひとりかもねむ']},
  {n:100,k:['ももしきや','ふるきのきばの','しのぶにも'],s:['なほあまりある','むかしなりけり']}
 ]},
 {id:'momo',name:'桃',base:'#d4587e',dark:'#8c2750',ink:'#fff0f5',poems:[
@@ -531,6 +544,7 @@ const setupScr=$('setup'),gameScr=$('game'),resultModal=$('resultModal');
 const colorPick=$('colorpick'),diffPick=$('diffpick'),diffNote=$('diffNote');
 const myField=$('myField'),cpuField=$('cpuField');
 const myCountEl=$('myCount'),cpuCountEl=$('cpuCount'),hudDiffEl=$('hudDiff'),phaseText=$('phaseText'),potText=$('potText');
+const myRestTag=$('myRestTag'),cpuRestTag=$('cpuRestTag');
 const reader=$('reader'),kamiText=$('kamiText'),subText=$('subText'),barFill=$('barFill'),replayBtn=$('replayBtn');
 const memoBar=$('memoBar'),memoNum=$('memoNum'),memoSkip=$('memoSkip');
 const readyOv=$('readyOv'),toastEl=$('toast'),voiceTest=$('voiceTest'),quitBtn=$('quitBtn');
@@ -554,7 +568,7 @@ function getVoiceByGender(gender){
   if(gender === 'female'){
     return ja.find(v => femaleKeys.some(k => (v.name||'').includes(k))) || ja[0];
   }else if(gender === 'male'){
-    return ja.find(v => maleKeys.some(k => (v.name||'').includes(k))) || ja.find(v => !(femaleKeys.some(k => (v.name||'').includes(k)))) || ja[0];
+    return ja.find(v => femaleKeys.some(k => (v.name||'').includes(k))) || ja.find(v => !(femaleKeys.some(k => (v.name||'').includes(k)))) || ja[0];
   }
   return ja.find(v => femaleKeys.concat(maleKeys).some(k => (v.name||'').includes(k))) || ja[0];
 }
@@ -800,6 +814,10 @@ function render(){
   hudDiffEl.textContent = S.diff.name;
   potText.textContent = S.pot > 0 ? ('（場のペナルティ札: ' + S.pot + '枚）') : '';
   myCountEl.classList.toggle('hot', S.phase === 'read');
+
+  // 1回休みの赤文字表示の切替
+  myRestTag.style.display = S.myRest ? 'inline-block' : 'none';
+  cpuRestTag.style.display = S.cpuRest ? 'inline-block' : 'none';
 }
 
 function toast(msg,ms){
@@ -893,12 +911,15 @@ function nextPoem(){
   reader.classList.remove('done');
   replayBtn.disabled=false;
 
+  render(); // 1回休みタグなどの最新状態を反映
+
   if(S.myRest && S.cpuRest) toast('【双方 1回休み】', 1400);
   else if(S.myRest) toast('【自分 1回休み】', 1400);
   else if(S.cpuRest) toast('【相手 1回休み】', 1400);
 
   speakPoem(S.cur, ()=>{ checkAutoAdvance(); });
 
+  // CPUが1回休みでない場合のみ動作を開始
   if(!S.cpuRest){
     const d=S.diff;
     const ms=Math.max(400, d.react+(Math.random()*2-1)*d.jitter);
@@ -906,7 +927,8 @@ function nextPoem(){
     S.cpuTimer=setTimeout(cpuAct,ms);
     startBar(ms);
   }else{
-    startBar(9000);
+    // CPUが1回休みの場合、CPUは何も行わずプレイヤーが取るか時間切れまで待機
+    startBar(18000);
   }
 
   clearTimeout(S.forceTimer);
@@ -942,50 +964,45 @@ function cpuAct(){
 
 /* ===== お手つき処理 ===== */
 function penaltyFrom(tapper){
-  if(S.resolved) return;
-  S.resolved=true; S.phase='read';
-  clearTimeout(S.cpuTimer);clearTimeout(S.forceTimer);stopBar();replayBtn.disabled=true;
-
   const isMe = (tapper === 'me');
+
+  // お手つきした本人は1回休みフラグを立てる（次の札は取れない）
+  if(isMe) S.myRest = true; 
+  else S.cpuRest = true;
+
   const takeCnt = isMe ? S.myTakeCount : S.cpuTakeCount;
-
-  subText.textContent = '下の句 ' + S.cur.s[0] + ' ' + S.cur.s[1];
-  subText.style.opacity = '1';
-  reader.classList.add('done');
-
-  let msg = '';
   if(takeCnt > 0){
-    if(isMe) S.myTakeCount--; else S.cpuTakeCount--;
+    if(isMe) S.myTakeCount--; 
+    else S.cpuTakeCount--;
     S.pot++;
-    msg = isMe ? 'お手つき！獲得札から1枚を場に出しました。<br><small>（この札は無効となり、誰も取れません）</small>' 
-               : '相手がお手つき！獲得札から1枚を場に出しました。<br><small>（この札は無効となり、誰も取れません）</small>';
-  }else{
-    if(isMe) S.myRest = true; else S.cpuRest = true;
-    msg = isMe ? 'お手つき！獲得札がないため次の1首は1回休み。<br><small>（この札は無効となり、誰も取れません）</small>' 
-               : '相手がお手つき！獲得札がないため次の1首は1回休み。<br><small>（この札は無効となり、誰も取れません）</small>';
   }
 
-  const slotObj = S.mySlots.find(s => !s.taken && s.poem.n === S.cur.n) || S.cpuSlots.find(s => !s.taken && s.poem.n === S.cur.n);
-  if(slotObj){
-    slotObj.taken = true;
-  }
+  let msg = isMe 
+    ? 'お手つき！次の1首は【1回休み】です。' 
+    : '相手がお手つき！次の1首は相手が【1回休み】です。';
 
   toast(msg, 2400);
+  render(); // 1回休み（赤文字）表示を更新
 
-  setTimeout(()=>{
-    render();
-  },500);
-
-  checkAutoAdvance();
+  // お手つきされてもその札は消さずに場に残すため、ゲームは継続（S.resolvedは変更しない）
+  // 自分がお手つきした場合は、この後正解札を押しても反応させないため休み状態を保持
 }
 
 /* ===== 札取り実行 ===== */
 function takeCard(n, owner, taker){
   if(S.resolved) return;
-  S.resolved=true;S.phase='read';
-  clearTimeout(S.cpuTimer);clearTimeout(S.forceTimer);stopBar();replayBtn.disabled=true;
   
   const isMe = (taker === 'me');
+
+  // 1回休みのプレイヤーは取れない（ガード）
+  if(isMe && S.myRest){
+    toast('【1回休み中】この首は札を取れません', 1200);
+    return;
+  }
+
+  S.resolved=true;S.phase='read';
+  clearTimeout(S.cpuTimer);clearTimeout(S.forceTimer);stopBar();replayBtn.disabled=true;
+
   const slots = owner==='me'? S.mySlots : S.cpuSlots;
   const slotObj = slots.find(s => !s.taken && s.poem.n === n);
   if(!slotObj) return;
@@ -994,6 +1011,7 @@ function takeCard(n, owner, taker){
   const el = document.querySelector(`.card[data-num="${n}"]`);
   if(el) el.classList.add('hit');
 
+  // 成功して取ったので休み状態は解除
   if(isMe) S.myRest = false; else S.cpuRest = false;
 
   let gained = 1;
@@ -1061,6 +1079,7 @@ function checkAutoAdvance(){
 }
 
 function advanceNext(){
+  // 1回の読み上げが終わったので、次の首に進むタイミングで休みを解除
   S.myRest = false;
   S.cpuRest = false;
 
@@ -1094,6 +1113,7 @@ function onTap(e){
   const el=e.target.closest?e.target.closest('.card'):null;
   if(!el||S.phase!=='read'||S.resolved||!S.cur)return;
 
+  // 自分が1回休み中の場合、タップに一切反応させない
   if(S.myRest){
     toast('【1回休み中】この首は札を取れません', 1200);
     return;
@@ -1102,11 +1122,13 @@ function onTap(e){
   const n=parseInt(el.dataset.num,10);
   const owner=el.dataset.own;
 
+  // 正解の札の場合
   if(n===S.cur.n){
     takeCard(n,owner,'me');
     return;
   }
 
+  // お手つきの場合
   el.classList.add('bad');
   setTimeout(()=>el.classList.remove('bad'),450);
   penaltyFrom('me');
