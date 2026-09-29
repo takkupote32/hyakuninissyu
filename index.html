@@ -154,21 +154,28 @@ body{
 .card .shimo{
   writing-mode:vertical-rl;
   -webkit-writing-mode:vertical-rl;
-  margin:auto;
   color:var(--c-ink);
-  text-align:start;
-  height:92%;
+
+  /* ★ 上下左右中央に配置する設定 */
   display:flex;
   flex-direction:column;
-  justify-content:center;
+  justify-content:center; /* 左右（行）の中央揃え */
+  align-items:center;     /* 上下（文字の流れ方向）の中央揃え */
+  text-align:center;      /* 文字単位の縦方向中央揃え */
+
+  height:100%;
+  width:100%;
+  box-sizing:border-box;
 }
+
 .card .shimo .line{
-  display:block;
+  display:inline-block;    /* 縦書きの行として自然に配置 */
   white-space:nowrap;
   font-size:clamp(9.5px, 1.8vh, 17px);
   line-height:1.15;
   letter-spacing:0.02em;
   font-weight:700;
+  text-align:center;       /* 各行内の文字を中央揃え */
 }
 
 .slot.taken .card{display:none;}
