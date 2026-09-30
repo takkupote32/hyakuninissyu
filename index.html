@@ -554,8 +554,25 @@ let speakTimers=[];
 let currentSpeakId=0;
 let currentAudio=null; // 音声ファイル再生用
 
+// ★ スマホ対策：単一のAudioオブジェクトを生成して使い回す
+const audioPlayer = new Audio();
+let audioUnlocked = false;
+
 // ★ 男性の声（録音MP3ファイル）のディレクトリ設定
 const AUDIO_DIR = "./audio/";
+
+// ★ スマホの自動再生制限（Autoplay Policy）を解除するアンロック関数
+function unlockAudio() {
+  if (audioUnlocked) return;
+  // 無音データ（Base64 MP3）を再生してブラウザの音声を有効化する
+  audioPlayer.src = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA==";
+  audioPlayer.play().then(() => {
+    audioPlayer.pause();
+    audioUnlocked = true;
+  }).catch(e => {
+    console.warn("Audio unlock failed:", e);
+  });
+}
 
 function getVoiceByGender(gender){
   if(!('speechSynthesis' in window)) return null;
@@ -581,6 +598,7 @@ if('speechSynthesis' in window){
 }
 
 function warmup(){
+  unlockAudio(); // 音声ファイルのスマホ制限を解除
   if(!('speechSynthesis' in window)) return;
   try {
     speechSynthesis.resume();
@@ -596,11 +614,12 @@ function stopSpeak(){
   speakTimers.forEach(t => clearTimeout(t));
   speakTimers = [];
   
-  if(currentAudio){
-    currentAudio.pause();
-    currentAudio.currentTime = 0;
-    currentAudio = null;
-  }
+  // 使い回すaudioPlayerを停止
+  audioPlayer.pause();
+  audioPlayer.currentTime = 0;
+  audioPlayer.onended = null;
+  audioPlayer.onerror = null;
+  currentAudio = null;
   
   if('speechSynthesis' in window){
     try{speechSynthesis.cancel();}catch(e){}
@@ -621,15 +640,12 @@ function speakPoem(poem, onEndCallback){
   if(S.opts.voiceGender === 'male'){
     S.speechEnded = false;
     
-    // 歌番号（例: 3 -> "003.mp3" / "3.mp3" 両対応できるよう整形）
-    // ファイル名が 001.mp3〜100.mp3 の場合の例
     const numStr = String(poem.n).padStart(3, '0');
     const audioPath = AUDIO_DIR + numStr + ".mp3";
     
-    currentAudio = new Audio(audioPath);
-    if(S.opts.slow) {
-      currentAudio.playbackRate = 0.85; // ゆっくり詠む時の再生速度
-    }
+    currentAudio = audioPlayer;
+    currentAudio.src = audioPath;
+    currentAudio.playbackRate = S.opts.slow ? 0.85 : 1.0;
 
     currentAudio.onended = () => {
       if(currentSpeakId !== speakId) return;
@@ -641,7 +657,6 @@ function speakPoem(poem, onEndCallback){
 
     currentAudio.onerror = (e) => {
       console.warn("音声ファイルが見つからないか再生できません:", audioPath);
-      // MP3が見つからない場合は自動でスキップ進行させて進行を止めない
       S.speechEnded = true;
       if(onEndCallback && currentSpeakId === speakId) onEndCallback();
     };
