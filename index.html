@@ -237,7 +237,8 @@ body{
   position:fixed;left:50%;top:40%;transform:translate(-50%,-50%) scale(.85);
   background:rgba(8,12,20,.95);border:1px solid var(--gold);color:#fff;padding:14px 26px;border-radius:14px;
   font-size:clamp(13px, 2vw, 18px);font-weight:700;letter-spacing:.08em;opacity:0;pointer-events:none;transition:all .2s;z-index:95;
-  white-space:nowrap;backdrop-filter:blur(6px);text-align:center;line-height:1.45;box-shadow:0 8px 24px rgba(0,0,0,.6);
+  width:max-content;max-width:calc(100vw - 32px);box-sizing:border-box;white-space:normal;overflow-wrap:anywhere;
+  backdrop-filter:blur(6px);text-align:center;line-height:1.45;box-shadow:0 8px 24px rgba(0,0,0,.6);
 }
 .toast.show{opacity:1;transform:translate(-50%,-50%) scale(1);}
 
@@ -517,11 +518,11 @@ const COLORS=[
 ];
 
 const DIFFS=[
- {id:'low',  name:'下位', sub:'入門',   react:4800, jitter:1000, err:0.35, note:'非常にゆっくり。誤りも多め。'},
- {id:'mid',  name:'中位', sub:'ふつう', react:3500, jitter:800,  err:0.20, note:'程よい速さ。じっくり勝負したい方に。'},
- {id:'high', name:'上位', sub:'速い',   react:2500, jitter:600,  err:0.10, note:'手ごたえのある速さ。素早い判断が必要。'},
- {id:'goku', name:'極意', sub:'達人',   react:1700, jitter:450,  err:0.04, note:'かなり速い。上の句の決まり字で勝負。'},
- {id:'gokuP',name:'極意+',sub:'最上',   react:1100, jitter:300,  err:0.01, note:'最速クラス。熟練者向け。'}
+ {id:'low',  name:'下位', sub:'入門',   react:4800, jitter:1000, err:0.20, note:'非常にゆっくり。誤りも少し。'},
+ {id:'mid',  name:'中位', sub:'ふつう', react:3500, jitter:800,  err:0.12, note:'程よい速さ。じっくり勝負したい方に。'},
+ {id:'high', name:'上位', sub:'速い',   react:2500, jitter:600,  err:0.06, note:'手ごたえのある速さ。素早い判断が必要。'},
+ {id:'goku', name:'極意', sub:'達人',   react:1700, jitter:450,  err:0.02, note:'かなり速い。上の句の決まり字で勝負。'},
+ {id:'gokuP',name:'極意+',sub:'最上',   react:1100, jitter:300,  err:0.005, note:'最速クラス。熟練者向け。'}
 ];
 
 /* ===== ゲーム状態 ===== */
