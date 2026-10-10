@@ -255,7 +255,7 @@ body{
 @keyframes modalUp{from{transform:scale(.8);opacity:0}to{transform:scale(1);opacity:1}}
 .modal-box .verdict{
   font-size:clamp(36px, 5vw, 48px);font-weight:800;letter-spacing:.15em;margin-bottom:6px;
-  background:linear-gradient(180deg,#f8ecc9,#d9b46a);-webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background:linear-gradient(180deg,#f8ecc9,#d9b46a);background-clip:text;-webkit-background-clip:text;-webkit-text-fill-color:transparent;
 }
 .modal-box .why{font-size:clamp(11.5px, 1.7vw, 16px);color:var(--dim);margin-bottom:18px;line-height:1.5;}
 .scorebox{
@@ -530,7 +530,8 @@ const S={
   mySlots:[], cpuSlots:[],
   order:[], idx:0, cur:null, resolved:true, phase:'idle',
   pot:0, myTakeCount:0, cpuTakeCount:0,
-  myRest:false, cpuRest:false, isSuddenDeath:false, speechEnded:false,
+  myRest:false, cpuRest:false, myRestNext:false, cpuRestNext:false,
+  myFouled:false, cpuFouled:false, isSuddenDeath:false, speechEnded:false,
   cpuTimer:null, rafId:null, forceTimer:null, memoTimer:null, waitTimer:null,
   opts:{num:false,kami:true,voice:true,slow:false,voiceGender:'female'}
 };
@@ -915,7 +916,7 @@ function start(){
   S.order=shuffle(pool.slice());
   S.idx=0;S.resolved=true;S.phase='ready';
   S.pot=0; S.myTakeCount=0; S.cpuTakeCount=0;
-  S.myRest=false; S.cpuRest=false; S.isSuddenDeath=false;
+  S.myRest=false; S.cpuRest=false; S.myRestNext=false; S.cpuRestNext=false; S.isSuddenDeath=false;
   
   clearTimeout(S.cpuTimer);clearTimeout(S.forceTimer);clearTimeout(S.waitTimer);clearInterval(S.memoTimer);
   stopBar();stopSpeak();
@@ -965,6 +966,9 @@ function begin(){
 function nextPoem(){
   S.cur=S.order[S.idx];
   S.resolved=false;S.phase='read';
+  S.myRest=S.myRestNext;S.cpuRest=S.cpuRestNext;
+  S.myRestNext=false;S.cpuRestNext=false;
+  S.myFouled=false;S.cpuFouled=false;
   
   phaseText.textContent = S.isSuddenDeath ? 'サドンデス' : ('第'+(S.idx+1)+'首／17首');
 
@@ -984,7 +988,7 @@ function nextPoem(){
 
   speakPoem(S.cur, ()=>{ checkAutoAdvance(); });
 
-  if(!S.cpuRest){
+  if(!S.cpuRest && !S.cpuFouled){
     const d=S.diff;
     const ms=Math.max(400, d.react+(Math.random()*2-1)*d.jitter);
     clearTimeout(S.cpuTimer);
@@ -1006,7 +1010,7 @@ replayBtn.addEventListener('click',()=>{
 
 /* ===== CPUの動作 ===== */
 function cpuAct(){
-  if(S.resolved||S.phase!=='read'||S.cpuRest)return;
+  if(S.resolved||S.phase!=='read'||S.cpuRest||S.cpuFouled)return;
   
   if(Math.random()<S.diff.err){
     penaltyFrom('cpu');
@@ -1027,24 +1031,45 @@ function cpuAct(){
 
 /* ===== お手つき処理 ===== */
 function penaltyFrom(tapper){
-  const isMe = (tapper === 'me');
+  if(S.resolved || !S.cur) return;
 
-  if(isMe) S.myRest = true; 
-  else S.cpuRest = true;
+  const isMe = (tapper === 'me');
+  const fouledKey = isMe ? 'myFouled' : 'cpuFouled';
+  if(S[fouledKey]) return;
+  S[fouledKey] = true;
 
   const takeCnt = isMe ? S.myTakeCount : S.cpuTakeCount;
   if(takeCnt > 0){
     if(isMe) S.myTakeCount--; 
     else S.cpuTakeCount--;
     S.pot++;
+  }else if(isMe){
+    S.myRestNext = true;
+  }else{
+    S.cpuRestNext = true;
   }
 
-  let msg = isMe 
-    ? 'お手つき！次の1首は【1回休み】です。' 
-    : '相手がお手つき！次の1首は相手が【1回休み】です。';
+  const opponent = isMe ? 'cpu' : 'me';
+  const slotObj = [...S.mySlots, ...S.cpuSlots].find(slot => !slot.taken && slot.poem.n === S.cur.n);
+  if(slotObj){
+    slotObj.taken = true;
+    if(opponent === 'me') S.myTakeCount++;
+    else S.cpuTakeCount++;
+    subText.textContent='下の句 '+slotObj.poem.s[0]+' '+slotObj.poem.s[1];
+    subText.style.opacity='1';
+    reader.classList.add('done');
+    reader.classList.remove('hide');
+  }
 
-  toast(msg, 2400);
+  S.resolved=true;S.phase='read';
+  clearTimeout(S.cpuTimer);clearTimeout(S.forceTimer);stopBar();replayBtn.disabled=true;
+  const msg = isMe
+    ? (takeCnt > 0 ? 'お手つき！この札は相手のものです。手持ち札を1枚場に出しました。' : 'お手つき！この札は相手のものです。次の首は1回休みです。')
+    : (takeCnt > 0 ? '相手がお手つき！この札は自分のものです。相手の手持ち札が1枚場に出ました。' : '相手がお手つき！この札は自分のものです。相手は次の首を1回休みます。');
+
+  toast(msg, 2800);
   render();
+  checkAutoAdvance();
 }
 
 /* ===== 札取り実行 ===== */
@@ -1053,10 +1078,11 @@ function takeCard(n, owner, taker){
   
   const isMe = (taker === 'me');
 
-  if(isMe && S.myRest){
+  if(isMe && (S.myRest || S.myFouled)){
     toast('【1回休み中】この首は札を取れません', 1200);
     return;
   }
+  if(!isMe && (S.cpuRest || S.cpuFouled)) return;
 
   S.resolved=true;S.phase='read';
   clearTimeout(S.cpuTimer);clearTimeout(S.forceTimer);stopBar();replayBtn.disabled=true;
@@ -1169,7 +1195,7 @@ function onTap(e){
   const el=e.target.closest?e.target.closest('.card'):null;
   if(!el||S.phase!=='read'||S.resolved||!S.cur)return;
 
-  if(S.myRest){
+  if(S.myRest || S.myFouled){
     toast('【1回休み中】この首は札を取れません', 1200);
     return;
   }
