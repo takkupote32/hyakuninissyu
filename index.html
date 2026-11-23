@@ -1040,8 +1040,9 @@ fieldset:disabled{opacity:.6}
     player.currentTime = 0;
     if(window.opener && !window.opener.closed){
       window.opener.focus();
+      window.opener.postMessage({type:'closeAudioOnlyWindow'}, '*');
     }
-    window.close();
+    setTimeout(() => window.close(), 50);
   });
   playerWindow.addEventListener('beforeunload', () => {
     isPlaying = false;
@@ -1479,6 +1480,14 @@ $('startBtn').addEventListener('click',()=>{
   start();
 });
 $('audioOnlyBtn').addEventListener('click', openAudioOnlyWindow);
+window.addEventListener('message', event => {
+  if(event.data && event.data.type === 'closeAudioOnlyWindow'){
+    if(audioOnlyWindow && !audioOnlyWindow.closed){
+      audioOnlyWindow.close();
+    }
+    window.focus();
+  }
+});
 document.addEventListener('gesturestart',e=>e.preventDefault());
 </script>
 </body>
