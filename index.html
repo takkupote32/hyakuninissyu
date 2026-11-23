@@ -89,6 +89,33 @@ body{
 }
 #audioOnlyBtn:active{transform:translateY(2px);box-shadow:0 2px 8px rgba(217,180,106,.24);}
 
+#audioOnlyScreen{
+  padding:calc(12px + env(safe-area-inset-top)) 12px calc(14px + env(safe-area-inset-bottom));
+  overflow-y:auto;
+}
+.audio-header{display:flex;align-items:center;gap:10px;margin-bottom:12px;}
+.audio-header h1{margin:0;flex:1;text-align:center;color:var(--gold);font-size:clamp(20px,3vw,28px);}
+.audio-back{
+  min-height:44px;padding:8px 12px;border:1px solid var(--gold);border-radius:10px;
+  background:rgba(217,180,106,.16);color:#f4e6c6;font-family:inherit;font-size:15px;font-weight:700;cursor:pointer;
+}
+.audio-main{width:min(100%,500px);margin:0 auto;}
+.audio-main fieldset{margin:0 0 14px;padding:14px;border:1px solid var(--line);border-radius:10px;}
+.audio-main legend{padding:0 6px;color:var(--gold);}
+.audio-main .color-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:7px;}
+.audio-main .audio-color{min-height:48px;border:2px solid transparent;border-radius:8px;color:#fff;font-size:16px;font-weight:bold;cursor:pointer;}
+.audio-main .audio-color.selected{border-color:#fff1c8;box-shadow:0 0 0 2px #d9b46a;}
+.audio-main .options{display:flex;flex-wrap:wrap;gap:8px;}
+.audio-main .choice,.audio-main .speed{
+  display:flex;align-items:center;gap:6px;padding:9px 11px;border:1px solid var(--line);
+  border-radius:20px;background:rgba(255,255,255,.05);cursor:pointer;
+}
+.audio-main .buttons{display:flex;gap:10px;margin-top:8px;}
+.audio-main .buttons button{flex:1;min-height:54px;border:0;border-radius:10px;font-size:17px;font-weight:bold;cursor:pointer;}
+.audio-main #audioPlayBtn{background:linear-gradient(180deg,#e7ca86,#c79a50);color:#251c07;}
+.audio-main #audioStopBtn{background:rgba(255,255,255,.10);color:#f3efe6;}
+.audio-main #audioStatus{min-height:44px;margin:14px 0 0;color:#cfd6e2;text-align:center;line-height:1.5;}
+
 /* 履歴セクション */
 .history-sec{margin-top:8px;background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:10px;padding:10px;}
 .history-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
@@ -345,6 +372,26 @@ body{
   <button id="startBtn">対 戦 ス タ ー ト</button>
   <button id="voiceTest" class="ghost">🔊 読み上げの音声テスト</button>
   <button id="audioOnlyBtn" class="ghost">🔊 音声のみ再生</button>
+</section>
+
+<section id="audioOnlyScreen" class="screen">
+  <div class="audio-main">
+    <div class="audio-header">
+      <button type="button" class="audio-back" id="audioBackBtn">← 設定画面に戻る</button>
+      <h1>音声のみ再生</h1>
+    </div>
+    <fieldset id="audioColorOptions"><legend>色</legend><div class="color-grid" id="audioColorGrid"></div></fieldset>
+    <fieldset id="audioVoiceOptions"><legend>読み手の声</legend><div class="options" id="audioVoiceOptionsInner"></div></fieldset>
+    <fieldset id="audioSpeedOptions"><legend>読む速さ</legend><div class="options">
+      <label class="speed"><input type="checkbox" id="audioSlowOption">ゆっくり読む</label>
+      <label class="speed"><input type="checkbox" id="audioFastOption" checked>早く読む</label>
+    </div></fieldset>
+    <div class="buttons">
+      <button type="button" id="audioPlayBtn">再生開始</button>
+      <button type="button" id="audioStopBtn" disabled>停止</button>
+    </div>
+    <p id="audioStatus">設定して「再生開始」を押してください。</p>
+  </div>
 </section>
 
 <!-- ========== 対戦 ========== -->
@@ -879,176 +926,103 @@ voiceTest.addEventListener('click',()=>{
   voiceTest.textContent = '🔊 音声テスト（' + voiceName + ': ローカルMP3再生）';
 });
 
-let audioOnlyWindow = null;
-function openAudioOnlyWindow(){
-  if(audioOnlyWindow && !audioOnlyWindow.closed){
-    audioOnlyWindow.focus();
-    return;
-  }
+const audioOnlyScreen=$('audioOnlyScreen');
+const audioOnlyPlayer=new Audio();
+let audioSelectedColor=S.color;
+let audioSelectedVoice=S.opts.voiceGender;
+let audioPoemQueue=[];
+let audioIsPlaying=false;
 
-  const playerWindow = window.open('', 'karutaAudioOnly', 'width=540,height=720,resizable=yes,scrollbars=yes');
-  if(!playerWindow){
-    alert('音声のみ再生ウィンドウを開けませんでした。ポップアップを許可してください。');
-    return;
-  }
-  audioOnlyWindow = playerWindow;
-
-  const colorButtonsHtml = COLORS.map(c =>
-    '<button type="button" class="audio-color" data-color="' + c.id +
-    '" style="background:linear-gradient(170deg,' + c.base + ',' + c.dark + ')">' +
-    c.name + '</button>'
-  ).join('');
-  const voiceOptions = [
-    ['female','女性の声'],
-    ['male','男性の声'],
-    ['child','子供の声']
-  ];
-  const voiceOptionsHtml = voiceOptions.map(([value,label]) =>
-    '<label class="choice"><input type="radio" name="audioVoice" value="' + value +
-    '"' + (S.opts.voiceGender === value ? ' checked' : '') + '>' + label + '</label>'
-  ).join('');
-
-  const doc = playerWindow.document;
-  doc.open();
-  doc.write(`<!DOCTYPE html>
-<html lang="ja">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>音声のみ再生</title>
-<style>
-*{box-sizing:border-box}
-body{margin:0;padding:20px;background:#0d1420;color:#f3efe6;font-family:Meiryo,"Yu Gothic",sans-serif}
-main{max-width:500px;margin:0 auto}
-h1{margin:0 0 18px;color:#d9b46a;font-size:23px;text-align:center}
-.header{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:16px}
-.header h1{margin:0;flex:1;text-align:left}
-.back-btn{min-height:44px;padding:8px 12px;border:2px solid #d9b46a;border-radius:9px;background:#d9b46a;color:#251c07;font-size:15px;font-weight:bold;cursor:pointer}
-.back-btn:active{transform:translateY(1px)}
-fieldset{margin:0 0 16px;padding:14px;border:1px solid rgba(255,255,255,.16);border-radius:10px}
-legend{padding:0 6px;color:#d9b46a}
-.color-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:7px}
-.audio-color{min-height:48px;border:2px solid transparent;border-radius:8px;color:#fff;font-size:16px;font-weight:bold;cursor:pointer}
-.audio-color.selected{border-color:#fff1c8;box-shadow:0 0 0 2px #d9b46a}
-.options{display:flex;flex-wrap:wrap;gap:8px}
-.choice,.speed{display:flex;align-items:center;gap:6px;padding:9px 11px;border:1px solid rgba(255,255,255,.16);border-radius:20px;background:rgba(255,255,255,.05);cursor:pointer}
-.buttons{display:flex;gap:10px}
-.buttons button{flex:1;padding:12px;border:0;border-radius:9px;font-size:16px;font-weight:bold;cursor:pointer}
-#playBtn{background:#d9b46a;color:#251c07}
-#stopBtn{background:rgba(255,255,255,.10);color:#f3efe6}
-#status{min-height:44px;margin:14px 0 0;color:#cfd6e2;text-align:center;line-height:1.5}
-fieldset:disabled{opacity:.6}
-</style>
-</head>
-<body>
-<main>
-  <div class="header"><h1>句をランダムに読み上げ</h1><button type="button" class="back-btn" id="backBtn">← 元の画面に戻る</button></div>
-  <fieldset id="colorOptions"><legend>色</legend><div class="color-grid">${colorButtonsHtml}</div></fieldset>
-  <fieldset id="voiceOptions"><legend>読み手の声</legend><div class="options">${voiceOptionsHtml}</div></fieldset>
-  <fieldset id="speedOptions"><legend>読む速さ</legend><div class="options">
-    <label class="speed"><input type="checkbox" id="slowOption"${S.opts.slow ? ' checked' : ''}>ゆっくり読む</label>
-    <label class="speed"><input type="checkbox" id="fastOption"${S.opts.fast ? ' checked' : ''}>早く読む</label>
-  </div></fieldset>
-  <div class="buttons"><button type="button" id="playBtn">再生開始</button><button type="button" id="stopBtn" disabled>停止</button></div>
-  <p id="status">設定して「再生開始」を押してください。</p>
-</main>
-</body>
-</html>`);
-  doc.close();
-
-  const colorButtons = Array.from(doc.querySelectorAll('.audio-color'));
-  const voiceRadios = Array.from(doc.querySelectorAll('input[name="audioVoice"]'));
-  const slowOption = doc.getElementById('slowOption');
-  const fastOption = doc.getElementById('fastOption');
-  const playBtn = doc.getElementById('playBtn');
-  const stopBtn = doc.getElementById('stopBtn');
-  const backBtn = doc.getElementById('backBtn');
-  const status = doc.getElementById('status');
-  const optionGroups = [
-    doc.getElementById('colorOptions'),
-    doc.getElementById('voiceOptions'),
-    doc.getElementById('speedOptions')
-  ];
-  const player = new playerWindow.Audio();
-  let selectedColor = S.color;
-  let selectedVoice = S.opts.voiceGender;
-  let poemQueue = [];
-  let isPlaying = false;
-
-  colorButtons.forEach(button => {
-    button.classList.toggle('selected', button.dataset.color === selectedColor.id);
-    button.addEventListener('click', () => {
-      selectedColor = COLORS.find(c => c.id === button.dataset.color);
-      colorButtons.forEach(item => item.classList.toggle('selected', item === button));
-      poemQueue = [];
-    });
+const audioColorGrid=$('audioColorGrid');
+COLORS.forEach(color=>{
+  const button=document.createElement('button');
+  button.type='button';
+  button.className='audio-color';
+  button.textContent=color.name;
+  button.style.background=`linear-gradient(170deg,${color.base},${color.dark})`;
+  button.dataset.color=color.id;
+  button.addEventListener('click',()=>{
+    audioSelectedColor=color;
+    audioPoemQueue=[];
+    Array.from(audioColorGrid.children).forEach(item=>item.classList.toggle('selected',item===button));
   });
-  voiceRadios.forEach(radio => {
-    radio.addEventListener('change', () => {
-      if(radio.checked) selectedVoice = radio.value;
-    });
-  });
-  slowOption.addEventListener('change', () => {
-    if(slowOption.checked) fastOption.checked = false;
-  });
-  fastOption.addEventListener('change', () => {
-    if(fastOption.checked) slowOption.checked = false;
-  });
+  audioColorGrid.appendChild(button);
+});
 
-  const setPlaying = playing => {
-    isPlaying = playing;
-    playBtn.disabled = playing;
-    stopBtn.disabled = !playing;
-    optionGroups.forEach(group => { group.disabled = playing; });
-  };
-  const stopPlayback = message => {
-    setPlaying(false);
-    player.pause();
-    player.currentTime = 0;
-    player.onended = null;
-    player.onerror = null;
-    status.textContent = message || '停止中';
-  };
-  const playNext = () => {
-    if(!isPlaying) return;
-    if(!poemQueue.length) poemQueue = shuffle(selectedColor.poems.slice());
-    const poem = poemQueue.pop();
-    const audioDir = selectedVoice === 'female' ? FEMALE_AUDIO_DIR
-      : selectedVoice === 'child' ? CHILD_AUDIO_DIR : AUDIO_DIR;
-    const audioPath = audioDir + String(poem.n).padStart(3, '0') + '.mp3';
-    player.src = new URL(audioPath, window.location.href).href;
-    player.playbackRate = slowOption.checked ? 0.85 : fastOption.checked ? 1.2 : 1.0;
-    status.textContent = selectedColor.name + '色・' +
-      voiceOptions.find(([value]) => value === selectedVoice)[1] +
-      '（' + poem.n + '番）を再生中';
-    player.onended = playNext;
-    player.onerror = () => stopPlayback('音声ファイルを再生できません: ' + audioPath);
-    player.play().catch(() => {
-      if(isPlaying) stopPlayback('音声を再生できませんでした。ファイルと再生環境を確認してください。');
-    });
-  };
+const audioVoiceOptionsInner=$('audioVoiceOptionsInner');
+[['female','女性の声'],['male','男性の声'],['child','子供の声']].forEach(([value,label])=>{
+  const choice=document.createElement('label');
+  choice.className='choice';
+  choice.innerHTML=`<input type="radio" name="audioVoice" value="${value}"${S.opts.voiceGender===value?' checked':''}>${label}`;
+  const radio=choice.querySelector('input');
+  radio.addEventListener('change',()=>{if(radio.checked) audioSelectedVoice=value;});
+  audioVoiceOptionsInner.appendChild(choice);
+});
 
-  playBtn.addEventListener('click', () => {
-    poemQueue = [];
-    setPlaying(true);
-    playNext();
-  });
-  stopBtn.addEventListener('click', () => stopPlayback());
-  backBtn.addEventListener('click', () => {
-    isPlaying = false;
-    player.pause();
-    player.currentTime = 0;
-    if(window.opener && !window.opener.closed){
-      window.opener.focus();
-      window.opener.postMessage({type:'closeAudioOnlyWindow'}, '*');
-    }
-    setTimeout(() => window.close(), 50);
-  });
-  playerWindow.addEventListener('beforeunload', () => {
-    isPlaying = false;
-    player.pause();
+const audioSlowOption=$('audioSlowOption');
+const audioFastOption=$('audioFastOption');
+audioSlowOption.checked=S.opts.slow;
+audioFastOption.checked=S.opts.fast;
+audioSlowOption.addEventListener('change',()=>{if(audioSlowOption.checked) audioFastOption.checked=false;});
+audioFastOption.addEventListener('change',()=>{if(audioFastOption.checked) audioSlowOption.checked=false;});
+
+function setAudioPlaying(playing){
+  audioIsPlaying=playing;
+  $('audioPlayBtn').disabled=playing;
+  $('audioStopBtn').disabled=!playing;
+  ['audioColorOptions','audioVoiceOptions','audioSpeedOptions'].forEach(id=>{$(id).disabled=playing;});
+}
+function stopAudioPlayback(message){
+  setAudioPlaying(false);
+  audioOnlyPlayer.pause();
+  audioOnlyPlayer.currentTime=0;
+  audioOnlyPlayer.onended=null;
+  audioOnlyPlayer.onerror=null;
+  $('audioStatus').textContent=message||'停止中';
+}
+function playNextAudio(){
+  if(!audioIsPlaying)return;
+  if(!audioPoemQueue.length)audioPoemQueue=shuffle(audioSelectedColor.poems.slice());
+  const poem=audioPoemQueue.pop();
+  const audioDir=audioSelectedVoice==='female'?FEMALE_AUDIO_DIR
+    :audioSelectedVoice==='child'?CHILD_AUDIO_DIR:AUDIO_DIR;
+  const audioPath=audioDir+String(poem.n).padStart(3,'0')+'.mp3';
+  audioOnlyPlayer.src=new URL(audioPath,window.location.href).href;
+  audioOnlyPlayer.playbackRate=audioSlowOption.checked?0.85:audioFastOption.checked?1.2:1.0;
+  const voiceLabel=audioSelectedVoice==='female'?'女性の声':audioSelectedVoice==='child'?'子供の声':'男性の声';
+  $('audioStatus').textContent=audioSelectedColor.name+'色・'+voiceLabel+'（'+poem.n+'番）を再生中';
+  audioOnlyPlayer.onended=playNextAudio;
+  audioOnlyPlayer.onerror=()=>stopAudioPlayback('音声ファイルを再生できません: '+audioPath);
+  audioOnlyPlayer.play().catch(()=>{
+    if(audioIsPlaying)stopAudioPlayback('音声を再生できませんでした。ファイルと再生環境を確認してください。');
   });
 }
+function openAudioOnlyWindow(){
+  audioSelectedColor=S.color;
+  audioSelectedVoice=S.opts.voiceGender;
+  Array.from(audioColorGrid.children).forEach(button=>{
+    button.classList.toggle('selected',button.dataset.color===audioSelectedColor.id);
+  });
+  Array.from(audioVoiceOptionsInner.querySelectorAll('input')).forEach(radio=>{
+    radio.checked=radio.value===audioSelectedVoice;
+  });
+  audioSlowOption.checked=S.opts.slow;
+  audioFastOption.checked=S.opts.fast;
+  setupScr.classList.remove('on');
+  audioOnlyScreen.classList.add('on');
+  audioOnlyScreen.scrollTop=0;
+}
+$('audioPlayBtn').addEventListener('click',()=>{
+  audioPoemQueue=[];
+  setAudioPlaying(true);
+  playNextAudio();
+});
+$('audioStopBtn').addEventListener('click',()=>stopAudioPlayback());
+$('audioBackBtn').addEventListener('click',()=>{
+  stopAudioPlayback();
+  audioOnlyScreen.classList.remove('on');
+  setupScr.classList.add('on');
+});
 
 /* ===== フィールド描画 ===== */
 function slotHTML(slotData, own, index){
@@ -1480,14 +1454,6 @@ $('startBtn').addEventListener('click',()=>{
   start();
 });
 $('audioOnlyBtn').addEventListener('click', openAudioOnlyWindow);
-window.addEventListener('message', event => {
-  if(event.data && event.data.type === 'closeAudioOnlyWindow'){
-    if(audioOnlyWindow && !audioOnlyWindow.closed){
-      audioOnlyWindow.close();
-    }
-    window.focus();
-  }
-});
 document.addEventListener('gesturestart',e=>e.preventDefault());
 </script>
 </body>
