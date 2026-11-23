@@ -337,6 +337,7 @@ body{
 
   <button id="startBtn">対 戦 ス タ ー ト</button>
   <button id="voiceTest" class="ghost">🔊 読み上げの音声テスト</button>
+  <button id="audioOnlyBtn" class="ghost">🔊 音声のみ再生</button>
 </section>
 
 <!-- ========== 対戦 ========== -->
@@ -871,6 +872,162 @@ voiceTest.addEventListener('click',()=>{
   voiceTest.textContent = '🔊 音声テスト（' + voiceName + ': ローカルMP3再生）';
 });
 
+let audioOnlyWindow = null;
+function openAudioOnlyWindow(){
+  if(audioOnlyWindow && !audioOnlyWindow.closed){
+    audioOnlyWindow.focus();
+    return;
+  }
+
+  const playerWindow = window.open('', 'karutaAudioOnly', 'width=540,height=720,resizable=yes,scrollbars=yes');
+  if(!playerWindow){
+    alert('音声のみ再生ウィンドウを開けませんでした。ポップアップを許可してください。');
+    return;
+  }
+  audioOnlyWindow = playerWindow;
+
+  const colorButtonsHtml = COLORS.map(c =>
+    '<button type="button" class="audio-color" data-color="' + c.id +
+    '" style="background:linear-gradient(170deg,' + c.base + ',' + c.dark + ')">' +
+    c.name + '</button>'
+  ).join('');
+  const voiceOptions = [
+    ['female','女性の声'],
+    ['male','男性の声'],
+    ['child','子供の声']
+  ];
+  const voiceOptionsHtml = voiceOptions.map(([value,label]) =>
+    '<label class="choice"><input type="radio" name="audioVoice" value="' + value +
+    '"' + (S.opts.voiceGender === value ? ' checked' : '') + '>' + label + '</label>'
+  ).join('');
+
+  const doc = playerWindow.document;
+  doc.open();
+  doc.write(`<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>音声のみ再生</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;padding:20px;background:#0d1420;color:#f3efe6;font-family:Meiryo,"Yu Gothic",sans-serif}
+main{max-width:500px;margin:0 auto}
+h1{margin:0 0 18px;color:#d9b46a;font-size:23px;text-align:center}
+fieldset{margin:0 0 16px;padding:14px;border:1px solid rgba(255,255,255,.16);border-radius:10px}
+legend{padding:0 6px;color:#d9b46a}
+.color-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:7px}
+.audio-color{min-height:48px;border:2px solid transparent;border-radius:8px;color:#fff;font-size:16px;font-weight:bold;cursor:pointer}
+.audio-color.selected{border-color:#fff1c8;box-shadow:0 0 0 2px #d9b46a}
+.options{display:flex;flex-wrap:wrap;gap:8px}
+.choice,.speed{display:flex;align-items:center;gap:6px;padding:9px 11px;border:1px solid rgba(255,255,255,.16);border-radius:20px;background:rgba(255,255,255,.05);cursor:pointer}
+.buttons{display:flex;gap:10px}
+.buttons button{flex:1;padding:12px;border:0;border-radius:9px;font-size:16px;font-weight:bold;cursor:pointer}
+#playBtn{background:#d9b46a;color:#251c07}
+#stopBtn{background:rgba(255,255,255,.10);color:#f3efe6}
+#status{min-height:44px;margin:14px 0 0;color:#cfd6e2;text-align:center;line-height:1.5}
+fieldset:disabled{opacity:.6}
+</style>
+</head>
+<body>
+<main>
+  <h1>句をランダムに読み上げ</h1>
+  <fieldset id="colorOptions"><legend>色</legend><div class="color-grid">${colorButtonsHtml}</div></fieldset>
+  <fieldset id="voiceOptions"><legend>読み手の声</legend><div class="options">${voiceOptionsHtml}</div></fieldset>
+  <fieldset id="speedOptions"><legend>読む速さ</legend><div class="options">
+    <label class="speed"><input type="checkbox" id="slowOption"${S.opts.slow ? ' checked' : ''}>ゆっくり読む</label>
+    <label class="speed"><input type="checkbox" id="fastOption"${S.opts.fast ? ' checked' : ''}>早く読む</label>
+  </div></fieldset>
+  <div class="buttons"><button type="button" id="playBtn">再生開始</button><button type="button" id="stopBtn" disabled>停止</button></div>
+  <p id="status">設定して「再生開始」を押してください。</p>
+</main>
+</body>
+</html>`);
+  doc.close();
+
+  const colorButtons = Array.from(doc.querySelectorAll('.audio-color'));
+  const voiceRadios = Array.from(doc.querySelectorAll('input[name="audioVoice"]'));
+  const slowOption = doc.getElementById('slowOption');
+  const fastOption = doc.getElementById('fastOption');
+  const playBtn = doc.getElementById('playBtn');
+  const stopBtn = doc.getElementById('stopBtn');
+  const status = doc.getElementById('status');
+  const optionGroups = [
+    doc.getElementById('colorOptions'),
+    doc.getElementById('voiceOptions'),
+    doc.getElementById('speedOptions')
+  ];
+  const player = new playerWindow.Audio();
+  let selectedColor = S.color;
+  let selectedVoice = S.opts.voiceGender;
+  let poemQueue = [];
+  let isPlaying = false;
+
+  colorButtons.forEach(button => {
+    button.classList.toggle('selected', button.dataset.color === selectedColor.id);
+    button.addEventListener('click', () => {
+      selectedColor = COLORS.find(c => c.id === button.dataset.color);
+      colorButtons.forEach(item => item.classList.toggle('selected', item === button));
+      poemQueue = [];
+    });
+  });
+  voiceRadios.forEach(radio => {
+    radio.addEventListener('change', () => {
+      if(radio.checked) selectedVoice = radio.value;
+    });
+  });
+  slowOption.addEventListener('change', () => {
+    if(slowOption.checked) fastOption.checked = false;
+  });
+  fastOption.addEventListener('change', () => {
+    if(fastOption.checked) slowOption.checked = false;
+  });
+
+  const setPlaying = playing => {
+    isPlaying = playing;
+    playBtn.disabled = playing;
+    stopBtn.disabled = !playing;
+    optionGroups.forEach(group => { group.disabled = playing; });
+  };
+  const stopPlayback = message => {
+    setPlaying(false);
+    player.pause();
+    player.currentTime = 0;
+    player.onended = null;
+    player.onerror = null;
+    status.textContent = message || '停止中';
+  };
+  const playNext = () => {
+    if(!isPlaying) return;
+    if(!poemQueue.length) poemQueue = shuffle(selectedColor.poems.slice());
+    const poem = poemQueue.pop();
+    const audioDir = selectedVoice === 'female' ? FEMALE_AUDIO_DIR
+      : selectedVoice === 'child' ? CHILD_AUDIO_DIR : AUDIO_DIR;
+    const audioPath = audioDir + String(poem.n).padStart(3, '0') + '.mp3';
+    player.src = new URL(audioPath, window.location.href).href;
+    player.playbackRate = slowOption.checked ? 0.85 : fastOption.checked ? 1.2 : 1.0;
+    status.textContent = selectedColor.name + '色・' +
+      voiceOptions.find(([value]) => value === selectedVoice)[1] +
+      '（' + poem.n + '番）を再生中';
+    player.onended = playNext;
+    player.onerror = () => stopPlayback('音声ファイルを再生できません: ' + audioPath);
+    player.play().catch(() => {
+      if(isPlaying) stopPlayback('音声を再生できませんでした。ファイルと再生環境を確認してください。');
+    });
+  };
+
+  playBtn.addEventListener('click', () => {
+    poemQueue = [];
+    setPlaying(true);
+    playNext();
+  });
+  stopBtn.addEventListener('click', () => stopPlayback());
+  playerWindow.addEventListener('beforeunload', () => {
+    isPlaying = false;
+    player.pause();
+  });
+}
+
 /* ===== フィールド描画 ===== */
 function slotHTML(slotData, own, index){
   if(!slotData || slotData.taken){
@@ -1300,6 +1457,7 @@ $('startBtn').addEventListener('click',()=>{
   warmup();
   start();
 });
+$('audioOnlyBtn').addEventListener('click', openAudioOnlyWindow);
 document.addEventListener('gesturestart',e=>e.preventDefault());
 </script>
 </body>
