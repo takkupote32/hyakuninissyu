@@ -364,8 +364,8 @@ body{
       <label class="chk on" id="chkKami"><input type="checkbox" id="cbKami" checked>上の句を表示</label>
       <label class="chk on" id="chkVoice"><input type="checkbox" id="cbVoice" checked>音声で読み上げ</label>
       <label class="chk" id="chkSlow"><input type="checkbox" id="cbSlow">ゆっくり詠む</label>
-      <label class="chk on" id="chkFast"><input type="checkbox" id="cbFast" checked>早く読む</label>
-      <label class="chk" id="chkFaster"><input type="checkbox" id="cbFaster">もっと早く読む</label>
+      <label class="chk on" id="chkFast"><input type="checkbox" id="cbFast" checked>早く詠む</label>
+      <label class="chk" id="chkFaster"><input type="checkbox" id="cbFaster">もっと早く詠む</label>
     </div>
   </div>
 
@@ -393,10 +393,10 @@ body{
     </div>
     <fieldset id="audioColorOptions"><legend>色</legend><div class="color-grid" id="audioColorGrid"></div></fieldset>
     <fieldset id="audioVoiceOptions"><legend>読み手の声</legend><div class="options" id="audioVoiceOptionsInner"></div></fieldset>
-    <fieldset id="audioSpeedOptions"><legend>読む速さ</legend><div class="options">
-      <label class="speed"><input type="checkbox" id="audioSlowOption">ゆっくり読む</label>
-      <label class="speed"><input type="checkbox" id="audioFastOption" checked>早く読む</label>
-      <label class="speed"><input type="checkbox" id="audioFasterOption">もっと早く読む</label>
+    <fieldset id="audioSpeedOptions"><legend>詠む速さ</legend><div class="options">
+      <label class="speed"><input type="checkbox" id="audioSlowOption">ゆっくり詠む</label>
+      <label class="speed"><input type="checkbox" id="audioFastOption" checked>早く詠む</label>
+      <label class="speed"><input type="checkbox" id="audioFasterOption">もっと早く詠む</label>
     </div></fieldset>
     <div class="buttons">
       <button type="button" id="audioPlayBtn">再生開始</button>
@@ -747,7 +747,7 @@ function speakPoem(poem, onEndCallback, onStartCallback){
       tryingCandidate = true;
       currentAudio = audioPlayer;
       currentAudio.src = candidates[candidateIndex];
-      currentAudio.playbackRate = S.opts.slow ? 0.85 : S.opts.faster ? 1.4 : S.opts.fast ? 1.2 : 1.0;
+      currentAudio.playbackRate = S.opts.slow ? 0.85 : S.opts.faster ? 1.5 : S.opts.fast ? 1.2 : 1.0;
       currentAudio.onplaying = notifyPlaybackStart;
       currentAudio.onended = () => {
         if(currentSpeakId !== speakId) return;
@@ -783,7 +783,7 @@ function speakPoem(poem, onEndCallback, onStartCallback){
   } catch(e) {}
 
   S.speechEnded = false;
-  const baseRate = S.opts.slow ? 0.62 : S.opts.faster ? 1.1 : S.opts.fast ? 0.9 : 0.72;
+  const baseRate = S.opts.slow ? 0.62 : S.opts.faster ? 1.5 : S.opts.fast ? 0.9 : 0.72;
   const targetVoice = getVoiceByGender(S.opts.voiceGender);
 
   let isMaleFallback = (S.opts.voiceGender === 'male' && targetVoice && !(['Otoya','Ichiro','Keita','Hattori','Takumi'].some(k=>(targetVoice.name||'').includes(k))));
@@ -1059,7 +1059,7 @@ function playNextAudio(){
     tryingCandidate=true;
     const audioPath=candidates[candidateIndex];
     audioOnlyPlayer.src=audioPath;
-    audioOnlyPlayer.playbackRate=audioSlowOption.checked?0.85:audioFasterOption.checked?1.4:audioFastOption.checked?1.2:1.0;
+    audioOnlyPlayer.playbackRate=audioSlowOption.checked?0.85:audioFasterOption.checked?1.5:audioFastOption.checked?1.2:1.0;
     audioOnlyPlayer.onerror=()=>{
       if(!tryingCandidate)return;
       tryingCandidate=false;
