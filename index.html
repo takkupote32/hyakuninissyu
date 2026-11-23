@@ -600,7 +600,7 @@ const S={
   order:[], idx:0, cur:null, resolved:true, phase:'idle',
   pot:0, myTakeCount:0, cpuTakeCount:0,
   myRest:false, cpuRest:false, myRestNext:false, cpuRestNext:false,
-  myFouled:false, cpuFouled:false, isSuddenDeath:false, speechEnded:false,
+  myFouled:false, cpuFouled:false, isSuddenDeath:false, speechEnded:false, readingStarted:false,
   cpuTimer:null, rafId:null, forceTimer:null, memoTimer:null, waitTimer:null,
   opts:{num:false,kami:true,voice:true,slow:false,fast:true,voiceGender:'child'}
 };
@@ -708,12 +708,19 @@ function stopSpeak(){
   }
 }
 
-function speakPoem(poem, onEndCallback){
+function speakPoem(poem, onEndCallback, onStartCallback){
   stopSpeak();
   const speakId = currentSpeakId;
+  let playbackStarted = false;
+  const notifyPlaybackStart = () => {
+    if(playbackStarted || currentSpeakId !== speakId) return;
+    playbackStarted = true;
+    if(onStartCallback) onStartCallback();
+  };
 
   if(!S.opts.voice){
     S.speechEnded = true;
+    notifyPlaybackStart();
     if(onEndCallback) onEndCallback();
     return;
   }
@@ -730,6 +737,7 @@ function speakPoem(poem, onEndCallback){
     const tryNextCandidate = () => {
       if(candidateIndex >= candidates.length){
         console.warn("音声ファイルが見つからないか再生できません:", candidates.join(", "));
+        notifyPlaybackStart();
         S.speechEnded = true;
         if(onEndCallback && currentSpeakId === speakId) onEndCallback();
         return;
@@ -738,6 +746,7 @@ function speakPoem(poem, onEndCallback){
       currentAudio = audioPlayer;
       currentAudio.src = candidates[candidateIndex];
       currentAudio.playbackRate = S.opts.slow ? 0.85 : S.opts.fast ? 1.2 : 1.0;
+      currentAudio.onplaying = notifyPlaybackStart;
       currentAudio.onended = () => {
         if(currentSpeakId !== speakId) return;
         subText.textContent = '下の句 ' + poem.s[0] + ' ' + poem.s[1];
@@ -798,6 +807,7 @@ function speakPoem(poem, onEndCallback){
     u.pitch = pitchBase + (0.05 * (1 - index * 0.5));
     u.volume = 1;
     if(targetVoice) u.voice = targetVoice;
+    if(index === 0) u.onstart = notifyPlaybackStart;
 
     u.onend = ()=>{
       if(currentSpeakId !== speakId) return;
@@ -1224,17 +1234,17 @@ function begin(){
 /* ===== 1首進行 ===== */
 function nextPoem(){
   S.cur=S.order[S.idx];
-  S.resolved=false;S.phase='read';
+  S.resolved=false;S.phase='read';S.readingStarted=false;
   S.myRest=S.myRestNext;S.cpuRest=S.cpuRestNext;
   S.myRestNext=false;S.cpuRestNext=false;
   S.myFouled=false;S.cpuFouled=false;
   
   phaseText.textContent = S.isSuddenDeath ? 'サドンデス' : ('第'+(S.idx+1)+'首／17首');
 
-  const k=S.cur.k.join('');
-  kamiText.textContent=k;
+  kamiText.textContent='';
   subText.textContent='';
   subText.style.opacity='0';
+  barFill.style.transform='scaleX(1)';
   reader.classList.toggle('hide',!S.opts.kami);
   reader.classList.remove('done');
   replayBtn.disabled=false;
@@ -1245,7 +1255,13 @@ function nextPoem(){
   else if(S.myRest) toast('【自分 1回休み】', 1400);
   else if(S.cpuRest) toast('【相手 1回休み】', 1400);
 
-  speakPoem(S.cur, ()=>{ checkAutoAdvance(); });
+  speakPoem(S.cur, ()=>{ checkAutoAdvance(); }, startReading);
+}
+
+function startReading(){
+  if(S.phase!=='read'||S.readingStarted||!S.cur)return;
+  S.readingStarted=true;
+  kamiText.textContent=S.cur.k.join('');
 
   if(!S.cpuRest && !S.cpuFouled){
     const d=S.diff;
@@ -1263,7 +1279,7 @@ function nextPoem(){
 
 replayBtn.addEventListener('click',()=>{
   if(S.cur&&S.phase==='read'&&!S.resolved){
-    speakPoem(S.cur, ()=>{ checkAutoAdvance(); });
+    speakPoem(S.cur, ()=>{ checkAutoAdvance(); }, startReading);
   }
 });
 
@@ -1452,7 +1468,7 @@ function advanceNext(){
 /* ===== タップ処理 ===== */
 function onTap(e){
   const el=e.target.closest?e.target.closest('.card'):null;
-  if(!el||S.phase!=='read'||S.resolved||!S.cur)return;
+  if(!el||S.phase!=='read'||S.resolved||!S.cur||!S.readingStarted)return;
 
   if(S.myRest || S.myFouled){
     toast('【1回休み中】この首は札を取れません', 1200);
