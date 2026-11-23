@@ -114,6 +114,8 @@ body{
 .audio-main #audioVoiceOptions{padding:10px 14px;}
 .audio-main #audioVoiceOptionsInner{flex-wrap:nowrap;gap:5px;}
 .audio-main #audioVoiceOptionsInner .choice{padding:7px 8px;font-size:clamp(10.5px,1.5vw,13px);}
+.audio-main #audioSpeedOptions .options{flex-wrap:nowrap;gap:3px;}
+.audio-main #audioSpeedOptions .speed{flex:1 1 0;justify-content:center;gap:3px;padding:6px 3px;font-size:clamp(9px,2.8vw,13px);}
 .audio-main .buttons{display:flex;gap:10px;margin-top:8px;}
 .audio-main .buttons button{flex:1;min-height:54px;border:0;border-radius:10px;font-size:17px;font-weight:bold;cursor:pointer;}
 .audio-main #audioPlayBtn{background:linear-gradient(180deg,#e7ca86,#c79a50);color:#251c07;}
@@ -364,8 +366,8 @@ body{
       <label class="chk on" id="chkKami"><input type="checkbox" id="cbKami" checked>上の句を表示</label>
       <label class="chk on" id="chkVoice"><input type="checkbox" id="cbVoice" checked>音声で読み上げ</label>
       <label class="chk" id="chkSlow"><input type="checkbox" id="cbSlow">ゆっくり詠む</label>
-      <label class="chk on" id="chkFast"><input type="checkbox" id="cbFast" checked>早く詠む</label>
-      <label class="chk" id="chkFaster"><input type="checkbox" id="cbFaster">もっと早く詠む</label>
+      <label class="chk on" id="chkFast"><input type="checkbox" id="cbFast" checked>速く詠む</label>
+      <label class="chk" id="chkFaster"><input type="checkbox" id="cbFaster">もっと速く詠む</label>
     </div>
   </div>
 
@@ -395,8 +397,8 @@ body{
     <fieldset id="audioVoiceOptions"><legend>読み手の声</legend><div class="options" id="audioVoiceOptionsInner"></div></fieldset>
     <fieldset id="audioSpeedOptions"><legend>詠む速さ</legend><div class="options">
       <label class="speed"><input type="checkbox" id="audioSlowOption">ゆっくり詠む</label>
-      <label class="speed"><input type="checkbox" id="audioFastOption" checked>早く詠む</label>
-      <label class="speed"><input type="checkbox" id="audioFasterOption">もっと早く詠む</label>
+      <label class="speed"><input type="checkbox" id="audioFastOption" checked>速く詠む</label>
+      <label class="speed"><input type="checkbox" id="audioFasterOption">もっと速く詠む</label>
     </div></fieldset>
     <div class="buttons">
       <button type="button" id="audioPlayBtn">再生開始</button>
