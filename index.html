@@ -626,20 +626,30 @@ let currentAudio=null; // 音声ファイル再生用
 
 // ★ スマホ対策：単一のAudioオブジェクトを生成して使い回す
 const audioPlayer = new Audio();
+const unlockPlayer = new Audio();
 let audioUnlocked = false;
 
 // ★ 録音MP3ファイルのディレクトリ設定
-const AUDIO_DIR = "./百人一首/audio/";
-const FEMALE_AUDIO_DIR = "./百人一首/女性の声/";
-const CHILD_AUDIO_DIR = "./百人一首/子供の声/";
+const AUDIO_DIR = "./audio/";
+const FEMALE_AUDIO_DIR = "./女性の声/";
+const CHILD_AUDIO_DIR = "./子供の声/";
+
+function getAudioCandidates(gender, numStr){
+  const candidates = gender === 'female'
+    ? [FEMALE_AUDIO_DIR + numStr + ".mp3", "./百人一首/女性の声/" + numStr + ".mp3"]
+    : gender === 'child'
+      ? [CHILD_AUDIO_DIR + numStr + ".mp3", "./百人一首/子供の声/" + numStr + ".mp3"]
+      : [AUDIO_DIR + numStr + ".mp3", "./百人一首/audio/" + numStr + ".mp3"];
+  return candidates.map(path => new URL(path, window.location.href).href);
+}
 
 // ★ スマホの自動再生制限（Autoplay Policy）を解除するアンロック関数
 function unlockAudio() {
   if (audioUnlocked) return;
   // 無音データ（Base64 MP3）を再生してブラウザの音声を有効化する
-  audioPlayer.src = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA==";
-  audioPlayer.play().then(() => {
-    audioPlayer.pause();
+  unlockPlayer.src = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQQAAAAAAA==";
+  unlockPlayer.play().then(() => {
+    unlockPlayer.pause();
     audioUnlocked = true;
   }).catch(e => {
     console.warn("Audio unlock failed:", e);
@@ -713,33 +723,44 @@ function speakPoem(poem, onEndCallback){
     S.speechEnded = false;
     
     const numStr = String(poem.n).padStart(3, '0');
-    const audioDir = S.opts.voiceGender === 'female' ? FEMALE_AUDIO_DIR
-      : S.opts.voiceGender === 'child' ? CHILD_AUDIO_DIR : AUDIO_DIR;
-    const audioPath = audioDir + numStr + ".mp3";
-    
-    currentAudio = audioPlayer;
-    currentAudio.src = audioPath;
-    currentAudio.playbackRate = S.opts.slow ? 0.85 : S.opts.fast ? 1.2 : 1.0;
+    const candidates = getAudioCandidates(S.opts.voiceGender, numStr);
+    let candidateIndex = 0;
+    let tryingCandidate = false;
 
-    currentAudio.onended = () => {
-      if(currentSpeakId !== speakId) return;
-      subText.textContent = '下の句 ' + poem.s[0] + ' ' + poem.s[1];
-      subText.style.opacity = '1';
-      S.speechEnded = true;
-      if(onEndCallback && currentSpeakId === speakId) onEndCallback();
+    const tryNextCandidate = () => {
+      if(candidateIndex >= candidates.length){
+        console.warn("音声ファイルが見つからないか再生できません:", candidates.join(", "));
+        S.speechEnded = true;
+        if(onEndCallback && currentSpeakId === speakId) onEndCallback();
+        return;
+      }
+      tryingCandidate = true;
+      currentAudio = audioPlayer;
+      currentAudio.src = candidates[candidateIndex];
+      currentAudio.playbackRate = S.opts.slow ? 0.85 : S.opts.fast ? 1.2 : 1.0;
+      currentAudio.onended = () => {
+        if(currentSpeakId !== speakId) return;
+        subText.textContent = '下の句 ' + poem.s[0] + ' ' + poem.s[1];
+        subText.style.opacity = '1';
+        S.speechEnded = true;
+        if(onEndCallback && currentSpeakId === speakId) onEndCallback();
+      };
+      currentAudio.onerror = () => {
+        if(currentSpeakId !== speakId || !tryingCandidate) return;
+        tryingCandidate = false;
+        candidateIndex++;
+        tryNextCandidate();
+      };
+      currentAudio.play().catch(err => {
+        if(currentSpeakId !== speakId || !tryingCandidate) return;
+        tryingCandidate = false;
+        console.warn("再生候補を変更します:", candidates[candidateIndex], err);
+        candidateIndex++;
+        tryNextCandidate();
+      });
     };
 
-    currentAudio.onerror = (e) => {
-      console.warn("音声ファイルが見つからないか再生できません:", audioPath);
-      S.speechEnded = true;
-      if(onEndCallback && currentSpeakId === speakId) onEndCallback();
-    };
-
-    currentAudio.play().catch(err => {
-      console.warn("再生がブロックされました:", err);
-      S.speechEnded = true;
-      if(onEndCallback && currentSpeakId === speakId) onEndCallback();
-    });
+    tryNextCandidate();
 
     return;
   }
@@ -1006,17 +1027,42 @@ function playNextAudio(){
   const poem=audioPoemQueue.pop();
   audioCurrentPoem=poem;
   const num=String(poem.n).padStart(3,'0');
-  const audioPath=new URL(AUDIO_DIR+num+'.mp3',window.location.href).href;
-  audioOnlyPlayer.src=audioPath;
-  audioOnlyPlayer.playbackRate=audioSlowOption.checked?0.85:audioFastOption.checked?1.2:1.0;
+  const candidates=getAudioCandidates(audioSelectedVoice,num);
+  let candidateIndex=0;
+  let tryingCandidate=false;
+
+  const tryNextCandidate=()=>{
+    if(candidateIndex>=candidates.length){
+      stopAudioPlayback('音声ファイルが見つかりません');
+      return;
+    }
+    tryingCandidate=true;
+    const audioPath=candidates[candidateIndex];
+    audioOnlyPlayer.src=audioPath;
+    audioOnlyPlayer.playbackRate=audioSlowOption.checked?0.85:audioFastOption.checked?1.2:1.0;
+    audioOnlyPlayer.onerror=()=>{
+      if(!tryingCandidate)return;
+      tryingCandidate=false;
+      candidateIndex++;
+      tryNextCandidate();
+    };
+    audioOnlyPlayer.play().catch(()=>{
+      if(!tryingCandidate)return;
+      tryingCandidate=false;
+      if(candidateIndex+1<candidates.length){
+        candidateIndex++;
+        tryNextCandidate();
+      }else if(audioIsPlaying){
+        stopAudioPlayback('音声を再生できませんでした。ファイルと再生環境を確認してください。');
+      }
+    });
+  };
+
   const voiceLabel=audioSelectedVoice==='female'?'女性の声':audioSelectedVoice==='child'?'子供の声':'男性の声';
   $('audioStatus').textContent=audioSelectedColor.name+'色・'+voiceLabel+'（'+poem.n+'番）を再生中';
   $('audioPoemText').innerHTML=poem.k[0]+' '+poem.k[1]+poem.k[2]+'<br>'+poem.s[0]+' '+poem.s[1];
   audioOnlyPlayer.onended=playNextAudio;
-  audioOnlyPlayer.onerror=()=>stopAudioPlayback('音声ファイルを再生できません: '+audioPath);
-  audioOnlyPlayer.play().catch(()=>{
-    if(audioIsPlaying)stopAudioPlayback('音声を再生できませんでした。ファイルと再生環境を確認してください。');
-  });
+  tryNextCandidate();
 }
 function openAudioOnlyWindow(){
   audioSelectedColor=S.color;
