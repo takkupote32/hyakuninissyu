@@ -600,7 +600,7 @@ const S={
   order:[], idx:0, cur:null, resolved:true, phase:'idle',
   pot:0, myTakeCount:0, cpuTakeCount:0,
   myRest:false, cpuRest:false, myRestNext:false, cpuRestNext:false,
-  myFouled:false, cpuFouled:false, isSuddenDeath:false, speechEnded:false, readingStarted:false,
+  myFouled:false, cpuFouled:false, isSuddenDeath:false, speechEnded:false, readingStarted:false, readingStartTimer:null,
   cpuTimer:null, rafId:null, forceTimer:null, memoTimer:null, waitTimer:null,
   opts:{num:false,kami:true,voice:true,slow:false,fast:true,voiceGender:'child'}
 };
@@ -1188,6 +1188,7 @@ function start(){
   S.myRest=false; S.cpuRest=false; S.myRestNext=false; S.cpuRestNext=false; S.isSuddenDeath=false;
   
   clearTimeout(S.cpuTimer);clearTimeout(S.forceTimer);clearTimeout(S.waitTimer);clearInterval(S.memoTimer);
+  clearTimeout(S.readingStartTimer);S.readingStartTimer=null;
   stopBar();stopSpeak();
 
   setupScr.classList.remove('on');resultModal.classList.remove('on');gameScr.classList.add('on');
@@ -1234,6 +1235,7 @@ function begin(){
 /* ===== 1首進行 ===== */
 function nextPoem(){
   S.cur=S.order[S.idx];
+  clearTimeout(S.readingStartTimer);S.readingStartTimer=null;
   S.resolved=false;S.phase='read';S.readingStarted=false;
   S.myRest=S.myRestNext;S.cpuRest=S.cpuRestNext;
   S.myRestNext=false;S.cpuRestNext=false;
@@ -1259,22 +1261,26 @@ function nextPoem(){
 }
 
 function startReading(){
-  if(S.phase!=='read'||S.readingStarted||!S.cur)return;
-  S.readingStarted=true;
-  kamiText.textContent=S.cur.k.join('');
+  if(S.phase!=='read'||S.readingStarted||S.readingStartTimer!==null||!S.cur)return;
+  S.readingStartTimer=setTimeout(()=>{
+    S.readingStartTimer=null;
+    if(S.phase!=='read'||S.readingStarted||!S.cur)return;
+    S.readingStarted=true;
+    kamiText.textContent=S.cur.k.join('');
 
-  if(!S.cpuRest && !S.cpuFouled){
-    const d=S.diff;
-    const ms=Math.max(400, d.react+(Math.random()*2-1)*d.jitter);
-    clearTimeout(S.cpuTimer);
-    S.cpuTimer=setTimeout(cpuAct,ms);
-    startBar(ms);
-  }else{
-    startBar(18000);
-  }
+    if(!S.cpuRest && !S.cpuFouled){
+      const d=S.diff;
+      const ms=Math.max(400, d.react+(Math.random()*2-1)*d.jitter);
+      clearTimeout(S.cpuTimer);
+      S.cpuTimer=setTimeout(cpuAct,ms);
+      startBar(ms);
+    }else{
+      startBar(18000);
+    }
 
-  clearTimeout(S.forceTimer);
-  S.forceTimer=setTimeout(forceResolve, 18000);
+    clearTimeout(S.forceTimer);
+    S.forceTimer=setTimeout(forceResolve, 18000);
+  },500);
 }
 
 replayBtn.addEventListener('click',()=>{
@@ -1494,6 +1500,7 @@ cpuField.addEventListener('click',onTap);
 function finish(){
   S.phase='over';S.resolved=true;
   clearTimeout(S.cpuTimer);clearTimeout(S.forceTimer);clearTimeout(S.waitTimer);clearInterval(S.memoTimer);
+  clearTimeout(S.readingStartTimer);S.readingStartTimer=null;
   stopBar();stopSpeak();
   memoBar.classList.remove('on');
 
@@ -1534,6 +1541,7 @@ quitBtn.addEventListener('click',()=>{
   if(confirm('対戦を中断して設定画面に戻りますか？')){
     S.phase='idle';S.resolved=true;
     clearTimeout(S.cpuTimer);clearTimeout(S.forceTimer);clearTimeout(S.waitTimer);clearInterval(S.memoTimer);
+    clearTimeout(S.readingStartTimer);S.readingStartTimer=null;
     stopBar();stopSpeak();
     memoBar.classList.remove('on');
     gameScr.classList.remove('on');
