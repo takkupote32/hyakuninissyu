@@ -307,9 +307,9 @@ body{
   <div class="sec">
     <h2>読み手の声</h2>
     <div class="opts">
-      <label class="rdo on" id="rdoVoiceFem"><input type="radio" name="vGender" value="female" checked>女性の声</label>
+      <label class="rdo" id="rdoVoiceFem"><input type="radio" name="vGender" value="female">女性の声</label>
       <label class="rdo" id="rdoVoiceMale"><input type="radio" name="vGender" value="male">男性の声</label>
-      <label class="rdo" id="rdoVoiceChild"><input type="radio" name="vGender" value="child">子供の声</label>
+      <label class="rdo on" id="rdoVoiceChild"><input type="radio" name="vGender" value="child" checked>子供の声</label>
     </div>
   </div>
 
@@ -320,7 +320,7 @@ body{
       <label class="chk on" id="chkKami"><input type="checkbox" id="cbKami" checked>上の句を表示</label>
       <label class="chk on" id="chkVoice"><input type="checkbox" id="cbVoice" checked>音声で読み上げ</label>
       <label class="chk" id="chkSlow"><input type="checkbox" id="cbSlow">ゆっくり詠む</label>
-      <label class="chk" id="chkFast"><input type="checkbox" id="cbFast">早く読む</label>
+      <label class="chk on" id="chkFast"><input type="checkbox" id="cbFast" checked>早く読む</label>
     </div>
   </div>
 
@@ -535,7 +535,7 @@ const S={
   myRest:false, cpuRest:false, myRestNext:false, cpuRestNext:false,
   myFouled:false, cpuFouled:false, isSuddenDeath:false, speechEnded:false,
   cpuTimer:null, rafId:null, forceTimer:null, memoTimer:null, waitTimer:null,
-  opts:{num:false,kami:true,voice:true,slow:false,fast:false,voiceGender:'female'}
+  opts:{num:false,kami:true,voice:true,slow:false,fast:true,voiceGender:'child'}
 };
 
 /* ===== 要素 ===== */
