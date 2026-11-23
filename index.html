@@ -320,6 +320,7 @@ body{
       <label class="chk on" id="chkKami"><input type="checkbox" id="cbKami" checked>上の句を表示</label>
       <label class="chk on" id="chkVoice"><input type="checkbox" id="cbVoice" checked>音声で読み上げ</label>
       <label class="chk" id="chkSlow"><input type="checkbox" id="cbSlow">ゆっくり詠む</label>
+      <label class="chk" id="chkFast"><input type="checkbox" id="cbFast">早く読む</label>
     </div>
   </div>
 
@@ -534,7 +535,7 @@ const S={
   myRest:false, cpuRest:false, myRestNext:false, cpuRestNext:false,
   myFouled:false, cpuFouled:false, isSuddenDeath:false, speechEnded:false,
   cpuTimer:null, rafId:null, forceTimer:null, memoTimer:null, waitTimer:null,
-  opts:{num:false,kami:true,voice:true,slow:false,voiceGender:'female'}
+  opts:{num:false,kami:true,voice:true,slow:false,fast:false,voiceGender:'female'}
 };
 
 /* ===== 要素 ===== */
@@ -651,7 +652,7 @@ function speakPoem(poem, onEndCallback){
     
     currentAudio = audioPlayer;
     currentAudio.src = audioPath;
-    currentAudio.playbackRate = S.opts.slow ? 0.85 : 1.0;
+    currentAudio.playbackRate = S.opts.slow ? 0.85 : S.opts.fast ? 1.2 : 1.0;
 
     currentAudio.onended = () => {
       if(currentSpeakId !== speakId) return;
@@ -683,7 +684,7 @@ function speakPoem(poem, onEndCallback){
   } catch(e) {}
 
   S.speechEnded = false;
-  const baseRate = S.opts.slow ? 0.62 : 0.72;
+  const baseRate = S.opts.slow ? 0.62 : S.opts.fast ? 0.9 : 0.72;
   const targetVoice = getVoiceByGender(S.opts.voiceGender);
 
   let isMaleFallback = (S.opts.voiceGender === 'male' && targetVoice && !(['Otoya','Ichiro','Keita','Hattori','Takumi'].some(k=>(targetVoice.name||'').includes(k))));
@@ -845,6 +846,21 @@ chk('chkNum','num','cbNum');
 chk('chkKami','kami','cbKami');
 chk('chkVoice','voice','cbVoice');
 chk('chkSlow','slow','cbSlow');
+chk('chkFast','fast','cbFast');
+$('cbSlow').addEventListener('change',()=>{
+  if(S.opts.slow && S.opts.fast){
+    S.opts.fast=false;
+    $('cbFast').checked=false;
+    $('chkFast').classList.remove('on');
+  }
+});
+$('cbFast').addEventListener('change',()=>{
+  if(S.opts.fast && S.opts.slow){
+    S.opts.slow=false;
+    $('cbSlow').checked=false;
+    $('chkSlow').classList.remove('on');
+  }
+});
 
 voiceTest.addEventListener('click',()=>{
   warmup();
