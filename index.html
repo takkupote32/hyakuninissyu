@@ -365,6 +365,7 @@ body{
       <label class="chk on" id="chkVoice"><input type="checkbox" id="cbVoice" checked>音声で読み上げ</label>
       <label class="chk" id="chkSlow"><input type="checkbox" id="cbSlow">ゆっくり詠む</label>
       <label class="chk on" id="chkFast"><input type="checkbox" id="cbFast" checked>早く読む</label>
+      <label class="chk" id="chkFaster"><input type="checkbox" id="cbFaster">もっと早く読む</label>
     </div>
   </div>
 
@@ -395,6 +396,7 @@ body{
     <fieldset id="audioSpeedOptions"><legend>読む速さ</legend><div class="options">
       <label class="speed"><input type="checkbox" id="audioSlowOption">ゆっくり読む</label>
       <label class="speed"><input type="checkbox" id="audioFastOption" checked>早く読む</label>
+      <label class="speed"><input type="checkbox" id="audioFasterOption">もっと早く読む</label>
     </div></fieldset>
     <div class="buttons">
       <button type="button" id="audioPlayBtn">再生開始</button>
@@ -602,7 +604,7 @@ const S={
   myRest:false, cpuRest:false, myRestNext:false, cpuRestNext:false,
   myFouled:false, cpuFouled:false, isSuddenDeath:false, speechEnded:false, readingStarted:false, readingStartTimer:null,
   cpuTimer:null, rafId:null, forceTimer:null, memoTimer:null, waitTimer:null,
-  opts:{num:false,kami:true,voice:true,slow:false,fast:true,voiceGender:'child'}
+  opts:{num:false,kami:true,voice:true,slow:false,fast:true,faster:false,voiceGender:'child'}
 };
 
 /* ===== 要素 ===== */
@@ -745,7 +747,7 @@ function speakPoem(poem, onEndCallback, onStartCallback){
       tryingCandidate = true;
       currentAudio = audioPlayer;
       currentAudio.src = candidates[candidateIndex];
-      currentAudio.playbackRate = S.opts.slow ? 0.85 : S.opts.fast ? 1.2 : 1.0;
+      currentAudio.playbackRate = S.opts.slow ? 0.85 : S.opts.faster ? 1.4 : S.opts.fast ? 1.2 : 1.0;
       currentAudio.onplaying = notifyPlaybackStart;
       currentAudio.onended = () => {
         if(currentSpeakId !== speakId) return;
@@ -781,7 +783,7 @@ function speakPoem(poem, onEndCallback, onStartCallback){
   } catch(e) {}
 
   S.speechEnded = false;
-  const baseRate = S.opts.slow ? 0.62 : S.opts.fast ? 0.9 : 0.72;
+  const baseRate = S.opts.slow ? 0.62 : S.opts.faster ? 1.1 : S.opts.fast ? 0.9 : 0.72;
   const targetVoice = getVoiceByGender(S.opts.voiceGender);
 
   let isMaleFallback = (S.opts.voiceGender === 'male' && targetVoice && !(['Otoya','Ichiro','Keita','Hattori','Takumi'].some(k=>(targetVoice.name||'').includes(k))));
@@ -945,19 +947,21 @@ chk('chkKami','kami','cbKami');
 chk('chkVoice','voice','cbVoice');
 chk('chkSlow','slow','cbSlow');
 chk('chkFast','fast','cbFast');
-$('cbSlow').addEventListener('change',()=>{
-  if(S.opts.slow && S.opts.fast){
-    S.opts.fast=false;
-    $('cbFast').checked=false;
-    $('chkFast').classList.remove('on');
-  }
-});
-$('cbFast').addEventListener('change',()=>{
-  if(S.opts.fast && S.opts.slow){
-    S.opts.slow=false;
-    $('cbSlow').checked=false;
-    $('chkSlow').classList.remove('on');
-  }
+chk('chkFaster','faster','cbFaster');
+const gameSpeedOptions=[
+  {key:'slow',input:'cbSlow',label:'chkSlow'},
+  {key:'fast',input:'cbFast',label:'chkFast'},
+  {key:'faster',input:'cbFaster',label:'chkFaster'}
+];
+gameSpeedOptions.forEach(option=>{
+  $(option.input).addEventListener('change',()=>{
+    if(!S.opts[option.key])return;
+    gameSpeedOptions.filter(other=>other.key!==option.key).forEach(other=>{
+      S.opts[other.key]=false;
+      $(other.input).checked=false;
+      $(other.label).classList.remove('on');
+    });
+  });
 });
 
 voiceTest.addEventListener('click',()=>{
@@ -1006,10 +1010,16 @@ const audioVoiceOptionsInner=$('audioVoiceOptionsInner');
 
 const audioSlowOption=$('audioSlowOption');
 const audioFastOption=$('audioFastOption');
+const audioFasterOption=$('audioFasterOption');
 audioSlowOption.checked=S.opts.slow;
 audioFastOption.checked=S.opts.fast;
-audioSlowOption.addEventListener('change',()=>{if(audioSlowOption.checked) audioFastOption.checked=false;});
-audioFastOption.addEventListener('change',()=>{if(audioFastOption.checked) audioSlowOption.checked=false;});
+audioFasterOption.checked=S.opts.faster;
+const audioSpeedOptions=[audioSlowOption,audioFastOption,audioFasterOption];
+audioSpeedOptions.forEach(option=>{
+  option.addEventListener('change',()=>{
+    if(option.checked)audioSpeedOptions.filter(other=>other!==option).forEach(other=>{other.checked=false;});
+  });
+});
 
 function setAudioPlaying(playing){
   audioIsPlaying=playing;
@@ -1049,7 +1059,7 @@ function playNextAudio(){
     tryingCandidate=true;
     const audioPath=candidates[candidateIndex];
     audioOnlyPlayer.src=audioPath;
-    audioOnlyPlayer.playbackRate=audioSlowOption.checked?0.85:audioFastOption.checked?1.2:1.0;
+    audioOnlyPlayer.playbackRate=audioSlowOption.checked?0.85:audioFasterOption.checked?1.4:audioFastOption.checked?1.2:1.0;
     audioOnlyPlayer.onerror=()=>{
       if(!tryingCandidate)return;
       tryingCandidate=false;
@@ -1085,6 +1095,7 @@ function openAudioOnlyWindow(){
   });
   audioSlowOption.checked=S.opts.slow;
   audioFastOption.checked=S.opts.fast;
+  audioFasterOption.checked=S.opts.faster;
   setupScr.classList.remove('on');
   audioOnlyScreen.classList.add('on');
   audioOnlyScreen.scrollTop=0;
