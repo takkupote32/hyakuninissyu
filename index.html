@@ -560,8 +560,9 @@ let currentAudio=null; // 音声ファイル再生用
 const audioPlayer = new Audio();
 let audioUnlocked = false;
 
-// ★ 男性の声（録音MP3ファイル）のディレクトリ設定
+// ★ 録音MP3ファイルのディレクトリ設定
 const AUDIO_DIR = "./audio/";
+const FEMALE_AUDIO_DIR = "./女性の声/";
 
 // ★ スマホの自動再生制限（Autoplay Policy）を解除するアンロック関数
 function unlockAudio() {
@@ -638,12 +639,13 @@ function speakPoem(poem, onEndCallback){
     return;
   }
 
-  // ★「男性の声」が選択されている場合、指定フォルダのMP3ファイルを実行再生
-  if(S.opts.voiceGender === 'male'){
+  // ★録音音声が選択されている場合、指定フォルダのMP3ファイルを再生
+  if(S.opts.voiceGender === 'male' || S.opts.voiceGender === 'female'){
     S.speechEnded = false;
     
     const numStr = String(poem.n).padStart(3, '0');
-    const audioPath = AUDIO_DIR + numStr + ".mp3";
+    const audioDir = S.opts.voiceGender === 'female' ? FEMALE_AUDIO_DIR : AUDIO_DIR;
+    const audioPath = audioDir + numStr + ".mp3";
     
     currentAudio = audioPlayer;
     currentAudio.src = audioPath;
