@@ -81,6 +81,13 @@ body{
   margin-top:4px;width:100%;border:1px solid var(--line);background:transparent;color:var(--dim);
   border-radius:10px;padding:10px;font-family:inherit;font-size:clamp(13px, 1.8vw, 16px);cursor:pointer;
 }
+#audioOnlyBtn{
+  min-height:54px;margin-top:8px;border:2px solid #d9b46a;
+  background:linear-gradient(180deg,#e7ca86,#c79a50);color:#251c07;
+  border-radius:12px;font-size:clamp(16px,2.2vw,20px);font-weight:700;
+  box-shadow:0 5px 14px rgba(217,180,106,.28);
+}
+#audioOnlyBtn:active{transform:translateY(2px);box-shadow:0 2px 8px rgba(217,180,106,.24);}
 
 /* 履歴セクション */
 .history-sec{margin-top:8px;background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:10px;padding:10px;}
@@ -914,6 +921,10 @@ function openAudioOnlyWindow(){
 body{margin:0;padding:20px;background:#0d1420;color:#f3efe6;font-family:Meiryo,"Yu Gothic",sans-serif}
 main{max-width:500px;margin:0 auto}
 h1{margin:0 0 18px;color:#d9b46a;font-size:23px;text-align:center}
+.header{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:16px}
+.header h1{margin:0;flex:1;text-align:left}
+.back-btn{min-height:44px;padding:8px 12px;border:2px solid #d9b46a;border-radius:9px;background:#d9b46a;color:#251c07;font-size:15px;font-weight:bold;cursor:pointer}
+.back-btn:active{transform:translateY(1px)}
 fieldset{margin:0 0 16px;padding:14px;border:1px solid rgba(255,255,255,.16);border-radius:10px}
 legend{padding:0 6px;color:#d9b46a}
 .color-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:7px}
@@ -931,7 +942,7 @@ fieldset:disabled{opacity:.6}
 </head>
 <body>
 <main>
-  <h1>句をランダムに読み上げ</h1>
+  <div class="header"><h1>句をランダムに読み上げ</h1><button type="button" class="back-btn" id="backBtn">← 元の画面に戻る</button></div>
   <fieldset id="colorOptions"><legend>色</legend><div class="color-grid">${colorButtonsHtml}</div></fieldset>
   <fieldset id="voiceOptions"><legend>読み手の声</legend><div class="options">${voiceOptionsHtml}</div></fieldset>
   <fieldset id="speedOptions"><legend>読む速さ</legend><div class="options">
@@ -951,6 +962,7 @@ fieldset:disabled{opacity:.6}
   const fastOption = doc.getElementById('fastOption');
   const playBtn = doc.getElementById('playBtn');
   const stopBtn = doc.getElementById('stopBtn');
+  const backBtn = doc.getElementById('backBtn');
   const status = doc.getElementById('status');
   const optionGroups = [
     doc.getElementById('colorOptions'),
@@ -1022,6 +1034,15 @@ fieldset:disabled{opacity:.6}
     playNext();
   });
   stopBtn.addEventListener('click', () => stopPlayback());
+  backBtn.addEventListener('click', () => {
+    isPlaying = false;
+    player.pause();
+    player.currentTime = 0;
+    if(window.opener && !window.opener.closed){
+      window.opener.focus();
+    }
+    window.close();
+  });
   playerWindow.addEventListener('beforeunload', () => {
     isPlaying = false;
     player.pause();
