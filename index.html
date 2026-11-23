@@ -109,12 +109,22 @@ body{
 .audio-main .choice,.audio-main .speed{
   display:flex;align-items:center;gap:6px;padding:9px 11px;border:1px solid var(--line);
   border-radius:20px;background:rgba(255,255,255,.05);cursor:pointer;
+  font-size:clamp(12px,1.8vw,15px);white-space:nowrap;
 }
+.audio-main #audioVoiceOptions{padding:10px 14px;}
+.audio-main #audioVoiceOptionsInner{flex-wrap:nowrap;gap:5px;}
+.audio-main #audioVoiceOptionsInner .choice{padding:7px 8px;font-size:clamp(10.5px,1.5vw,13px);}
 .audio-main .buttons{display:flex;gap:10px;margin-top:8px;}
 .audio-main .buttons button{flex:1;min-height:54px;border:0;border-radius:10px;font-size:17px;font-weight:bold;cursor:pointer;}
 .audio-main #audioPlayBtn{background:linear-gradient(180deg,#e7ca86,#c79a50);color:#251c07;}
+.audio-main #audioPauseBtn{background:rgba(217,180,106,.18);color:#f4e6c6;border:1px solid #d9b46a;}
 .audio-main #audioStopBtn{background:rgba(255,255,255,.10);color:#f3efe6;}
 .audio-main #audioStatus{min-height:44px;margin:14px 0 0;color:#cfd6e2;text-align:center;line-height:1.5;}
+.audio-main #audioPoemText{
+  min-height:76px;margin:10px 0 0;padding:12px;border:1px solid rgba(217,180,106,.35);
+  border-radius:10px;background:rgba(217,180,106,.08);color:#f8ecc9;
+  text-align:center;font-size:clamp(15px,2.4vw,20px);font-weight:700;line-height:1.7;
+}
 
 /* 履歴セクション */
 .history-sec{margin-top:8px;background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:10px;padding:10px;}
@@ -388,8 +398,10 @@ body{
     </div></fieldset>
     <div class="buttons">
       <button type="button" id="audioPlayBtn">再生開始</button>
+      <button type="button" id="audioPauseBtn" disabled>一時停止</button>
       <button type="button" id="audioStopBtn" disabled>停止</button>
     </div>
+    <div id="audioPoemText">再生中の句がここに表示されます</div>
     <p id="audioStatus">設定して「再生開始」を押してください。</p>
   </div>
 </section>
@@ -617,9 +629,9 @@ const audioPlayer = new Audio();
 let audioUnlocked = false;
 
 // ★ 録音MP3ファイルのディレクトリ設定
-const AUDIO_DIR = "./audio/";
-const FEMALE_AUDIO_DIR = "./女性の声/";
-const CHILD_AUDIO_DIR = "./子供の声/";
+const AUDIO_DIR = "./百人一首/audio/";
+const FEMALE_AUDIO_DIR = "./百人一首/女性の声/";
+const CHILD_AUDIO_DIR = "./百人一首/子供の声/";
 
 // ★ スマホの自動再生制限（Autoplay Policy）を解除するアンロック関数
 function unlockAudio() {
@@ -932,6 +944,8 @@ let audioSelectedColor=S.color;
 let audioSelectedVoice=S.opts.voiceGender;
 let audioPoemQueue=[];
 let audioIsPlaying=false;
+let audioIsPaused=false;
+let audioCurrentPoem=null;
 
 const audioColorGrid=$('audioColorGrid');
 COLORS.forEach(color=>{
@@ -969,28 +983,35 @@ audioFastOption.addEventListener('change',()=>{if(audioFastOption.checked) audio
 function setAudioPlaying(playing){
   audioIsPlaying=playing;
   $('audioPlayBtn').disabled=playing;
+  $('audioPauseBtn').disabled=!playing;
   $('audioStopBtn').disabled=!playing;
   ['audioColorOptions','audioVoiceOptions','audioSpeedOptions'].forEach(id=>{$(id).disabled=playing;});
 }
 function stopAudioPlayback(message){
   setAudioPlaying(false);
+  audioIsPaused=false;
+  audioCurrentPoem=null;
   audioOnlyPlayer.pause();
   audioOnlyPlayer.currentTime=0;
   audioOnlyPlayer.onended=null;
   audioOnlyPlayer.onerror=null;
+  $('audioPlayBtn').textContent='再生開始';
+  $('audioPauseBtn').textContent='一時停止';
+  $('audioPoemText').textContent='再生中の句がここに表示されます';
   $('audioStatus').textContent=message||'停止中';
 }
 function playNextAudio(){
   if(!audioIsPlaying)return;
   if(!audioPoemQueue.length)audioPoemQueue=shuffle(audioSelectedColor.poems.slice());
   const poem=audioPoemQueue.pop();
-  const audioDir=audioSelectedVoice==='female'?FEMALE_AUDIO_DIR
-    :audioSelectedVoice==='child'?CHILD_AUDIO_DIR:AUDIO_DIR;
-  const audioPath=audioDir+String(poem.n).padStart(3,'0')+'.mp3';
-  audioOnlyPlayer.src=new URL(audioPath,window.location.href).href;
+  audioCurrentPoem=poem;
+  const num=String(poem.n).padStart(3,'0');
+  const audioPath=new URL(AUDIO_DIR+num+'.mp3',window.location.href).href;
+  audioOnlyPlayer.src=audioPath;
   audioOnlyPlayer.playbackRate=audioSlowOption.checked?0.85:audioFastOption.checked?1.2:1.0;
   const voiceLabel=audioSelectedVoice==='female'?'女性の声':audioSelectedVoice==='child'?'子供の声':'男性の声';
   $('audioStatus').textContent=audioSelectedColor.name+'色・'+voiceLabel+'（'+poem.n+'番）を再生中';
+  $('audioPoemText').innerHTML=poem.k[0]+' '+poem.k[1]+poem.k[2]+'<br>'+poem.s[0]+' '+poem.s[1];
   audioOnlyPlayer.onended=playNextAudio;
   audioOnlyPlayer.onerror=()=>stopAudioPlayback('音声ファイルを再生できません: '+audioPath);
   audioOnlyPlayer.play().catch(()=>{
@@ -1013,9 +1034,30 @@ function openAudioOnlyWindow(){
   audioOnlyScreen.scrollTop=0;
 }
 $('audioPlayBtn').addEventListener('click',()=>{
+  if(audioIsPaused){
+    audioIsPaused=false;
+    setAudioPlaying(true);
+    audioOnlyPlayer.play().catch(()=>{
+      if(audioIsPlaying)stopAudioPlayback('音声を再生できませんでした。ファイルと再生環境を確認してください。');
+    });
+    $('audioPlayBtn').textContent='再生中';
+    $('audioPauseBtn').textContent='一時停止';
+    $('audioStatus').textContent='再開しました';
+    return;
+  }
   audioPoemQueue=[];
   setAudioPlaying(true);
   playNextAudio();
+});
+$('audioPauseBtn').addEventListener('click',()=>{
+  if(!audioIsPlaying||audioIsPaused)return;
+  audioIsPaused=true;
+  audioOnlyPlayer.pause();
+  $('audioPlayBtn').disabled=false;
+  $('audioPauseBtn').disabled=true;
+  $('audioStopBtn').disabled=false;
+  $('audioPlayBtn').textContent='再生再開';
+  $('audioStatus').textContent='一時停止中';
 });
 $('audioStopBtn').addEventListener('click',()=>stopAudioPlayback());
 $('audioBackBtn').addEventListener('click',()=>{
