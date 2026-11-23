@@ -308,8 +308,8 @@ body{
     <h2>読み手の声</h2>
     <div class="opts">
       <label class="rdo on" id="rdoVoiceFem"><input type="radio" name="vGender" value="female" checked>女性の声</label>
-      <label class="rdo" id="rdoVoiceMale"><input type="radio" name="vGender" value="male">男性の声（録音ファイル）</label>
-      <label class="rdo" id="rdoVoiceAuto"><input type="radio" name="vGender" value="auto">自動・標準</label>
+      <label class="rdo" id="rdoVoiceMale"><input type="radio" name="vGender" value="male">男性の声</label>
+      <label class="rdo" id="rdoVoiceChild"><input type="radio" name="vGender" value="child">子供の声</label>
     </div>
   </div>
 
@@ -563,6 +563,7 @@ let audioUnlocked = false;
 // ★ 録音MP3ファイルのディレクトリ設定
 const AUDIO_DIR = "./audio/";
 const FEMALE_AUDIO_DIR = "./女性の声/";
+const CHILD_AUDIO_DIR = "./子供の声/";
 
 // ★ スマホの自動再生制限（Autoplay Policy）を解除するアンロック関数
 function unlockAudio() {
@@ -640,11 +641,12 @@ function speakPoem(poem, onEndCallback){
   }
 
   // ★録音音声が選択されている場合、指定フォルダのMP3ファイルを再生
-  if(S.opts.voiceGender === 'male' || S.opts.voiceGender === 'female'){
+  if(S.opts.voiceGender === 'male' || S.opts.voiceGender === 'female' || S.opts.voiceGender === 'child'){
     S.speechEnded = false;
     
     const numStr = String(poem.n).padStart(3, '0');
-    const audioDir = S.opts.voiceGender === 'female' ? FEMALE_AUDIO_DIR : AUDIO_DIR;
+    const audioDir = S.opts.voiceGender === 'female' ? FEMALE_AUDIO_DIR
+      : S.opts.voiceGender === 'child' ? CHILD_AUDIO_DIR : AUDIO_DIR;
     const audioPath = audioDir + numStr + ".mp3";
     
     currentAudio = audioPlayer;
@@ -674,7 +676,7 @@ function speakPoem(poem, onEndCallback){
     return;
   }
 
-  // ★「女性の声」または「自動」の場合はブラウザ合成音声を使用
+  // ★音声ファイル以外が選択された場合はブラウザ合成音声を使用
   try {
     const dummyUttr = new SpeechSynthesisUtterance('');
     speechSynthesis.speak(dummyUttr);
@@ -848,12 +850,9 @@ voiceTest.addEventListener('click',()=>{
   warmup();
   const sample = {n:3, k:['あしびきの','やまどりのをの','しだりをの'],s:['ながながしよを','ひとりかもねむ']};
   speakPoem(sample, null);
-  if(S.opts.voiceGender === 'male'){
-    voiceTest.textContent = '🔊 音声テスト（男性: ローカルMP3再生）';
-  } else {
-    const v = getVoiceByGender(S.opts.voiceGender);
-    voiceTest.textContent = v ? ('🔊 音声テスト（' + v.name + '）') : '🔊 音声テスト（日本語音声未検出）';
-  }
+  const voiceName = S.opts.voiceGender === 'female' ? '女性'
+    : S.opts.voiceGender === 'male' ? '男性' : '子供';
+  voiceTest.textContent = '🔊 音声テスト（' + voiceName + ': ローカルMP3再生）';
 });
 
 /* ===== フィールド描画 ===== */
